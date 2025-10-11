@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/guoyixu/OFDM_Sense/OFDM-Sense/latency_test.cpp
+uhd/usrp/multi_usrp.hpp
+-
+uhd/utils/safe_main.hpp
+-
+uhd/utils/thread.hpp
+-
+boost/format.hpp
+-
+boost/program_options.hpp
+-
+complex
+-
+iostream
+-
+

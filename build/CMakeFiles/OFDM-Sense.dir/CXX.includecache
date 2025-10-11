@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/guoyixu/OFDM_Sense/OFDM-Sense/uhd_test.cpp
+uhd/utils/thread_priority.hpp
+-
+uhd/utils/safe_main.hpp
+-
+uhd/usrp/multi_usrp.hpp
+-
+uhd/exception.hpp
+-
+uhd/types/tune_request.hpp
+-
+boost/program_options.hpp
+-
+boost/format.hpp
+-
+boost/thread.hpp
+-
+iostream
+-
+
