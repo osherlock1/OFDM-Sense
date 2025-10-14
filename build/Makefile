@@ -111,44 +111,44 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named TXRX_TEST
+# Target rules for targets named BENCHMARK_RATE
 
 # Build rule for target.
-TXRX_TEST: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 TXRX_TEST
-.PHONY : TXRX_TEST
+BENCHMARK_RATE: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 BENCHMARK_RATE
+.PHONY : BENCHMARK_RATE
 
 # fast build rule for target.
-TXRX_TEST/fast:
-	$(MAKE) -f CMakeFiles/TXRX_TEST.dir/build.make CMakeFiles/TXRX_TEST.dir/build
-.PHONY : TXRX_TEST/fast
+BENCHMARK_RATE/fast:
+	$(MAKE) -f CMakeFiles/BENCHMARK_RATE.dir/build.make CMakeFiles/BENCHMARK_RATE.dir/build
+.PHONY : BENCHMARK_RATE/fast
 
-txrx_loopback_to_file.o: txrx_loopback_to_file.cpp.o
+benchmark_rate.o: benchmark_rate.cpp.o
 
-.PHONY : txrx_loopback_to_file.o
+.PHONY : benchmark_rate.o
 
 # target to build an object file
-txrx_loopback_to_file.cpp.o:
-	$(MAKE) -f CMakeFiles/TXRX_TEST.dir/build.make CMakeFiles/TXRX_TEST.dir/txrx_loopback_to_file.cpp.o
-.PHONY : txrx_loopback_to_file.cpp.o
+benchmark_rate.cpp.o:
+	$(MAKE) -f CMakeFiles/BENCHMARK_RATE.dir/build.make CMakeFiles/BENCHMARK_RATE.dir/benchmark_rate.cpp.o
+.PHONY : benchmark_rate.cpp.o
 
-txrx_loopback_to_file.i: txrx_loopback_to_file.cpp.i
+benchmark_rate.i: benchmark_rate.cpp.i
 
-.PHONY : txrx_loopback_to_file.i
+.PHONY : benchmark_rate.i
 
 # target to preprocess a source file
-txrx_loopback_to_file.cpp.i:
-	$(MAKE) -f CMakeFiles/TXRX_TEST.dir/build.make CMakeFiles/TXRX_TEST.dir/txrx_loopback_to_file.cpp.i
-.PHONY : txrx_loopback_to_file.cpp.i
+benchmark_rate.cpp.i:
+	$(MAKE) -f CMakeFiles/BENCHMARK_RATE.dir/build.make CMakeFiles/BENCHMARK_RATE.dir/benchmark_rate.cpp.i
+.PHONY : benchmark_rate.cpp.i
 
-txrx_loopback_to_file.s: txrx_loopback_to_file.cpp.s
+benchmark_rate.s: benchmark_rate.cpp.s
 
-.PHONY : txrx_loopback_to_file.s
+.PHONY : benchmark_rate.s
 
 # target to generate assembly for a file
-txrx_loopback_to_file.cpp.s:
-	$(MAKE) -f CMakeFiles/TXRX_TEST.dir/build.make CMakeFiles/TXRX_TEST.dir/txrx_loopback_to_file.cpp.s
-.PHONY : txrx_loopback_to_file.cpp.s
+benchmark_rate.cpp.s:
+	$(MAKE) -f CMakeFiles/BENCHMARK_RATE.dir/build.make CMakeFiles/BENCHMARK_RATE.dir/benchmark_rate.cpp.s
+.PHONY : benchmark_rate.cpp.s
 
 # Help Target
 help:
@@ -158,10 +158,10 @@ help:
 	@echo "... depend"
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
-	@echo "... TXRX_TEST"
-	@echo "... txrx_loopback_to_file.o"
-	@echo "... txrx_loopback_to_file.i"
-	@echo "... txrx_loopback_to_file.s"
+	@echo "... BENCHMARK_RATE"
+	@echo "... benchmark_rate.o"
+	@echo "... benchmark_rate.i"
+	@echo "... benchmark_rate.s"
 .PHONY : help
 
 

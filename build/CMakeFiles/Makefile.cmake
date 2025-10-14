@@ -81,5 +81,5 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/TXRX_TEST.dir/DependInfo.cmake"
+  "CMakeFiles/BENCHMARK_RATE.dir/DependInfo.cmake"
   )
