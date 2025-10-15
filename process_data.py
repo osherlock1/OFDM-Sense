@@ -22,13 +22,13 @@ samples = samples[::2] + 1j*samples[1::2]
 
 sample_iq = iq[0:1000]
 N = 1024
-#fft_iq = np.fft.fft(sample_iq, N)
+fft_iq = np.fft.fft(sample_iq, N)
 
 
-# magnitude = np.sqrt(np.real(sample_iq ** 2 + np.imag(sample_iq ** 2)))
-# print(f"simple_iq lenght {len(sample_iq)}")
+magnitude = np.sqrt(np.real(sample_iq ** 2 + np.imag(sample_iq ** 2)))
+print(f"simple_iq lenght {len(sample_iq)}")
 
-plt.plot(np.real(sample_iq))
+plt.plot(np.abs(fft_iq))
 plt.grid(True)
 plt.show()
 
