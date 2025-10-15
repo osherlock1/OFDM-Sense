@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 
 
 
-file_name = sys.argv[1]
+file_name = "usrp_samples_fc32.dat"
 
-sample_rate = sys.argv[2]
+#sample_rate = sys.argv[2]
 
 file_size = os.path.getsize(file_name)
 
