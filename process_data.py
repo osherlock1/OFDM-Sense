@@ -30,6 +30,15 @@ print(f"simple_iq lenght {len(sample_iq)}")
 
 plt.plot(np.abs(fft_iq))
 plt.grid(True)
+plt.title("100kHz Frequency Response")
 plt.show()
 
+plt.plot(np.real(sample_iq))
+plt.grid(True)
+plt.title("100kHz Sine Wave")
+plt.show()
 
+plt.plot(np.real(sample_iq), np.imag(sample_iq))
+plt.grid(True)
+plt.title("Constalation Plot")
+plt.show()
