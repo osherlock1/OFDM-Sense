@@ -1,8 +1,8 @@
 from ofdm import ofdmManager
 import matplotlib.pyplot as plt
 import numpy as np
-
-
+from subcarrier_map import SubcarrierMap
+from ofdm_symbol import OFDMSymbol
 #Indicies helper
 def idx(k):
     return k % 64
@@ -11,8 +11,11 @@ def idx(k):
 
 def main():
 
+
+    map = SubcarrierMap()
+
      #Simple IQ samples respoinse
-    iq_samples = [-0.9487 + 0.9487j, -0.3162 + 0.9487j,  0.3162 + 0.9487j,  0.9487 + 0.9487j,
+    iq_samples = np.array([-0.9487 + 0.9487j, -0.3162 + 0.9487j,  0.3162 + 0.9487j,  0.9487 + 0.9487j,
  -0.9487 + 0.3162j, -0.3162 + 0.3162j,  0.3162 + 0.3162j,  0.9487 + 0.3162j,
  -0.9487 - 0.3162j, -0.3162 - 0.3162j,  0.3162 - 0.3162j,  0.9487 - 0.3162j,
  -0.9487 - 0.9487j, -0.3162 - 0.9487j,  0.3162 - 0.9487j,  0.9487 - 0.9487j,
@@ -25,9 +28,14 @@ def main():
  -0.9487 + 0.9487j, -0.3162 + 0.9487j,  0.3162 + 0.9487j,  0.9487 + 0.9487j,
  -0.9487 + 0.3162j, -0.3162 + 0.3162j,  0.3162 + 0.3162j,  0.9487 + 0.3162j,
  -0.9487 - 0.3162j, -0.3162 - 0.3162j,  0.3162 - 0.3162j,  0.9487 - 0.3162j,
- -0.9487 - 0.9487j, -0.3162 - 0.9487j,  0.3162 - 0.9487j,  0.9487 - 0.9487j]
+ -0.9487 - 0.9487j, -0.3162 - 0.9487j,  0.3162 - 0.9487j,  0.9487 - 0.9487j], dtype=complex)
 
 
+    pilots = np.array([1 + 0j, 1 + 0j, 1+0j, 1+0j], dtype=complex)
+
+    ofdm_symbol1 = OFDMSymbol(iq_samples48=iq_samples, pilots4=pilots, submap=map)
+    
+    print(ofdm_symbol1.symbol)
     om = ofdmManager()
 
     #Define the OFDM symbol
@@ -50,18 +58,9 @@ def main():
         X[idx(k)] = iq_samples[i]
         i += 1
 
-    print(X)
    
-
-    #Perform 64 Poinrt IFFT
-    ifft_response = om.ifft(iq_samples, N=64)
     
 
-    #Normalize
-
-    #plt.plot(np.real(iq_samples), np.imag(iq_samples), ".")
-    # plt.plot(np.abs(ifft_response))
-    # plt.show()
 
 
 if __name__ == "__main__":

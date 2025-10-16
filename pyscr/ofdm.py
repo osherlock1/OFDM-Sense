@@ -13,4 +13,8 @@ class ofdmManager():
         response = np.fft.ifft(samples, N)
         return response
     
-    
+    def _idx(self, k):
+        """
+        Helper Method to convert from frequency bin index to numpy indexing
+        """
+        return k % 64
