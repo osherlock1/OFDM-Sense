@@ -12,8 +12,8 @@ TX_RATE = "1e6"
 RX_RATE = "1e6"
 TX_FREQ = "0"
 RX_FREQ = "0"
-WAVE_TYPE = "SINE"
-WAVE_FREQ = "500e3"
+WAVE_TYPE = "SQUARE"
+WAVE_FREQ = "100e3"
 AMPL = "0.3"
 TX_GAIN = "0"
 RX_GAIN = "0"
@@ -91,7 +91,7 @@ plt.grid(True)
 plt.title("100kHz Sine Wave")
 plt.show()
 
-plt.plot(np.real(sample_iq), np.imag(sample_iq))
+plt.plot(np.real(sample_iq), np.imag(sample_iq), ".")
 plt.grid(True)
 plt.title("Constalation Plot")
 plt.show()
