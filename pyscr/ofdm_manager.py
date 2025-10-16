@@ -27,6 +27,13 @@ class OFDMManager():
             it output a np array which will be the TX Block sent to the USRP
         
         """
-        prefix = symbol.symbol[len(self.map.N)-prefix_len:]
-        TX_block = np.array([prefix,symbol.symbol], dtype=complex)
+        prefix = symbol.symbol[self.map.N-prefix_len:]
+        TX_block = np.concatenate([prefix,symbol.symbol]).astype(complex)
         return TX_block
+    
+    def create_tx_block(self, symbol:np.ndarray)->np.ndarray:
+        #Compute ifft
+        self.ifft(symbol)
+        #Add cycle prefix
+        tx_block = self.add_cycle_prefix(symbol)
+        return tx_block
