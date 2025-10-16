@@ -25,9 +25,7 @@ class OFDMSymbol:
         self._build_ofdm_symbol(self.iq_samlpes48, self.pilots4)
         print("OFDM Symbol Instantiated!")
 
-
-
-
+    # HELPER METHODS
     def _build_ofdm_symbol(self, data, pilots):
         """
         Build the completed OFDM Symbol
@@ -42,7 +40,8 @@ class OFDMSymbol:
         i = 0
         for k in self.submap.data_bins:
             self.symbol[self._idx(k)] = iq_samlpes[i]
-        
+            i += 1
+
     def _add_pilots(self, pilots):
         """
         Add pilots to proper indicies
@@ -50,6 +49,7 @@ class OFDMSymbol:
         i = 0
         for k in self.submap.pilots_k:
             self.symbol[self._idx(k)] = pilots[i]
+            i += 1
 
     def _idx(self, idx:int) -> int:
         return idx % self.submap.N
