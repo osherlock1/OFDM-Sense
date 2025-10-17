@@ -32,6 +32,9 @@ class OFDMManager():
         return TX_block
     
     def create_tx_block(self, symbol:np.ndarray)->np.ndarray:
+        """
+        Create convert OFDM Symbol from Frequency Domain to Time Domain and add Cyclacle Prefix
+        """
         #Compute ifft
         self.ifft(symbol)
         #Add cycle prefix
@@ -39,6 +42,9 @@ class OFDMManager():
         return tx_block
     
     def binary_to_iq(self, binary: str, M: int = 16, scale_factor = np.sqrt(10)):
+        """
+        Convert from 4 bit binary to 16-QAM gey-coded
+        """
         k = np.log2(M) # Number of bits
 
         #Check if binary is 4 bits
@@ -62,7 +68,9 @@ class OFDMManager():
         return iq_sample / scale_factor
 
     def iq_to_binary(self, iq_sample: complex, scale_factor = np.sqrt(10)):
-        
+        """
+        Convert an IQ sample to 16-QAM gey-coded
+        """
         grey_coded_map = {
             -3 : "00",
             -1 : "01",
