@@ -58,8 +58,19 @@ class OFDMManager():
         I = binary[0:2]
         Q = binary[2:4]
         #Build the IQ sample
-        print(f"I: {I}")
-        print(f"Q: {Q}")
         iq_sample = grey_coded_map[I] + 1j * grey_coded_map[Q]
-        print(iq_sample)
+        return iq_sample / scale_factor
 
+    def iq_to_binary(self, iq_sample: complex, scale_factor = np.sqrt(10)):
+        
+        grey_coded_map = {
+            -3 : "00",
+            -1 : "01",
+            1 : "11",
+            3 : "10"
+        }
+        I = round(np.real(iq_sample) * scale_factor)
+        Q = round((np.imag(iq_sample) * scale_factor))
+
+        return grey_coded_map[I] + grey_coded_map[Q]
+        
