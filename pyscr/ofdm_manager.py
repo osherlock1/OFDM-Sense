@@ -37,3 +37,29 @@ class OFDMManager():
         #Add cycle prefix
         tx_block = self.add_cycle_prefix(symbol)
         return tx_block
+    
+    def binary_to_iq(self, binary: str, M: int = 16, scale_factor = np.sqrt(10)):
+        k = np.log2(M) # Number of bits
+
+        #Check if binary is 4 bits
+        if len(binary) != k:
+            raise ValueError(
+                f"Binary Length Expected to be {k}"
+                f" but got {len(binary)} instead"
+            )
+
+        grey_coded_map = {
+            "00" : -3,
+            "01" : -1,
+            "11" : 1,
+            "10" : 3
+        }
+
+        I = binary[0:2]
+        Q = binary[2:4]
+        #Build the IQ sample
+        print(f"I: {I}")
+        print(f"Q: {Q}")
+        iq_sample = grey_coded_map[I] + 1j * grey_coded_map[Q]
+        print(iq_sample)
+
