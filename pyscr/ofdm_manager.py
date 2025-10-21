@@ -5,6 +5,7 @@ from subcarrier_map import SubcarrierMap
 class OFDMManager():
     def __init__(self, map:SubcarrierMap):
         self.map = map
+        self.N = map.N # Number of subcarries in a OFDM symbol
 
     def ifft(self, symbol_freq:np.ndarray):
         """
@@ -82,3 +83,25 @@ class OFDMManager():
 
         return grey_coded_map[I] + grey_coded_map[Q]
         
+    def schmidl_cox_metrics(self, r: np.ndarray, delay: int):
+        """
+        Compute P, R, and M for the reciever Schmidl Cox Algorithm
+        r = recieved time series data
+        delay = shifting starting index
+        """
+        
+        L = self.N // 2 #Half the number of subcarriers of OFDM symbols
+        a = r[delay : delay + L]
+        b = r[delay + L: delay + 2 * L]
+
+        #Check for index bound errors
+        if len(a) != L or len(b) != L:
+            return 0j, 0.0, 0.0
+        
+        P = np.vdot(a , b)
+        R = np.vdot(b, b).real
+        M = (np.abs(P) ** 2) / (R ** 2 + 1e-12) #1e-12 to prevent division by 0
+        
+        return P, R, M
+
+
