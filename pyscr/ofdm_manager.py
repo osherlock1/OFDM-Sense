@@ -83,7 +83,7 @@ class OFDMManager():
 
         return grey_coded_map[I] + grey_coded_map[Q]
         
-    def schmidl_cox_metrics(self, r: np.ndarray, delay: int):
+    def schmidl_cox_metrics_P_R_M(self, r: np.ndarray, delay: int):
         """
         Compute P, R, and M for the reciever Schmidl Cox Algorithm
         r = recieved time series data

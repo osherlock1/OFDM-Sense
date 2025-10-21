@@ -38,8 +38,8 @@ send_signal = np.concat([tx_data_block, tx_block, tx_data_block, tx_data_block, 
 P_values = []
 M_values = []
 R_values = []
-for i in range(150):
-    P, R, M = om.schmidl_cox_metrics(r = send_signal, delay = i)
+for i in range(250):
+    P, R, M = om.schmidl_cox_metrics_P_R_M(r = send_signal, delay = i)
     P_values.append(P)
     R_values.append(R)
     M_values.append(M)
@@ -47,14 +47,16 @@ for i in range(150):
 print(np.abs(M_values))
 
 plt.figure()
-plt.plot(np.abs(P_values))
+#plt.plot(np.abs(P_values))
 plt.title("P Values")
 
 plt.figure()
-plt.plot(R_values)
+#plt.plot(R_values)
 plt.title("R Values")
 
 plt.figure()
-plt.plot(M_values)
+plt.plot(M_values, label="M Values")
+plt.plot(send_signal, label="OFDM Packet")
 plt.title("M values")
+plt.legend()
 plt.show()
