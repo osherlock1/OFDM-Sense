@@ -99,9 +99,10 @@ class OFDMManager():
             return 0j, 0.0, 0.0
         
         P = np.vdot(a , b)
-        R = np.vdot(b, b).real
-        M = (np.abs(P) ** 2) / (R ** 2 + 1e-12) #1e-12 to prevent division by 0
+        Ra = np.vdot(a, a).real
+        Rb = np.vdot(b, b).real
+        M = (np.abs(P) ** 2) / (Ra * Rb + 1e-12) #1e-12 to prevent division by 0
         
-        return P, R, M
+        return P, (Ra, Rb), M
 
 
