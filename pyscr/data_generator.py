@@ -27,9 +27,9 @@ class DataGenerator:
             chunks.append(chunk)
         return chunks
     
-    def generate_random_packet(self):
+    def generate_random_packet(self, N_data_symbols:int = 5) -> np.ndarray:
         ofdm_data_symbols= [] 
-        for i in range(5):
+        for i in range(N_data_symbols):
             size = 48 * 4
             input = self.generate_random_binary(size)
             parsed_input = self._parse_string(input, 4)
