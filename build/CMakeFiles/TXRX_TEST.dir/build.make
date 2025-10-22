@@ -57,27 +57,27 @@ include CMakeFiles/TXRX_TEST.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/TXRX_TEST.dir/flags.make
 
-CMakeFiles/TXRX_TEST.dir/txrx_loopback_to_file.cpp.o: CMakeFiles/TXRX_TEST.dir/flags.make
-CMakeFiles/TXRX_TEST.dir/txrx_loopback_to_file.cpp.o: ../txrx_loopback_to_file.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/guoyixu/OFDM_Sense/OFDM-Sense/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/TXRX_TEST.dir/txrx_loopback_to_file.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/TXRX_TEST.dir/txrx_loopback_to_file.cpp.o -c /home/guoyixu/OFDM_Sense/OFDM-Sense/txrx_loopback_to_file.cpp
+CMakeFiles/TXRX_TEST.dir/example_files/test.cpp.o: CMakeFiles/TXRX_TEST.dir/flags.make
+CMakeFiles/TXRX_TEST.dir/example_files/test.cpp.o: ../example_files/test.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/guoyixu/OFDM_Sense/OFDM-Sense/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/TXRX_TEST.dir/example_files/test.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/TXRX_TEST.dir/example_files/test.cpp.o -c /home/guoyixu/OFDM_Sense/OFDM-Sense/example_files/test.cpp
 
-CMakeFiles/TXRX_TEST.dir/txrx_loopback_to_file.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/TXRX_TEST.dir/txrx_loopback_to_file.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/guoyixu/OFDM_Sense/OFDM-Sense/txrx_loopback_to_file.cpp > CMakeFiles/TXRX_TEST.dir/txrx_loopback_to_file.cpp.i
+CMakeFiles/TXRX_TEST.dir/example_files/test.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/TXRX_TEST.dir/example_files/test.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/guoyixu/OFDM_Sense/OFDM-Sense/example_files/test.cpp > CMakeFiles/TXRX_TEST.dir/example_files/test.cpp.i
 
-CMakeFiles/TXRX_TEST.dir/txrx_loopback_to_file.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/TXRX_TEST.dir/txrx_loopback_to_file.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/guoyixu/OFDM_Sense/OFDM-Sense/txrx_loopback_to_file.cpp -o CMakeFiles/TXRX_TEST.dir/txrx_loopback_to_file.cpp.s
+CMakeFiles/TXRX_TEST.dir/example_files/test.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/TXRX_TEST.dir/example_files/test.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/guoyixu/OFDM_Sense/OFDM-Sense/example_files/test.cpp -o CMakeFiles/TXRX_TEST.dir/example_files/test.cpp.s
 
 # Object files for target TXRX_TEST
 TXRX_TEST_OBJECTS = \
-"CMakeFiles/TXRX_TEST.dir/txrx_loopback_to_file.cpp.o"
+"CMakeFiles/TXRX_TEST.dir/example_files/test.cpp.o"
 
 # External object files for target TXRX_TEST
 TXRX_TEST_EXTERNAL_OBJECTS =
 
-TXRX_TEST: CMakeFiles/TXRX_TEST.dir/txrx_loopback_to_file.cpp.o
+TXRX_TEST: CMakeFiles/TXRX_TEST.dir/example_files/test.cpp.o
 TXRX_TEST: CMakeFiles/TXRX_TEST.dir/build.make
 TXRX_TEST: /usr/local/lib/libuhd.so
 TXRX_TEST: /usr/lib/x86_64-linux-gnu/libboost_program_options.so.1.71.0

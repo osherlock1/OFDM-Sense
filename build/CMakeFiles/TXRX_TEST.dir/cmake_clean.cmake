@@ -1,5 +1,5 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/TXRX_TEST.dir/txrx_loopback_to_file.cpp.o"
+  "CMakeFiles/TXRX_TEST.dir/example_files/test.cpp.o"
   "TXRX_TEST"
   "TXRX_TEST.pdb"
 )

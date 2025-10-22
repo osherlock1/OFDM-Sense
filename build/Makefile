@@ -111,44 +111,44 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named TXRX
+# Target rules for targets named TXRX_TEST
 
 # Build rule for target.
-TXRX: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 TXRX
-.PHONY : TXRX
+TXRX_TEST: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 TXRX_TEST
+.PHONY : TXRX_TEST
 
 # fast build rule for target.
-TXRX/fast:
-	$(MAKE) -f CMakeFiles/TXRX.dir/build.make CMakeFiles/TXRX.dir/build
-.PHONY : TXRX/fast
+TXRX_TEST/fast:
+	$(MAKE) -f CMakeFiles/TXRX_TEST.dir/build.make CMakeFiles/TXRX_TEST.dir/build
+.PHONY : TXRX_TEST/fast
 
-example_files/txrx_loopback_to_file.o: example_files/txrx_loopback_to_file.cpp.o
+example_files/test.o: example_files/test.cpp.o
 
-.PHONY : example_files/txrx_loopback_to_file.o
+.PHONY : example_files/test.o
 
 # target to build an object file
-example_files/txrx_loopback_to_file.cpp.o:
-	$(MAKE) -f CMakeFiles/TXRX.dir/build.make CMakeFiles/TXRX.dir/example_files/txrx_loopback_to_file.cpp.o
-.PHONY : example_files/txrx_loopback_to_file.cpp.o
+example_files/test.cpp.o:
+	$(MAKE) -f CMakeFiles/TXRX_TEST.dir/build.make CMakeFiles/TXRX_TEST.dir/example_files/test.cpp.o
+.PHONY : example_files/test.cpp.o
 
-example_files/txrx_loopback_to_file.i: example_files/txrx_loopback_to_file.cpp.i
+example_files/test.i: example_files/test.cpp.i
 
-.PHONY : example_files/txrx_loopback_to_file.i
+.PHONY : example_files/test.i
 
 # target to preprocess a source file
-example_files/txrx_loopback_to_file.cpp.i:
-	$(MAKE) -f CMakeFiles/TXRX.dir/build.make CMakeFiles/TXRX.dir/example_files/txrx_loopback_to_file.cpp.i
-.PHONY : example_files/txrx_loopback_to_file.cpp.i
+example_files/test.cpp.i:
+	$(MAKE) -f CMakeFiles/TXRX_TEST.dir/build.make CMakeFiles/TXRX_TEST.dir/example_files/test.cpp.i
+.PHONY : example_files/test.cpp.i
 
-example_files/txrx_loopback_to_file.s: example_files/txrx_loopback_to_file.cpp.s
+example_files/test.s: example_files/test.cpp.s
 
-.PHONY : example_files/txrx_loopback_to_file.s
+.PHONY : example_files/test.s
 
 # target to generate assembly for a file
-example_files/txrx_loopback_to_file.cpp.s:
-	$(MAKE) -f CMakeFiles/TXRX.dir/build.make CMakeFiles/TXRX.dir/example_files/txrx_loopback_to_file.cpp.s
-.PHONY : example_files/txrx_loopback_to_file.cpp.s
+example_files/test.cpp.s:
+	$(MAKE) -f CMakeFiles/TXRX_TEST.dir/build.make CMakeFiles/TXRX_TEST.dir/example_files/test.cpp.s
+.PHONY : example_files/test.cpp.s
 
 # Help Target
 help:
@@ -158,10 +158,10 @@ help:
 	@echo "... depend"
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
-	@echo "... TXRX"
-	@echo "... example_files/txrx_loopback_to_file.o"
-	@echo "... example_files/txrx_loopback_to_file.i"
-	@echo "... example_files/txrx_loopback_to_file.s"
+	@echo "... TXRX_TEST"
+	@echo "... example_files/test.o"
+	@echo "... example_files/test.i"
+	@echo "... example_files/test.s"
 .PHONY : help
 
 

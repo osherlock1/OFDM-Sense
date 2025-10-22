@@ -53,7 +53,7 @@ CMAKE_BINARY_DIR = /home/guoyixu/OFDM_Sense/OFDM-Sense/build
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all: CMakeFiles/TXRX.dir/all
+all: CMakeFiles/TXRX_TEST.dir/all
 
 .PHONY : all
 
@@ -63,36 +63,36 @@ preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
-clean: CMakeFiles/TXRX.dir/clean
+clean: CMakeFiles/TXRX_TEST.dir/clean
 
 .PHONY : clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/TXRX.dir
+# Target rules for target CMakeFiles/TXRX_TEST.dir
 
 # All Build rule for target.
-CMakeFiles/TXRX.dir/all:
-	$(MAKE) -f CMakeFiles/TXRX.dir/build.make CMakeFiles/TXRX.dir/depend
-	$(MAKE) -f CMakeFiles/TXRX.dir/build.make CMakeFiles/TXRX.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/guoyixu/OFDM_Sense/OFDM-Sense/build/CMakeFiles --progress-num=1,2 "Built target TXRX"
-.PHONY : CMakeFiles/TXRX.dir/all
+CMakeFiles/TXRX_TEST.dir/all:
+	$(MAKE) -f CMakeFiles/TXRX_TEST.dir/build.make CMakeFiles/TXRX_TEST.dir/depend
+	$(MAKE) -f CMakeFiles/TXRX_TEST.dir/build.make CMakeFiles/TXRX_TEST.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/guoyixu/OFDM_Sense/OFDM-Sense/build/CMakeFiles --progress-num=1,2 "Built target TXRX_TEST"
+.PHONY : CMakeFiles/TXRX_TEST.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/TXRX.dir/rule: cmake_check_build_system
+CMakeFiles/TXRX_TEST.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/guoyixu/OFDM_Sense/OFDM-Sense/build/CMakeFiles 2
-	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/TXRX.dir/all
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/TXRX_TEST.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/guoyixu/OFDM_Sense/OFDM-Sense/build/CMakeFiles 0
-.PHONY : CMakeFiles/TXRX.dir/rule
+.PHONY : CMakeFiles/TXRX_TEST.dir/rule
 
 # Convenience name for target.
-TXRX: CMakeFiles/TXRX.dir/rule
+TXRX_TEST: CMakeFiles/TXRX_TEST.dir/rule
 
-.PHONY : TXRX
+.PHONY : TXRX_TEST
 
 # clean rule for target.
-CMakeFiles/TXRX.dir/clean:
-	$(MAKE) -f CMakeFiles/TXRX.dir/build.make CMakeFiles/TXRX.dir/clean
-.PHONY : CMakeFiles/TXRX.dir/clean
+CMakeFiles/TXRX_TEST.dir/clean:
+	$(MAKE) -f CMakeFiles/TXRX_TEST.dir/build.make CMakeFiles/TXRX_TEST.dir/clean
+.PHONY : CMakeFiles/TXRX_TEST.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

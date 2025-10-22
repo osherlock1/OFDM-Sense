@@ -2,7 +2,9 @@ import subprocess, pathlib, shlex, sys, time
 import numpy as np
 import os, sys, numpy as np
 import matplotlib.pyplot as plt
-
+from ofdm_manager import OFDMManager
+from ofdm_symbol import OFDMSymbol
+from subcarrier_map import SubcarrierMap
 
 #CPP ARGS
 BUILD_PATH = "./build/TXRX_TEST"
@@ -20,8 +22,9 @@ RX_GAIN = "0"
 OTW = "sc16"
 TYPE = "float"
 FILE_NAME = "data_files/usrp_samples_fc32_OUTPUT.dat"
-NSAMPLES = "1000000"
-SETTLING = "0.2"
+NSAMPLES = "10000"
+SETTLING = "0"
+#TX_FILE = "data_files/usrp_samples_fc32_test.dat"
 TX_FILE = "data_files/ofdm_iq_interleaved.dat"
 TX_TYPE = "float"
 TX_SPB = "0"
@@ -61,46 +64,29 @@ print(str(run_cmd))
 subprocess.run(run_cmd)
 print(f"Run of {BUILD_PATH} complete!")
 
-print("Running python plotter")
+
+# ---------------------------------
+# UNPACK OFDM SYMBOL
+# --------------------------------
+map = SubcarrierMap()
+om = OFDMManager(map)
 
 
-
+print("Unpacking OFDM Symbol...\n \n \n")
 file_name = "data_files/usrp_samples_fc32_OUTPUT.dat"
-
-#sample_rate = sys.argv[2]
-
 file_size = os.path.getsize(file_name)
-
 iq = np.fromfile(file_name, dtype = np.complex64)
-print(file_size, "\n")
-print(iq)
+plt.figure()
+plt.plot(iq[:2000])
+print("Calculating M Values... \n")
+M_Values = []
+for i in range(len(iq)):
+    P, R, M = om.schmidl_cox_metrics_P_R_M(iq, delay=i)
+    M_Values.append(M)
+print("Done!\n")
 
-
-samples = np.fromfile(file_name, np.int16)
-samples / 32768
-samples = samples[::2] + 1j*samples[1::2]
-
-
-
-sample_iq = iq[0:1000]
-N = 1024
-fft_iq = np.fft.fft(sample_iq, N)
-
-
-magnitude = np.sqrt(np.real(sample_iq ** 2 + np.imag(sample_iq ** 2)))
-print(f"simple_iq lenght {len(sample_iq)}")
-
-plt.plot(np.abs(fft_iq))
-plt.grid(True)
-plt.title("100kHz Frequency Response")
+plt.figure()
+plt.plot(M_Values[:2000])
 plt.show()
 
-plt.plot(np.real(sample_iq))
-plt.grid(True)
-plt.title("100kHz Sine Wave")
-plt.show()
 
-plt.plot(np.real(sample_iq), np.imag(sample_iq), ".")
-plt.grid(True)
-plt.title("Constalation Plot")
-plt.show()

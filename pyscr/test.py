@@ -50,7 +50,7 @@ sync = SyncSymbol()
 sync_symbol = SyncSymbol()
 tx_block = om.create_tx_block(sync)
 
-send_signal = np.concat([tx_data_block, tx_block, tx_data_block, tx_data_block, tx_data_block])
+send_signal = np.concatenate([tx_data_block, tx_block, tx_data_block, tx_data_block, tx_data_block])
 P_values = []
 M_values = []
 R_values = []
@@ -95,7 +95,7 @@ def generate_random_packet():
     final_packet = om.create_tx_block(SyncSymbol())
 
     for symbol in ofdm_data_symbols:
-        final_packet = np.concat([final_packet, symbol])
+        final_packet = np.concatenate([final_packet, symbol])
     return final_packet
 
 
@@ -109,13 +109,26 @@ for n in range(48*12):
 plt.figure()
 plt.plot(time_finder)
 plt.plot(np.abs(ofdm_packet))
-plt.show()
+#plt.show()
 
 """
 Store Array to File
 """
+buffer_len = 200
+buffer_noise = []
+for i in range(buffer_len):
+    buffer_noise.append(random.uniform(-1.0,1.0)
+                        )
+buffer = np.array(buffer_noise, dtype=complex)
+ofdm_packet2 = np.concatenate([buffer,ofdm_packet,buffer])
+
 # Save as interleaved I/Q float32 (IQIQIQ...)
-iq_interleaved = np.empty(ofdm_packet.size * 2, dtype=np.float32)
-iq_interleaved[0::2] = np.real(ofdm_packet)  # I samples
-iq_interleaved[1::2] = np.imag(ofdm_packet)  # Q samples
-iq_interleaved.tofile('ofdm_iq_interleaved.dat')
+iq_interleaved = np.empty(len(ofdm_packet2) * 2, dtype=np.float32)
+iq_interleaved[0::2] = np.real(ofdm_packet2)  # I samples
+iq_interleaved[1::2] = np.imag(ofdm_packet2)  # Q samples
+iq_interleaved.tofile('data_files/ofdm_iq_interleaved.dat')
+
+#assert ofdm_packet2.dtype == np.complex64
+
+iq_cp64 = np.empty(ofdm_packet2.size * 2, dtype=np.complex64)
+iq_cp64.tofile('data_files/ofdm_cp64.dat')

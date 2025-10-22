@@ -63,7 +63,7 @@ link_directories(${Boost_LIBRARY_DIRS})
 
 ### Make the executable #######################################################
 #CHANGE ME: PROJECT_NAME    cpp file
-add_executable(TXRX example_files/txrx_loopback_to_file.cpp)
+add_executable(TXRX_TEST example_files/test.cpp)
 
 set(CMAKE_BUILD_TYPE "Release")
 message(STATUS "******************************************************************************")
@@ -79,13 +79,13 @@ if(NOT UHD_USE_STATIC_LIBS)
     message(STATUS "Linking against shared UHD library.")
     #CHANGE ME: PROJECT_NAME
 
-    target_link_libraries(TXRX ${UHD_LIBRARIES} ${Boost_LIBRARIES} ${CURSES_LIBRARIES})
+    target_link_libraries(TXRX_TEST ${UHD_LIBRARIES} ${Boost_LIBRARIES} ${CURSES_LIBRARIES})
 # Shared library case: All we need to do is link against the library, and
 # anything else we need (in this case, some Boost libraries):
 else(NOT UHD_USE_STATIC_LIBS)
     message(STATUS "Linking against static UHD library.")
     #CHANGE ME: PROJECT_NAME
-    target_link_libraries(TXRX
+    target_link_libraries(TXRX_TEST
         # We could use ${UHD_LIBRARIES}, but linking requires some extra flags,
         # so we use this convenience variable provided to us
         ${UHD_STATIC_LIB_LINK_FLAG}
