@@ -117,7 +117,7 @@ Store Array to File
 buffer_len = 200
 buffer_noise = []
 for i in range(buffer_len):
-    buffer_noise.append(random.uniform(-1.0,1.0)
+    buffer_noise.append(random.uniform(-0.3,0.3)
                         )
 buffer = np.array(buffer_noise, dtype=complex)
 ofdm_packet2 = np.concatenate([buffer,ofdm_packet,buffer])
