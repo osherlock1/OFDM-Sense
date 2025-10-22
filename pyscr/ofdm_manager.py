@@ -6,6 +6,8 @@ class OFDMManager():
     def __init__(self, map:SubcarrierMap):
         self.map = map
         self.N = map.N # Number of subcarries in a OFDM symbol
+        self.N_data_symbols = 5 #Number of payload symbols per OFDM packet
+
 
     def ifft(self, symbol_freq:np.ndarray):
         """
@@ -44,7 +46,7 @@ class OFDMManager():
     
     def binary_to_iq(self, binary: str, M: int = 16, scale_factor = np.sqrt(10)):
         """
-        Convert from 4 bit binary to 16-QAM gey-coded
+        Convert from 4 bit binary string to 16-QAM gey-coded
         """
         k = np.log2(M) # Number of bits
 
@@ -104,5 +106,8 @@ class OFDMManager():
         M = (np.abs(P) ** 2) / (Ra * Rb + 1e-12) #1e-12 to prevent division by 0
         
         return P, (Ra, Rb), M
+    
+    def build_ofdm_packet(self, iq_samples):
+        pass
 
 
