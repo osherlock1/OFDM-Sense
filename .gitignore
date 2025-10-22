@@ -1,2 +1,10 @@
+
+#Data Files
 *.dat
 
+#Virtual Environment
+venv/
+
+# IDE files
+.vscode/
+.idea/
