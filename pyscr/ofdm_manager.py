@@ -3,9 +3,9 @@ from subcarrier_map import SubcarrierMap
 
 
 class OFDMManager():
-    def __init__(self, map:SubcarrierMap):
-        self.map = map
-        self.N = map.N # Number of subcarries in a OFDM symbol
+    def __init__(self):
+        self.map = SubcarrierMap()
+        self.N = self.map.N # Number of subcarries in a OFDM symbol
         self.N_data_symbols = 5 #Number of payload symbols per OFDM packet
 
 

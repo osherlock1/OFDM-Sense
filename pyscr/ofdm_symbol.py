@@ -2,24 +2,24 @@ import numpy as np
 from subcarrier_map import SubcarrierMap
 
 class OFDMSymbol:
-    def __init__(self, iq_samples48: np.ndarray, pilots4: np.ndarray, submap: SubcarrierMap):
+    def __init__(self, iq_samples48: np.ndarray, pilots4: np.ndarray):
         self.iq_samlpes48 = iq_samples48
         self.pilots4 = pilots4
-        self.submap = submap
+        self.submap = SubcarrierMap()
 
         self.symbol = np.zeros(64, dtype=complex) #initiate the ofdm array
 
         #Check if data samples matches subcarrier map
-        if len(self.iq_samlpes48) != len(submap.data_bins):
+        if len(self.iq_samlpes48) != len(self.submap.data_bins):
             raise ValueError(
-                f"Expected {len(submap.data_bins)} data sybols"
+                f"Expected {len(self.submap.data_bins)} data sybols"
                 f"but got {len(self.iq_samlpes48)} instead"
             )
 
         #Check if pilot values amout matches expected from subcarrier map
-        if len(self.pilots4) != len(submap.pilots_k):
+        if len(self.pilots4) != len(self.submap.pilots_k):
             raise ValueError(
-                f"Expected {len(submap.pilots_k)} pilot values"
+                f"Expected {len(self.submap.pilots_k)} pilot values"
                 f"but got {len(self.pilots4)} instead"
             )
         self._build_ofdm_symbol(self.iq_samlpes48, self.pilots4)
