@@ -46,7 +46,7 @@ class DataGenerator:
         final_packet = self.om.create_tx_block(SyncSymbol())
 
         for symbol in ofdm_data_symbols:
-            final_packet = np.concat([final_packet, symbol])
+            final_packet = np.concatenate([final_packet, symbol])
             
         return final_packet
 

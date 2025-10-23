@@ -55,17 +55,36 @@ def main():
 
     preamble_valid_est = scipy.signal.lfilter(b_preamble, (1,), zeroCrossing_2)
     payload_valid_est = scipy.signal.lfilter(b_payload, (1,), zeroCrossing_2)
-
+    #print(f"payload valid est len = {len(payload_valid_est) // map.N}")
     #Plot the OFDM packet
     plt.figure()
     plt.plot(packet, label = "OFDM Packet")
-    plt.plot(M_values, label = "M Values")
-    plt.plot(M_filter, label = "Filtered M")
-    plt.plot(D, label = "Derivative of M_filter")
-    plt.plot(zeroCrossing_2, label = "zero crossings")
+    #plt.plot(M_values, label = "M Values")
+    #plt.plot(M_filter, label = "Filtered M")
+    #plt.plot(D, label = "Derivative of M_filter")
+    #plt.plot(zeroCrossing_2, label = "zero crossings")
     plt.plot(preamble_valid_est, label = "Estiamtion of valid Sync")
     plt.plot(payload_valid_est, label = "Estimation of valid payload")
     plt.legend()
+    #plt.show()
+
+    #get payload indicies
+    payload_idx = np.where(payload_valid_est > 0)[0]
+    
+    rx_ofdm_symbols = []
+    for idx in payload_idx:
+        rx_ofdm_symbols.append(packet[idx])
+
+    rx_ofdm_symbols_np = np.array(rx_ofdm_symbols, dtype=complex)
+
+    #print((len(rx_ofdm_symbols_np) -6) / 64)
+    chunks = np.split(rx_ofdm_symbols_np[:-6], N_data_symbols)
+    print(chunks[0])
+
+    symbol1 = chunks[0]
+    symbol1_fft = np.fft.fft(symbol1, map.N)
+    plt.figure()
+    plt.plot(np.real(symbol1_fft), np.imag(symbol1_fft), ".")
     plt.show()
 
 
