@@ -69,7 +69,7 @@ print(f"Run of {BUILD_PATH} complete!")
 # UNPACK OFDM SYMBOL
 # --------------------------------
 map = SubcarrierMap()
-om = OFDMManager(map)
+om = OFDMManager()
 
 
 print("Unpacking OFDM Symbol...\n \n \n")

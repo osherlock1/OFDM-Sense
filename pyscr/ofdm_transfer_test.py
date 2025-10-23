@@ -14,6 +14,15 @@ def main():
     om = OFDMManager()
     data_gen = DataGenerator()
 
+    #data from file
+    try:
+        file_iq = np.fromfile("data_files/usrp_samples_fc32_OUTPUT.dat", dtype=np.complex64)
+    except:
+        return ValueError(
+            print("File does not exist")
+        )
+
+    #file_iq = normalize_samples(file_iq)
     #Genearte random OFDM pakcet
     N_data_symbols = 6
     N_symbols = N_data_symbols + 1
@@ -24,12 +33,19 @@ def main():
     #Concat noise buffer to packet
     packet = np.concatenate([noise_buffer, packet, noise_buffer])
     
-
+    
     #Calculate M Values
     M_values = []
-    for delay_i in range(int(len(packet))):
-        P, R, M = om.schmidl_cox_metrics_P_R_M(r = packet, delay=delay_i)
+    for delay_i in range(int(len(file_iq))):
+        P, R, M = om.schmidl_cox_metrics_P_R_M(r = file_iq, delay=delay_i)
         M_values.append(M)
+
+    plt.figure()
+    plt.plot(M_values)
+    plt.plot(file_iq)
+    plt.show()
+
+
 
     #Filter M values
     ofdm_CP = 8
@@ -64,16 +80,16 @@ def main():
     #print(f"payload valid est len = {len(payload_valid_est) // map.N}")
     #Plot the OFDM packet
     plt.figure()
-    plt.plot(packet, label = "OFDM Packet")
-    #plt.plot(M_values, label = "M Values")
-    #plt.plot(M_filter, label = "Filtered M")
-    #plt.plot(D, label = "Derivative of M_filter")
-    plt.plot(zeroCrossing_3, label = "zero crossings")
-    plt.plot(ignore_times, label = "Ignore window")
+    plt.plot(file_iq, label = "OFDM Packet")
+    plt.plot(M_values, label = "M Values")
+    plt.plot(M_filter, label = "Filtered M")
+    plt.plot(D, label = "Derivative of M_filter")
+    #plt.plot(zeroCrossing_3, label = "zero crossings")
+    #plt.plot(ignore_times, label = "Ignore window")
     plt.plot(preamble_valid_est, label = "Estiamtion of valid Sync")
     plt.plot(payload_valid_est, label = "Estimation of valid payload")
     plt.legend()
-    #plt.show()
+    plt.show()
 
     #get payload indicies
     payload_idx = np.where(payload_valid_est > 0)[0]
@@ -82,20 +98,22 @@ def main():
 
     sync_ofdm_symbol = []
     for idx in sync_idx:
-        sync_ofdm_symbol.append(packet[idx])
+        sync_ofdm_symbol.append(file_iq[idx])
     print(f"sync len: {len(sync_ofdm_symbol)}")
 
     rx_ofdm_symbols = []
     for idx in payload_idx:
-        rx_ofdm_symbols.append(packet[idx])
+        rx_ofdm_symbols.append(file_iq[idx])
     sync_ofdm_symbol_np = np.array(sync_ofdm_symbol[:-1], dtype=complex)
     rx_ofdm_symbols_np = np.array(rx_ofdm_symbols, dtype=complex)
 
-    #print((len(rx_ofdm_symbols_np) -6) / 64)
-    chunks = np.split(rx_ofdm_symbols_np[2:-4], N_data_symbols)
-    #print(chunks[0])
 
-    sync_fft = np.fft.fft(sync_ofdm_symbol_np, map.N)
+
+    print(len(rx_ofdm_symbols_np))
+    chunks = np.split(rx_ofdm_symbols_np, N_data_symbols)
+    #print(chunks[0])
+    print(f"len of check is {len(chunks[0])}")
+    sync_fft = np.fft.fft(sync_ofdm_symbol_np[:-4], map.N)
     plt.figure()
     plt.plot(np.abs(sync_fft))
     plt.title("sync FFT")
@@ -126,7 +144,7 @@ def main():
     symbol1 = chunks[0]
     symbol1_fft = np.fft.fft(symbol1, map.N)
     plt.figure()
-    plt.plot(np.real(symbol1_fft) * np.sqrt(10), np.imag(symbol1_fft) * np.sqrt(10), '.', label = "Recieved OFDM packet")
+    plt.plot(np.real(symbol1_fft) , np.imag(symbol1_fft), '.', label = "Recieved OFDM packet")
     plt.plot(np.real(qam_16_iq) * np.sqrt(10), np.imag(qam_16_iq) * np.sqrt(10), '.', label = "Constalation Map")
     plt.show()
 
@@ -136,6 +154,14 @@ def generate_noise_buffer(buf_len:int = 200) -> np.ndarray:
     for i in range(buf_len):
         noise_buffer.append(random.uniform(-0.1,0.1))
     return np.array(noise_buffer, dtype=complex)
+
+
+def normalize_samples(samples):
+    max_magnitude = np.max(np.abs(samples))
+    if max_magnitude > 0:
+        return samples / max_magnitude
+    else:
+        return samples
 
 if __name__ == "__main__":
     main()
