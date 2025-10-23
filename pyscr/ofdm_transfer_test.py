@@ -45,6 +45,12 @@ def main():
     M_values_np = np.array(M_values, dtype=complex)
     zeroCrossing_2 = ((D[:-1] * D[1:]) <= 0) * (M_values_np[1:-1] > 0.5)
 
+    b_ignore = np.ones(1+map.N)
+    b_ignore[0] = 0
+    ignore_times = (scipy.signal.lfilter(b_ignore, (1, ), zeroCrossing_2) > 0).astype(int)
+
+    zeroCrossing_3 = zeroCrossing_2 * (ignore_times == 0)
+
     #Remove duplicate zero crossings
     b_preamble = np.zeros(map.N + N_symbols * (map.N + ofdm_CP))
     b_preamble[:map.N] = 1
@@ -53,8 +59,8 @@ def main():
     for s in range(N_data_symbols):
         b_payload[map.N + (s + 1)*ofdm_CP + s * map.N + np.arange(map.N)] = 1
 
-    preamble_valid_est = scipy.signal.lfilter(b_preamble, (1,), zeroCrossing_2)
-    payload_valid_est = scipy.signal.lfilter(b_payload, (1,), zeroCrossing_2)
+    preamble_valid_est = scipy.signal.lfilter(b_preamble, (1,), zeroCrossing_3)
+    payload_valid_est = scipy.signal.lfilter(b_payload, (1,), zeroCrossing_3)
     #print(f"payload valid est len = {len(payload_valid_est) // map.N}")
     #Plot the OFDM packet
     plt.figure()
@@ -62,7 +68,8 @@ def main():
     #plt.plot(M_values, label = "M Values")
     #plt.plot(M_filter, label = "Filtered M")
     #plt.plot(D, label = "Derivative of M_filter")
-    #plt.plot(zeroCrossing_2, label = "zero crossings")
+    plt.plot(zeroCrossing_3, label = "zero crossings")
+    plt.plot(ignore_times, label = "Ignore window")
     plt.plot(preamble_valid_est, label = "Estiamtion of valid Sync")
     plt.plot(payload_valid_est, label = "Estimation of valid payload")
     plt.legend()
@@ -70,21 +77,57 @@ def main():
 
     #get payload indicies
     payload_idx = np.where(payload_valid_est > 0)[0]
-    
+    sync_idx = np.where(preamble_valid_est > 0)[0]
+
+
+    sync_ofdm_symbol = []
+    for idx in sync_idx:
+        sync_ofdm_symbol.append(packet[idx])
+    print(f"sync len: {len(sync_ofdm_symbol)}")
+
     rx_ofdm_symbols = []
     for idx in payload_idx:
         rx_ofdm_symbols.append(packet[idx])
-
+    sync_ofdm_symbol_np = np.array(sync_ofdm_symbol[:-1], dtype=complex)
     rx_ofdm_symbols_np = np.array(rx_ofdm_symbols, dtype=complex)
 
     #print((len(rx_ofdm_symbols_np) -6) / 64)
-    chunks = np.split(rx_ofdm_symbols_np[:-6], N_data_symbols)
-    print(chunks[0])
+    chunks = np.split(rx_ofdm_symbols_np[2:-4], N_data_symbols)
+    #print(chunks[0])
+
+    sync_fft = np.fft.fft(sync_ofdm_symbol_np, map.N)
+    plt.figure()
+    plt.plot(np.abs(sync_fft))
+    plt.title("sync FFT")
+
+    qam_16 = ["0000",
+              "0001",
+              "0010",
+              "0011",
+              "0100",
+              "0101",
+              "0110",
+              "0111",
+              "1000",
+              "1001",
+              "1010",
+              "1011",
+              "1100",
+              "1101",
+              "1110",
+              "1111"]
+    
+    qam_16_iq = []
+    for word in qam_16:
+        qam_16_iq.append(om.binary_to_iq(word))
+
+    print(len(qam_16))  
 
     symbol1 = chunks[0]
     symbol1_fft = np.fft.fft(symbol1, map.N)
     plt.figure()
-    plt.plot(np.real(symbol1_fft), np.imag(symbol1_fft), ".")
+    plt.plot(np.real(symbol1_fft) * np.sqrt(10), np.imag(symbol1_fft) * np.sqrt(10), '.', label = "Recieved OFDM packet")
+    plt.plot(np.real(qam_16_iq) * np.sqrt(10), np.imag(qam_16_iq) * np.sqrt(10), '.', label = "Constalation Map")
     plt.show()
 
 
