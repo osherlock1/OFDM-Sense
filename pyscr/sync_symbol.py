@@ -4,8 +4,8 @@ from subcarrier_map import SubcarrierMap
 class SyncSymbol():
     def __init__(self):
 
-        map = SubcarrierMap()
-        self.N = map.N #Expect N = 64
+        self.map = SubcarrierMap()
+        self.N = self.map.N #Expect N = 64
         self.symbol = np.zeros(SubcarrierMap().N, dtype = complex) #Subcarrier bins
         
         #Define Used frequency bins
@@ -38,7 +38,8 @@ class SyncSymbol():
         """
         i = 0
         for k in even_k:
-            self.symbol[SubcarrierMap().idx(k)] = self.bpsk_seq[i]
+            self.symbol[self.map.idx(k)] = self.bpsk_seq[i]
+            i += 1
 
 
     
