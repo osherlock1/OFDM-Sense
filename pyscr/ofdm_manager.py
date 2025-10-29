@@ -13,7 +13,7 @@ class OFDMManager():
         """
         Compute IFFT of the QAM Frequency Packet (Default 64 Point)
         """
-        symbol_freq.symbol = np.fft.ifft(symbol_freq.symbol, self.N) * np.sqrt(self.N / (len(self.map.data_bins) + len(self.map.pilots_k)))
+        symbol_freq.symbol = np.fft.ifft(symbol_freq.symbol, self.N) #* np.sqrt(self.N) #/ (len(self.map.data_bins) + len(self.map.pilots_k)))
         
     
     def fft(self, symbol_time:np.ndarray):
@@ -70,7 +70,7 @@ class OFDMManager():
         iq_sample = grey_coded_map[I] + 1j * grey_coded_map[Q]
         return iq_sample / scale_factor
 
-    def iq_to_binary(self, iq_sample: complex, scale_factor = np.sqrt(10)):
+    def iq_to_binary(self, iq_sample: complex, scale_factor = 1):
         """
         Convert an IQ sample to 16-QAM gey-coded
         """
@@ -107,7 +107,75 @@ class OFDMManager():
         
         return P, (Ra, Rb), M
     
-    def build_ofdm_packet(self, iq_samples):
+    def build_ofdm_packet(self, iq_samples:np.ndarray, N_data_symbols:int = 5) -> np.ndarray:
+        """
+        TODO: FINISH THIS METHOD
+        """
+        ofdm_data_symbols = np.split(iq_samples, N_data_symbols)
+        print(len(ofdm_data_symbols))
+
+
+    def calc_BER(self, Y_ref, Y):
+        """
+        Calculate the Bit Error Rate
+        Y_ref: Reference array of individual bits
+        Y: Recieved array of unpacked bits from OFDM transfer
+        returns bit error rate int
+        """
+        total_bits = len(Y_ref)
+        errors = np.sum(Y_ref != Y)
+        ber = errors/ total_bits
+        return ber
+    
+    def calc_SER(self, Y_ref, Y):
+        """
+        Calculate Symbol Error Rate
+        Y_ref: Reference array of IQ samples
+        Y: Recieved array of IQ samples from transfer
+        """
+        errors = np.sum(Y_ref != Y)
+        total_iq_samples = len(Y_ref)
+        ser = errors / total_iq_samples
+        return ser
+
+    def calc_EVM(self):
         pass
+    def decode_rx(self, Y) -> np.ndarray:
+        """
+        Method to Map and entire raw recieved OFDM iq samples and returns entire nearest mapping array
+        Y = 
+        """
+        decoded_Y = []
+        for iq_sample in Y:
+            decded_sample = self.calc_closesest_qam(iq_sample)
+            decoded_Y.append(decded_sample)
+        return np.array(decoded_Y, dtype=complex)
+
+
+    def calc_closesest_qam(self, iq_sample):
+        """
+        Method to map a single RX OFDM IQ sampel to its nearest reference map point.  Returns the nearest refence point
+        iq_sample: single complex iq sample (SHOULD BE SCALED to QAM MAP i.e. [-3, -1, 1, 3])
+        """
+        I = np.real(iq_sample)
+        Q = np.imag(iq_sample)
+
+        qam_map = [-3 + 3j, -1 + 3j, 1 + 3j, 3 + 3j,
+                   -3 + 1j, -1 + 1j, 1 +1j, 3 + 1j,
+                   -3 - 1j, -1 - 1j, 1 - 1j, 3 - 1j,
+                   -3 - 3j, -1 - 3j, 1 - 3j, 3 - 3j,]
+        
+        
+        min_distance = float('inf')
+        min_map_point = None
+        for ref in qam_map:
+            
+            distance = np.abs(iq_sample - ref)
+            if distance < min_distance:
+                min_distance = distance
+                min_map_point = ref
+        return min_map_point
+
+            
 
 
