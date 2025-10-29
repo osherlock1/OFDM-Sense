@@ -7,10 +7,15 @@ from sync_symbol import SyncSymbol
 
 
 class DataGenerator:
-    def __init__(self):
+    def __init__(self, seed = None):
         self.map = SubcarrierMap()
         self.om = OFDMManager()
         self.pilots = np.array([1 + 0j, 1 + 0j, 1+0j, 1+0j], dtype=complex)
+        self.seed = seed
+        if self.seed is not None:
+            np.random.seed(seed)
+            random.seed(seed)
+        
 
     def generate_random_binary(self, N: int) -> list:
         
@@ -28,6 +33,9 @@ class DataGenerator:
         return chunks
     
     def generate_random_packet(self, N_data_symbols:int = 5) -> np.ndarray:
+        np.random.seed(self.seed)
+        random.seed(self.seed)
+        
         ofdm_data_symbols= [] 
         for i in range(N_data_symbols):
             size = 48 * 4
@@ -50,3 +58,11 @@ class DataGenerator:
             
         return final_packet
 
+    def add_noise(self, x, snr_db, rng = None):
+        if rng is None:
+            rng = np.random.default_rng()
+        Px = np.mean(np.abs(x) ** 2)
+        snr_lin = 10 ** (snr_db / 10)
+        sigma2 = Px / snr_lin
+        n = (rng.standard_normal(x.shape) + 1j * rng.standard_normal(x.shape)) * np.sqrt(sigma2/2)
+        return x + n

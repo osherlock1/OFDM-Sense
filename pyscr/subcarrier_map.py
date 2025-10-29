@@ -1,7 +1,7 @@
 class SubcarrierMap:
     N: int = 64
     pilots_k = (-21, -7, 7, 21)
-
+    cp_len = 8
     def idx(self, k:int) -> int:
         return k % self.N
     
