@@ -21,7 +21,7 @@ def main():
     args = parser.parse_args()
 
     if args.data_source == "random":
-        gen_random_packet(5, seed = None, snr_db=30)
+        gen_random_packet(5, seed = None, snr_db=100)
     
 
 def gen_random_packet(N_data_symb: int = 5, file_name:str = "rand_ofdm_packet", seed = None, snr_db:int = 100) -> np.ndarray:
