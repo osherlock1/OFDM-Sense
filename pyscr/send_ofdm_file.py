@@ -90,7 +90,7 @@ def main():
     UNCOMMENT WHEN NOT ON LAPTOP
     
     """
-    subprocess.run(run_cmd)
+    #subprocess.run(run_cmd)
     print(f"Run of {BUILD_PATH} complete!")
 
 
@@ -124,7 +124,7 @@ def main():
     
     #Get the OFDM symbols - CP
     ofdm_symbols = get_ofdm_symbols(iq, payload_valid_est)
-    print(f"len of OFDM SYMBOLS IS: {len(ofdm_symbols)}")
+    #print(f"len of OFDM SYMBOLS IS: {len(ofdm_symbols)}")
     chunks = np.split(ofdm_symbols, N_data_symbols)
     #chunk = chunks[0]
     #Perform FFT
@@ -140,50 +140,22 @@ def main():
     plt.figure()
     plt.plot(lambda_k)
     plt.title("lambda k")
-    plt.show()
+    #plt.show()
 
     # Y_test = np.fft.fft(chunks[1])
     # Y_test = Y_test[data_idx]
     # Y_test = Y_test / lambda_k
 
 
-    Y_test = []
+    Y = []
     data_chunks = chunks[1:]
     for chunk in data_chunks:
         chunk_fft = np.fft.fft(chunk)
         Y_tst = chunk_fft[data_idx]
         Y_tst = Y_tst / lambda_k
-        Y_test.append(Y_tst)
-    Y_test = np.concatenate(Y_test)
-
-
-
-
-
-
-
-    Y_f = []
-    for chunk in chunks:
-        Y = np.fft.fft(chunk, map.N)
-        #Y = adjust_offset(2, Y)
-
-        #CHANNEL ESTIMATION
-        data_idx = map.data_bins
-        data_idx = np.array([map.idx(k) for k in data_idx])
-        #print(data_idx)
-        pilots_k = [-21, -7, 7, 21]
-
-        delta = estimate_delta_from_pilots(Y, pilots_k, pilot_values, map.N)    
-        Y = adjust_offset(delta, Y)
-        Y = Y[map.data_bins]
-        #print(f"delta {delta}")
-        Y_f.append(Y)
-
-    Y_f = np.concatenate(Y_f)
-
-    Y_scaled = Y_f * np.sqrt(10)
-    decoded_Y = om.decode_rx(Y_scaled)
-    print(decoded_Y[:20])
+        Y.append(Y_tst)
+    Y = np.concatenate(Y)
+    Y_scaled = Y * np.sqrt(10)
 
 
     #-------------------------
@@ -192,14 +164,17 @@ def main():
 
     #Get golden reference data from json reference
     ref_data = unpack_json_ref(ref_file_path)
-    #Convert decoded_Y to binary
+    ref_data = ref_data[:-192]
+    print(ref_data[:15])
+    print(len(ref_data))
+    #Convert Y to binary
     rx_binary = []
-    for iq_sample in decoded_Y:
-        rx_binary.append(om.iq_to_binary(iq_sample, scale_factor= 1))
+    for iq_sample in Y_scaled:
+        rx_binary.append(om.iq_to_binary(iq_sample))
     rx_string = ''.join(rx_binary)
     rx_binary = np.array([int(bit) for bit in rx_string])
-    
-
+    print(rx_binary[:15])
+    print(len(rx_binary))
 
     #CALCUALTE BIT ERROR RATE
     bit_error_rate = om.calc_BER(ref_data, rx_binary)
@@ -210,13 +185,7 @@ def main():
     #Convert Binary Ref data to ref IQ samples
     rx_string_parsed = dg._parse_string(rx_string, 4)
     ref_iq = np.array([om.binary_to_iq(binary_sample) for binary_sample in rx_string_parsed]) * np.sqrt(10)
-    ser = om.calc_SER(ref_iq, decoded_Y)
-    print(ref_iq[:6])
-    print(decoded_Y[:6])
-
-
-    print(f"symbol error rate {ser}")
-    
+    ser = om.calc_SER(ref_iq, Y)
 
 
     #------------------------------
@@ -224,29 +193,27 @@ def main():
     #-----------------------------
 
 
-
-
     qam_16_iq = qam_values()
 
     plt.figure()
-    plt.plot(np.real(Y_test) * np.sqrt(10)  , np.imag(Y_test) * np.sqrt(10), '.', label = "Recieved OFDM packet")
+    plt.plot(np.real(Y) * np.sqrt(10)  , np.imag(Y) * np.sqrt(10), '.', label = "Recieved OFDM packet")
     plt.plot(np.real(qam_16_iq) * np.sqrt(10), np.imag(qam_16_iq) * np.sqrt(10), '.', label = "Constalation Map")
-    #plt.show()
-
-
-
-    plt.figure()
-    plt.plot(iq, label = "OFDM Packet")
-    plt.plot(M_Values, label = "M Values")
-    plt.plot(M_filtered, label = "Filtered M")
-    #plt.plot(D, label = "Derivative of M_filter")
-    #plt.plot(zeroCrossing_3, label = "zero crossings")
-    #plt.plot(ignore_times, label = "Ignore window")
-   # plt.plot(actual_synq, label = "Actual Sync packet")
-    plt.plot(preamble_valid_est, label = "Estiamtion of valid Sync")
-    plt.plot(payload_valid_est, label = "Estimation of valid payload")
-    plt.legend()
     plt.show()
+
+
+
+#     plt.figure()
+#     plt.plot(iq, label = "OFDM Packet")
+#     plt.plot(M_Values, label = "M Values")
+#     plt.plot(M_filtered, label = "Filtered M")
+#     #plt.plot(D, label = "Derivative of M_filter")
+#     #plt.plot(zeroCrossing_3, label = "zero crossings")
+#     #plt.plot(ignore_times, label = "Ignore window")
+#    # plt.plot(actual_synq, label = "Actual Sync packet")
+#     plt.plot(preamble_valid_est, label = "Estiamtion of valid Sync")
+#     plt.plot(payload_valid_est, label = "Estimation of valid payload")
+#     plt.legend()
+#     plt.show()
 
 
 #------------------

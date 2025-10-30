@@ -146,7 +146,12 @@ class OFDMManager():
         returns bit error rate int
         """
         total_bits = len(Y_ref)
-        errors = np.sum(Y_ref != Y)
+        errors = 0
+        for i in range(len(Y_ref)):
+            if Y_ref[i] != Y[i]:
+                errors += 1
+        
+        print(f"Number of Bit errors: {errors}")
         ber = errors/ total_bits
         return ber
     
