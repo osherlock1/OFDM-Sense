@@ -161,13 +161,41 @@ class OFDMManager():
         Y_ref: Reference array of IQ samples
         Y: Recieved array of IQ samples from transfer
         """
-        errors = np.sum(Y_ref != Y)
+
+        Y_mapped = []
+        for iq_sample in Y:
+            iq_mapped = (self.calc_closesest_qam(iq_sample))
+            Y_mapped.append(iq_mapped)
+            
+        Y_mapped = np.array(Y_mapped)
+
+
+        errors = 0
+        for i in range(len(Y)):
+            if Y_ref[i] != Y_mapped[i]:
+                print("WRONG")
+                errors += 1
+        print(f"ERRORS: {errors}")
         total_iq_samples = len(Y_ref)
         ser = errors / total_iq_samples
         return ser
 
-    def calc_EVM(self):
-        pass
+    def calc_EVM(self, Y, Y_ref):
+        """
+        Calculate the Average Vector Magnitude Error
+        """
+        error_vectors = Y - Y_ref
+        
+        #Calc mean square error
+        mean_square_error = np.mean(np.abs(error_vectors) ** 2)
+
+        #Mean refernce power
+        mean_reference_power = np.mean(np.abs(Y_ref) ** 2)
+
+        #Calc EVM
+        evm = np.sqrt(mean_square_error / mean_reference_power)
+        return evm
+
     def decode_rx(self, Y) -> np.ndarray:
         """
         Method to Map and entire raw recieved OFDM iq samples and returns entire nearest mapping array
@@ -204,6 +232,6 @@ class OFDMManager():
                 min_map_point = ref
         return min_map_point
 
-            
+ 
 
 

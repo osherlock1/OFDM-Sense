@@ -185,7 +185,12 @@ def main():
     #Convert Binary Ref data to ref IQ samples
     rx_string_parsed = dg._parse_string(rx_string, 4)
     ref_iq = np.array([om.binary_to_iq(binary_sample) for binary_sample in rx_string_parsed]) * np.sqrt(10)
-    ser = om.calc_SER(ref_iq, Y)
+    ser = om.calc_SER(ref_iq, Y_scaled)
+    print(f"SER is {ser}")
+
+    #Calculate EVM
+    evm = om.calc_EVM(Y_scaled, ref_iq)
+    print(f"EVM is equal to {evm}")
 
 
     #------------------------------
@@ -363,6 +368,8 @@ def channel_estimation(recieved_pilot_symbol:np.ndarray, known_pilot_symbol:np.n
     sqr_mag_s = np.abs(s) ** 2
     channel_gain = (r * s_conj) / sqr_mag_s
     return channel_gain
+
+
 
 if __name__ == "__main__":
     main()
