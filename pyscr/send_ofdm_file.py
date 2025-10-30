@@ -28,9 +28,6 @@ def main():
     pilot_idx = [map.idx(map.pilots_k[i]) for i in range(len(pilot_values))]
     
 
-
-
-
     #CPP ARGS
     BUILD_PATH = "./build/TXRX_TEST"
     TX_ADDR = "addr=192.168.30.2"
