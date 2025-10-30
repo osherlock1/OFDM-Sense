@@ -90,7 +90,7 @@ def main():
     UNCOMMENT WHEN NOT ON LAPTOP
     
     """
-    #subprocess.run(run_cmd)
+    subprocess.run(run_cmd)
     print(f"Run of {BUILD_PATH} complete!")
 
 
@@ -142,9 +142,24 @@ def main():
     plt.title("lambda k")
     plt.show()
 
-    Y_test = np.fft.fft(chunks[1])
-    Y_test = Y_test[data_idx]
-    Y_test = Y_test / lambda_k
+    # Y_test = np.fft.fft(chunks[1])
+    # Y_test = Y_test[data_idx]
+    # Y_test = Y_test / lambda_k
+
+
+    Y_test = []
+    data_chunks = chunks[1:]
+    for chunk in data_chunks:
+        chunk_fft = np.fft.fft(chunk)
+        Y_tst = chunk_fft[data_idx]
+        Y_tst = Y_tst / lambda_k
+        Y_test.append(Y_tst)
+    Y_test = np.concatenate(Y_test)
+
+
+
+
+
 
 
     Y_f = []
