@@ -12,3 +12,5 @@ venv/
 build/
 
 pyscr/__pycache__/
+
+pyscr/scrap.py
