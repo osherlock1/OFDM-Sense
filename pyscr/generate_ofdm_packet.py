@@ -7,6 +7,7 @@ import numpy as np
 from sync_symbol import SyncSymbol
 import matplotlib.pyplot as plt
 import json
+from pilot_symbol import PilotSymbol
 
 def main():
     #Create parser
@@ -20,7 +21,7 @@ def main():
     args = parser.parse_args()
 
     if args.data_source == "random":
-        gen_random_packet(5, seed = None, snr_db=10)
+        gen_random_packet(5, seed = None, snr_db=30)
     
 
 def gen_random_packet(N_data_symb: int = 5, file_name:str = "rand_ofdm_packet", seed = None, snr_db:int = 100) -> np.ndarray:
@@ -63,7 +64,7 @@ def gen_random_packet(N_data_symb: int = 5, file_name:str = "rand_ofdm_packet", 
 
     #Develop final packet to be returned
     final_packet = om.create_tx_block(SyncSymbol())
-    
+    final_packet = np.concatenate([final_packet, om.create_tx_block(PilotSymbol())])
     
     for symbol in ofdm_data_symbols:
         final_packet = np.concatenate([final_packet, symbol])

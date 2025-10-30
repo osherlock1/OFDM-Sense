@@ -9,6 +9,7 @@ from data_generator import DataGenerator
 import scipy
 from scipy.interpolate import interp1d
 import json
+from pilot_symbol import PilotSymbol
 
 def main():
     #Instantate OFDM Objects
@@ -128,6 +129,24 @@ def main():
     #chunk = chunks[0]
     #Perform FFT
 
+    #----------------------
+    #CHANNEL ESTIMATION
+    #--------------------
+    data_k = map.data_bins
+    data_idx = np.array([map.idx(k) for k in data_k])
+    pilot_symb_ref = PilotSymbol().symbol
+    pilot_recieved = np.fft.fft(chunks[0])
+    lambda_k = channel_estimation(pilot_recieved, pilot_symb_ref)
+    plt.figure()
+    plt.plot(lambda_k)
+    plt.title("lambda k")
+    plt.show()
+
+    Y_test = np.fft.fft(chunks[1])
+    Y_test = Y_test[data_idx]
+    Y_test = Y_test / lambda_k
+
+
     Y_f = []
     for chunk in chunks:
         Y = np.fft.fft(chunk, map.N)
@@ -135,6 +154,7 @@ def main():
 
         #CHANNEL ESTIMATION
         data_idx = map.data_bins
+        data_idx = np.array([map.idx(k) for k in data_idx])
         #print(data_idx)
         pilots_k = [-21, -7, 7, 21]
 
@@ -150,7 +170,6 @@ def main():
     decoded_Y = om.decode_rx(Y_scaled)
     print(decoded_Y[:20])
 
-  
 
     #-------------------------
     # CALCULATE METRICS
@@ -195,7 +214,7 @@ def main():
     qam_16_iq = qam_values()
 
     plt.figure()
-    plt.plot(np.real(Y_scaled)  , np.imag(Y_scaled), '.', label = "Recieved OFDM packet")
+    plt.plot(np.real(Y_test) * np.sqrt(10)  , np.imag(Y_test) * np.sqrt(10), '.', label = "Recieved OFDM packet")
     plt.plot(np.real(qam_16_iq) * np.sqrt(10), np.imag(qam_16_iq) * np.sqrt(10), '.', label = "Constalation Map")
     #plt.show()
 
@@ -350,7 +369,18 @@ def unpack_json_ref(file_name):
 
     return binary_data
 
-
+def channel_estimation(recieved_pilot_symbol:np.ndarray, known_pilot_symbol:np.ndarray):
+    
+    data_k = map.data_bins
+    data_idx = np.array([map.idx(k) for k in data_k])
+    
+    
+    r = recieved_pilot_symbol[data_idx]
+    s = known_pilot_symbol[data_idx]
+    s_conj = np.conj(s)
+    sqr_mag_s = np.abs(s) ** 2
+    channel_gain = (r * s_conj) / sqr_mag_s
+    return channel_gain
 
 if __name__ == "__main__":
     main()
