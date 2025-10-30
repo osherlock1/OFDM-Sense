@@ -70,7 +70,7 @@ class OFDMManager():
         iq_sample = grey_coded_map[I] + 1j * grey_coded_map[Q]
         return iq_sample / scale_factor
 
-    def iq_to_binary(self, iq_sample: complex, scale_factor = 1):
+    def iq_to_binary(self, iq_sample: complex):
         """
         Convert an IQ sample to 16-QAM gey-coded
         """
@@ -80,10 +80,33 @@ class OFDMManager():
             1 : "11",
             3 : "10"
         }
-        I = round(np.real(iq_sample) * scale_factor)
-        Q = round((np.imag(iq_sample) * scale_factor))
+        
+        I = np.real(iq_sample)
+        Q = np.imag(iq_sample)
+        I_min = float('inf')
+        Q_min = float('inf')
+        I_map = 0
+        Q_map = 0
 
-        return grey_coded_map[I] + grey_coded_map[Q]
+        for key in grey_coded_map:
+            I_delta = (np.abs(I - key))
+            Q_delta = (np.abs(Q - key))
+
+
+            if I_delta < I_min:
+                I_map = key
+                I_min = I_delta
+
+            if Q_delta < Q_min:
+                Q_map = key
+                Q_min = Q_delta
+        return grey_coded_map[I_map] + grey_coded_map[Q_map]
+
+
+
+
+
+        #return grey_coded_map[I] + grey_coded_map[Q]
         
     def schmidl_cox_metrics_P_R_M(self, r: np.ndarray, delay: int):
         """
