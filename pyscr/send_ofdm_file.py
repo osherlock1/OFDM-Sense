@@ -87,7 +87,7 @@ def main():
     UNCOMMENT WHEN NOT ON LAPTOP
     
     """
-    #subprocess.run(run_cmd)
+    subprocess.run(run_cmd)
     print(f"Run of {BUILD_PATH} complete!")
 
 
@@ -204,18 +204,18 @@ def main():
 
 
 
-#     plt.figure()
-#     plt.plot(iq, label = "OFDM Packet")
-#     plt.plot(M_Values, label = "M Values")
-#     plt.plot(M_filtered, label = "Filtered M")
-#     #plt.plot(D, label = "Derivative of M_filter")
-#     #plt.plot(zeroCrossing_3, label = "zero crossings")
-#     #plt.plot(ignore_times, label = "Ignore window")
-#    # plt.plot(actual_synq, label = "Actual Sync packet")
-#     plt.plot(preamble_valid_est, label = "Estiamtion of valid Sync")
-#     plt.plot(payload_valid_est, label = "Estimation of valid payload")
-#     plt.legend()
-#     plt.show()
+    plt.figure()
+    plt.plot(iq, label = "OFDM Packet")
+    plt.plot(M_Values, label = "M Values")
+    plt.plot(M_filtered, label = "Filtered M")
+    #plt.plot(D, label = "Derivative of M_filter")
+    #plt.plot(zeroCrossing_3, label = "zero crossings")
+    #plt.plot(ignore_times, label = "Ignore window")
+   # plt.plot(actual_synq, label = "Actual Sync packet")
+    plt.plot(preamble_valid_est, label = "Estiamtion of valid Sync")
+    plt.plot(payload_valid_est, label = "Estimation of valid payload")
+    plt.legend()
+    plt.show()
 
 
 #------------------
