@@ -16,12 +16,15 @@ def main():
     #Add arguments
     parser.add_argument('--data_source', type=str, default = "random",
                        help = "Specify which file the data is stored in, random for random data: Default = Random")
-
+    parser.add_argument('--snr', type = int, default = 100)
+    parser.add_argument('--seed', type = int, default = None)
     #Parse arguments
     args = parser.parse_args()
-
+    seed = args.seed
+    snr = args.snr
     if args.data_source == "random":
-        gen_random_packet(5, seed = None, snr_db=25)
+        gen_random_packet(5, seed = seed, snr_db=snr)
+        print(f"Generated OFDM packet with seed = {seed}, SNR = {snr}")
     
 
 def gen_random_packet(N_data_symb: int = 5, file_name:str = "rand_ofdm_packet", seed = None, snr_db:int = 100) -> np.ndarray:
