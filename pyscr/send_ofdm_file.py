@@ -173,31 +173,42 @@ def main():
     #Get golden reference data from json reference
     ref_data = unpack_json_ref(REF_FILE_PATH)
     ref_data = ref_data[:-192]
-    print(ref_data[:15])
-    print(len(ref_data))
-    #Convert Y to binary
+
+    #Convert Recieved Data to binary
     rx_binary = []
     for iq_sample in Y_scaled:
         rx_binary.append(om.iq_to_binary(iq_sample))
     rx_string = ''.join(rx_binary)
     rx_binary = np.array([int(bit) for bit in rx_string])
-    print(rx_binary[:15])
-    print(len(rx_binary))
 
+    #Convert Reference data from binary to IQ samples
+    ref_list = [bit for bit in ref_data]
+    ref_string = ""
+    for bit in ref_list: #Convert the list of ints to single bit string
+        ref_string += str(bit)
+    
+    #Parse Bit string and convert to iq samples
+    ref_string_parsed = dg._parse_string(ref_string, 4)
+
+    ref_iq = []
+    for bits in ref_string_parsed:
+        ref_iq.append(om.binary_to_iq(bits))
+    ref_iq = np.array([ref_iq]) #Convert list to np array
+
+    ref_iq_16qam = ref_iq * np.sqrt(10) #Scale ref_iq to 16qam
+    ref_iq_16qam = ref_iq_16qam[0]
+
+    
     #CALCUALTE BIT ERROR RATE
     bit_error_rate = om.calc_BER(ref_data, rx_binary)
     print(f"bit_error_rate {bit_error_rate}")
 
-    #CALCUALTE SER
-    
-    #Convert Binary Ref data to ref IQ samples
-    rx_string_parsed = dg._parse_string(rx_string, 4)
-    ref_iq = np.array([om.binary_to_iq(binary_sample) for binary_sample in rx_string_parsed]) * np.sqrt(10)
-    ser = om.calc_SER(ref_iq, Y_scaled)
+    #CALCUALTE SYMBOL ERROR RATE (SER)
+    ser = om.calc_SER(ref_iq_16qam, Y_scaled)
     print(f"SER is {ser}")
 
     #Calculate EVM
-    evm = om.calc_EVM(Y_scaled, ref_iq)
+    evm = om.calc_EVM(Y_scaled, ref_iq_16qam)
     print(f"EVM is equal to {evm}")
 
 
