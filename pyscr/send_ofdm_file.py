@@ -10,15 +10,25 @@ import scipy
 from scipy.interpolate import interp1d
 import json
 from pilot_symbol import PilotSymbol
-
+import argparse
 def main():
+
+
+    # CLI ARGS
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--sim', type=bool, default = False)
+    args = parser.parse_args()
+    SIMULATION = args.sim
+
+
+
     #Instantate OFDM Objects
     init_globals()
     #OFDM Packet File
-    tx_file_path = "data_files/rand_ofdm_packet.dat"
+    TX_FILE_PATH = "data_files/rand_ofdm_packet.dat"
     #Store read out file 
-    rx_file_path = "data_files/rand_ofdm_packet.dat"
-    ref_file_path = "data_files/rand_ofdm_packet_ref.json"
+    RX_FILE_PATH = "data_files/rand_ofdm_packet_rx.dat"
+    REF_FILE_PATH = "data_files/rand_ofdm_packet_ref.json"
     """
     FIXME: HARDCODED DATA BELOW
     """
@@ -43,11 +53,11 @@ def main():
     RX_GAIN = "0"
     OTW = "sc16"
     TYPE = "float"
-    FILE_NAME = rx_file_path
+    FILE_NAME = RX_FILE_PATH
     NSAMPLES = "1000"
     SETTLING = "0"
     #TX_FILE = "data_files/usrp_samples_fc32_test.dat"
-    TX_FILE = tx_file_path
+    TX_FILE = TX_FILE_PATH
     TX_TYPE = "float"
     TX_SPB = "0"
     TX_REPEAT = "false"
@@ -80,15 +90,17 @@ def main():
     #-------------------------
     # TRANSFER FILE DATA OVER USRP
     #----------------------------
-    print("\n")
-    print(f"Running {BUILD_PATH}...")
-    print(str(run_cmd))
-    """"
-    UNCOMMENT WHEN NOT ON LAPTOP
-    
-    """
-    subprocess.run(run_cmd)
-    print(f"Run of {BUILD_PATH} complete!")
+
+    if SIMULATION is False:
+        print("\n")
+        print(f"Running {BUILD_PATH}...")
+        print(str(run_cmd))
+        subprocess.run(run_cmd)
+        print(f"Run of {BUILD_PATH} complete!")
+        file_name = RX_FILE_PATH
+    else:
+        print("Simulating OFDM Transfer... \n")
+        file_name = TX_FILE_PATH
 
 
     # ---------------------------------
@@ -96,7 +108,6 @@ def main():
     # --------------------------------
 
     print("Unpacking OFDM Symbol...\n \n \n")
-    file_name = rx_file_path
     file_size = os.path.getsize(file_name)
     iq = np.fromfile(file_name, dtype = np.complex64)
     plt.figure()
@@ -160,7 +171,7 @@ def main():
     #------------------------
 
     #Get golden reference data from json reference
-    ref_data = unpack_json_ref(ref_file_path)
+    ref_data = unpack_json_ref(REF_FILE_PATH)
     ref_data = ref_data[:-192]
     print(ref_data[:15])
     print(len(ref_data))
