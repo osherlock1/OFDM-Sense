@@ -1,3 +1,0 @@
-/home/guoyixu/OFDM_Sense/OFDM-Sense/build/CMakeFiles/rebuild_cache.dir
-/home/guoyixu/OFDM_Sense/OFDM-Sense/build/CMakeFiles/edit_cache.dir
-/home/guoyixu/OFDM_Sense/OFDM-Sense/build/CMakeFiles/TXRX_TEST.dir
