@@ -151,7 +151,7 @@ class OFDMManager():
             if Y_ref[i] != Y[i]:
                 errors += 1
         
-        print(f"Number of Bit errors: {errors}")
+        #print(f"Number of Bit errors: {errors}")
         ber = errors/ total_bits
         return ber
     
@@ -173,9 +173,8 @@ class OFDMManager():
         errors = 0
         for i in range(len(Y)):
             if Y_ref[i] != Y_mapped[i]:
-                print("WRONG")
                 errors += 1
-        print(f"ERRORS: {errors}")
+       #print(f"ERRORS: {errors}")
         total_iq_samples = len(Y_ref)
         ser = errors / total_iq_samples
         return ser
