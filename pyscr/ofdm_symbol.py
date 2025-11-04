@@ -23,7 +23,7 @@ class OFDMSymbol:
                 f"but got {len(self.pilots4)} instead"
             )
         self._build_ofdm_symbol(self.iq_samlpes48, self.pilots4)
-        print("OFDM Symbol Instantiated!")
+        #print("OFDM Symbol Instantiated!")
 
     # HELPER METHODS
     def _build_ofdm_symbol(self, data, pilots):
