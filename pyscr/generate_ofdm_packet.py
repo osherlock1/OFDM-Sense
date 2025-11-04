@@ -78,6 +78,8 @@ def gen_random_packet(N_data_symb: int = 5, file_name:str = "rand_ofdm_packet", 
     buffer = np.zeros(30, dtype=complex)
     final_packet = np.concatenate([buffer, final_packet, buffer])
     
+    final_packet = final_packet / 10
+
     print(f"Generation Copmlete! \n")
 
     #Save final packet to a file
