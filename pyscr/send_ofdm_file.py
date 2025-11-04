@@ -110,8 +110,6 @@ def main():
     print("Unpacking OFDM Symbol...\n \n \n")
     file_size = os.path.getsize(file_name)
     iq = np.fromfile(file_name, dtype = np.complex64)
-    plt.figure()
-    plt.plot(iq)
     print("Calculating M Values... \n")
     M_Values = calc_M_values(iq)
     print("Done!\n")
@@ -145,9 +143,6 @@ def main():
     pilot_symb_ref = PilotSymbol().symbol
     pilot_recieved = np.fft.fft(chunks[0])
     lambda_k = channel_estimation(pilot_recieved, pilot_symb_ref)
-    plt.figure()
-    plt.plot(np.fft.fftshift(lambda_k))
-    plt.title("lambda k")
     #plt.show()
 
     # Y_test = np.fft.fft(chunks[1])
@@ -217,17 +212,15 @@ def main():
     # PLOT RESULTS
     #-----------------------------
 
-
-    qam_16_iq = qam_values()
-
+    #Raw recieved time series data
     plt.figure()
-    plt.plot(np.real(Y) * np.sqrt(10)  , np.imag(Y) * np.sqrt(10), '.', label = "Recieved OFDM packet")
-    plt.plot(np.real(qam_16_iq) * np.sqrt(10), np.imag(qam_16_iq) * np.sqrt(10), '.', label = "Constalation Map")
-    plt.show()
-
-
-
-    plt.figure()
+    plt.subplot(4, 3, 1)
+    plt.plot(iq)
+    plt.title("Raw Recieved Data")
+    plt.xlabel("Samples")
+    
+    #Plot of Sync Algorithm 
+    plt.subplot(4, 3, 2)
     plt.plot(iq, label = "OFDM Packet")
     plt.plot(M_Values, label = "M Values")
     plt.plot(M_filtered, label = "Filtered M")
@@ -237,8 +230,28 @@ def main():
    # plt.plot(actual_synq, label = "Actual Sync packet")
     plt.plot(preamble_valid_est, label = "Estiamtion of valid Sync")
     plt.plot(payload_valid_est, label = "Estimation of valid payload")
-    plt.legend()
+    #plt.legend()
+    plt.title("Shmidil Cox Sync Algoirthm")
+    plt.xlabel("Samples")
+
+    plt.subplot(4, 3 , 3)
+    plt.plot(np.fft.fftshift(lambda_k))
+    plt.title("Channel Estimation Gain (Lambda)")
+    plt.xlabel("Symbol Bins (k)")
+
+    qam_16_iq = qam_values()
+
+    plt.subplot(4, 3, (8,15))
+    plt.plot(np.real(Y) * np.sqrt(10)  , np.imag(Y) * np.sqrt(10), '.', label = "Recieved OFDM packet")
+    plt.plot(np.real(qam_16_iq) * np.sqrt(10), np.imag(qam_16_iq) * np.sqrt(10), '.', label = "Constalation Map")
+    plt.title("Constalation Diagram (16-QAM)")
+    plt.xlabel("Real Axis")
+    plt.ylabel("Imaginary Axis")
     plt.show()
+
+
+
+
 
 
 #------------------
