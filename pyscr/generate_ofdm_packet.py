@@ -43,7 +43,7 @@ def gen_random_packet(N_data_symb: int = 5, file_name:str = "rand_ofdm_packet", 
 
     ofdm_data_symbols = []
 
-    print(f"Generating Random OFDM Packet with {N_data_symb} Data Packets")
+    print(f"Generating Random OFDM Packet with {N_data_symb} Data Packets...")
     #Generate random binary data
     rand_data_ref = []
     for i in range(N_data_symb):
@@ -78,11 +78,13 @@ def gen_random_packet(N_data_symb: int = 5, file_name:str = "rand_ofdm_packet", 
     buffer = np.zeros(30, dtype=complex)
     final_packet = np.concatenate([buffer, final_packet, buffer])
     
+    print(f"Generation Copmlete! \n")
+
     #Save final packet to a file
     data_file = "data_files/"
     save_path = data_file + file_name + ".dat"
     final_packet.astype(np.complex64).tofile(save_path)
-    print(f"Saved OFDM Packet to {save_path}!\n")
+    print(f"Saved OFDM Packet to {save_path}!")
     #Save binary reference
     referense_data = {
         "seed":seed,

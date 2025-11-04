@@ -199,17 +199,18 @@ def main():
     ref_iq_16qam = ref_iq_16qam[0]
 
     
+
+    print(f"------- Metrics --------")
     #CALCUALTE BIT ERROR RATE
     bit_error_rate = om.calc_BER(ref_data, rx_binary)
-    print(f"bit_error_rate {bit_error_rate}")
-
+    print(f"BER: {bit_error_rate}")
     #CALCUALTE SYMBOL ERROR RATE (SER)
     ser = om.calc_SER(ref_iq_16qam, Y_scaled)
-    print(f"SER is {ser}")
-
+    print(f"SER: {ser}")
     #Calculate ERROR VECTOR MAGNITUDE (EVM)
     evm = om.calc_EVM(Y_scaled, ref_iq_16qam)
-    print(f"EVM is equal to {evm}")
+    print(f"EVM: {evm}")
+    print((f"------------------------"))
 
 
     #------------------------------
