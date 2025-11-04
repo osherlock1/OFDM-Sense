@@ -211,7 +211,7 @@ def main():
     #------------------------------
     # PLOT RESULTS
     #-----------------------------
-
+    print("Plotting...")
     #Raw recieved time series data
     plt.figure()
     plt.subplot(4, 3, 1)
@@ -234,13 +234,15 @@ def main():
     plt.title("Shmidil Cox Sync Algoirthm")
     plt.xlabel("Samples")
 
+    #Chanel Estimation lambda plot
     plt.subplot(4, 3 , 3)
-    plt.plot(np.fft.fftshift(lambda_k))
-    plt.title("Channel Estimation Gain (Lambda)")
+    plt.plot(np.abs(np.fft.fftshift(lambda_k)))
+    plt.title("Channel Estimation Gain Magnitude (Lambda)")
     plt.xlabel("Symbol Bins (k)")
 
     qam_16_iq = qam_values()
 
+    #Constalation Plot
     plt.subplot(4, 3, (8,15))
     plt.plot(np.real(Y) * np.sqrt(10)  , np.imag(Y) * np.sqrt(10), '.', label = "Recieved OFDM packet")
     plt.plot(np.real(qam_16_iq) * np.sqrt(10), np.imag(qam_16_iq) * np.sqrt(10), '.', label = "Constalation Map")
@@ -248,7 +250,8 @@ def main():
     plt.xlabel("Real Axis")
     plt.ylabel("Imaginary Axis")
     plt.show()
-
+    
+    print("Plot Complete!")
 
 
 
