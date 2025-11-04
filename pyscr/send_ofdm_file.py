@@ -15,7 +15,7 @@ def main():
     #Instantate OFDM Objects
     init_globals()
     #OFDM Packet File
-    tx_file_path = "data_files/ofdm_data_tx.dat"
+    tx_file_path = "data_files/rand_ofdm_packet.dat"
     #Store read out file 
     rx_file_path = "data_files/rand_ofdm_packet.dat"
     ref_file_path = "data_files/rand_ofdm_packet_ref.json"
@@ -29,13 +29,13 @@ def main():
     
 
     #CPP ARGS
-    BUILD_PATH = "./build/TXRX_TEST"
+    BUILD_PATH = "./build/TXRX_FROM_FILE"
     TX_ADDR = "addr=192.168.30.2"
     RX_ADDR = "addr=192.168.30.2"
-    TX_RATE = "1e6"
-    RX_RATE = "1e6"
-    TX_FREQ = "0"
-    RX_FREQ = "0"
+    TX_RATE = "10e6"
+    RX_RATE = "10e6"
+    TX_FREQ = "8e6"
+    RX_FREQ = "8e6"
     WAVE_TYPE = "SINE"
     WAVE_FREQ = "100e3"
     AMPL = "0.3"
@@ -100,7 +100,7 @@ def main():
     file_size = os.path.getsize(file_name)
     iq = np.fromfile(file_name, dtype = np.complex64)
     plt.figure()
-    plt.plot(iq[:2000])
+    plt.plot(iq)
     print("Calculating M Values... \n")
     M_Values = calc_M_values(iq)
     print("Done!\n")
@@ -135,7 +135,7 @@ def main():
     pilot_recieved = np.fft.fft(chunks[0])
     lambda_k = channel_estimation(pilot_recieved, pilot_symb_ref)
     plt.figure()
-    plt.plot(lambda_k)
+    plt.plot(np.fft.fftshift(lambda_k))
     plt.title("lambda k")
     #plt.show()
 
