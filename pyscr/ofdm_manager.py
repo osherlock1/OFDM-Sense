@@ -184,17 +184,24 @@ class OFDMManager():
         """
         Calculate the Average Vector Magnitude Error
         """
-        error_vectors = Y - Y_ref
+        normalization = np.abs(np.sum(Y_ref))
         
         #Calc mean square error
-        mean_square_error = np.mean(np.abs(error_vectors) ** 2)
-
+        N = len(Y)
         #Mean refernce power
-        mean_reference_power = np.mean(np.abs(Y_ref) ** 2)
+        sum_result = 0 
+        for i in range(N):
+            Ierr = np.real(Y[i]) - np.real(Y_ref[i])
+            Qerr = np.imag(Y[i]) - np.imag(Y_ref[i])
+            sum_result += ((Ierr ** 2) + (Qerr ** 2)) / (np.abs(Y_ref[i]) ** 2)
+            #print(sum_result)
+        evm = np.sqrt((1 / N) * sum_result)
+
+
 
         #Calc EVM
-        evm = np.sqrt(mean_square_error / mean_reference_power)
-        return evm
+        #evm = np.sqrt(mean_square_error / mean_reference_power)
+        return 20 * np.log10(evm)
 
     def decode_rx(self, Y) -> np.ndarray:
         """
