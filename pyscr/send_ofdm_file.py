@@ -207,7 +207,7 @@ def main():
     ser = om.calc_SER(ref_iq_16qam, Y_scaled)
     print(f"SER is {ser}")
 
-    #Calculate EVM
+    #Calculate ERROR VECTOR MAGNITUDE (EVM)
     evm = om.calc_EVM(Y_scaled, ref_iq_16qam)
     print(f"EVM is equal to {evm}")
 
