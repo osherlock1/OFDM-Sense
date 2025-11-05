@@ -42,10 +42,10 @@ def main():
     BUILD_PATH = "./build/TXRX_FROM_FILE"
     TX_ADDR = "addr=192.168.30.2"
     RX_ADDR = "addr=192.168.30.2"
-    TX_RATE = "10e6"
-    RX_RATE = "10e6"
-    TX_FREQ = "8e6"
-    RX_FREQ = "8e6"
+    TX_RATE = "100e6"
+    RX_RATE = "100e6"
+    TX_FREQ = "60e6"
+    RX_FREQ = "60e6"
     WAVE_TYPE = "SINE"
     WAVE_FREQ = "100e3"
     AMPL = "0.3"
@@ -56,12 +56,15 @@ def main():
     FILE_NAME = RX_FILE_PATH
     NSAMPLES = "1000"
     SETTLING = "0"
-    #TX_FILE = "data_files/usrp_samples_fc32_test.dat"
     TX_FILE = TX_FILE_PATH
+    #TX_FILE = "data_files/ofdm_iq_interleaved.dat" #NAME OF FILE YOU WANT TO READ AND SEND
     TX_TYPE = "float"
     TX_SPB = "0"
     TX_REPEAT = "false"
-
+    RX_CHANNEL = "0" #Specify number of active channel (0 = one channel, 1 = both (2) channels)
+    TX_CHANNEL = "0"
+    RX_SUBDEV = "B:0"
+    TX_SUBDEV = "B:0"
 
     #Build the command to run
     run_cmd = [
@@ -85,7 +88,12 @@ def main():
         "--tx-file", TX_FILE,
         "--tx-type", TX_TYPE,
         "--tx-spb", TX_SPB,
-        "--tx-repeat", TX_REPEAT
+        "--tx-repeat", TX_REPEAT,
+        "--rx-channels", RX_CHANNEL,
+        "--tx-channels", TX_CHANNEL,
+        "--rx-subdev", RX_SUBDEV,
+        "--tx-subdev", TX_SUBDEV
+
     ]
     #-------------------------
     # TRANSFER FILE DATA OVER USRP
