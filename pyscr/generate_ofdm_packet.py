@@ -75,10 +75,9 @@ def gen_random_packet(N_data_symb: int = 5, file_name:str = "rand_ofdm_packet", 
     if snr_db != 100:
         final_packet = dg.add_noise(final_packet, snr_db)
 
-    buffer = np.zeros(30, dtype=complex)
+    buffer = np.zeros(100, dtype=complex)
     final_packet = np.concatenate([buffer, final_packet, buffer])
-    
-    final_packet = final_packet / 10
+    final_packet = final_packet
 
     print(f"Generation Copmlete! \n")
 
