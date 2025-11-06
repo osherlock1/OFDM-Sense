@@ -18,16 +18,18 @@ def main():
                        help = "Specify which file the data is stored in, random for random data: Default = Random")
     parser.add_argument('--snr', type = int, default = 100)
     parser.add_argument('--seed', type = int, default = None)
+    parser.add_argument("--scaling_factor", '-s', type = int, default = 1)
     #Parse arguments
     args = parser.parse_args()
     seed = args.seed
     snr = args.snr
+    sf = args.scaling_factor
     if args.data_source == "random":
-        gen_random_packet(5, seed = seed, snr_db=snr)
-        print(f"Generated OFDM packet with seed = {seed}, SNR = {snr}")
+        gen_random_packet(5, seed = seed, snr_db=snr, scaling_factor = sf)
+        print(f"Generated OFDM packet with seed = {seed}, SNR = {snr}, Scaling Factor = {sf}")
     
 
-def gen_random_packet(N_data_symb: int = 5, file_name:str = "rand_ofdm_packet", seed = None, snr_db:int = 100) -> np.ndarray:
+def gen_random_packet(N_data_symb: int = 5, file_name:str = "rand_ofdm_packet", seed = None, snr_db:int = 100, scaling_factor = 1) -> np.ndarray:
     
     map = SubcarrierMap()
     om = OFDMManager()
@@ -77,7 +79,7 @@ def gen_random_packet(N_data_symb: int = 5, file_name:str = "rand_ofdm_packet", 
 
     buffer = np.zeros(100, dtype=complex)
     final_packet = np.concatenate([buffer, final_packet, buffer])
-    final_packet = final_packet
+    final_packet = final_packet * scaling_factor
 
     print(f"Generation Copmlete! \n")
 
