@@ -40,14 +40,17 @@ def main():
     with open(REF_FILE_PATH, 'r') as file:
         data = json.load(file)
         N_data_symbols = data["N_data_symbols"]
-    
+        n_samples = data["n_samples"]
     print(N_data_symbols)
-
+    print(n_samples)
     
     N_symbols = N_data_symbols + 1
     pilot_values = np.array([1,1,1,1], dtype=complex)
     pilot_idx = [map.idx(map.pilots_k[i]) for i in range(len(pilot_values))]
     
+
+
+    SAMPLE_BUFFER = 500 #Number of additional samples to transfer from the length of the OFDM packet
 
     #CPP ARGS
     BUILD_PATH = "./build/TXRX_FROM_FILE"
@@ -65,7 +68,7 @@ def main():
     OTW = "sc16"
     TYPE = "float"
     FILE_NAME = RX_FILE_PATH
-    NSAMPLES = "4000"
+    NSAMPLES = str(n_samples + SAMPLE_BUFFER)
     SETTLING = "0"
     TX_FILE = TX_FILE_PATH
     #TX_FILE = "data_files/ofdm_iq_interleaved.dat" #NAME OF FILE YOU WANT TO READ AND SEND
