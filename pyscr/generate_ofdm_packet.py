@@ -19,14 +19,16 @@ def main():
     parser.add_argument('--snr', type = int, default = 100)
     parser.add_argument('--seed', type = int, default = None)
     parser.add_argument("--scaling_factor", '-s', type = int, default = 1)
+    parser.add_argument("--n_symb", '-n', type = int, default = 5)
     #Parse arguments
     args = parser.parse_args()
     seed = args.seed
     snr = args.snr
+    n_data = args.n_symb
     sf = args.scaling_factor
     if args.data_source == "random":
-        gen_random_packet(5, seed = seed, snr_db=snr, scaling_factor = sf)
-        print(f"Generated OFDM packet with seed = {seed}, SNR = {snr}, Scaling Factor = {sf}")
+        gen_random_packet(seed = seed, snr_db=snr, scaling_factor = sf, N_data_symb=n_data)
+        print(f"Generated OFDM packet with seed = {seed}, SNR = {snr}, Scaling Factor = {sf}, # of Data Symbols = {n_data}")
     
 
 def gen_random_packet(N_data_symb: int = 5, file_name:str = "rand_ofdm_packet", seed = None, snr_db:int = 100, scaling_factor = 1) -> np.ndarray:
