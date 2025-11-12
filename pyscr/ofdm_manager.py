@@ -258,10 +258,10 @@ class OFDMManager():
         k = int(np.argmax(np.abs(G)))
         f_hat = f_grid[k]
 
-        Rx_hat = Rx * np.exp(-1j * 2*np.pi * f_hat * n / fs)
+        #Rx_hat = Rx * np.exp(-1j * 2*np.pi * f_hat * n / fs)
 
 
-        return Rx_hat, G, k, f_hat
+        return G, k, f_hat
     
 
 
