@@ -240,18 +240,30 @@ class OFDMManager():
 
  
 
-    def cfo_adjustment(self, Tx:np.ndarray, Rx:np.ndarray, fs:int) -> np.ndarray:
-        frequency_bins = np.linspace(-fs, fs, len(Tx))
-        #print(frequency_bins)
+    def cfo_correct(self, Tx:np.ndarray, Rx:np.ndarray, fs:int, n_bins:int = 2 ** 12):
+        
+        #Define frequency bins
+        f_grid = np.linspace(-fs/2, fs/2, n_bins, endpoint=False)
 
-        G = []
+        #Define n array
+        n_len = len(Tx)
+        n = np.arange(n_len)
 
-        for w in frequency_bins:
-            gi = np.corrcoef(Tx, np.conj(Rx * (np.e ** (-1j * w))))
-            print(gi)
-            G.append(gi[0][1])
+        G = np.empty(n_bins, dtype=np.complex128)
+        #Calculate G array
+        for i, f in enumerate(f_grid):
+            r = Rx * np.exp(-1j * 2*np.pi * f * n / fs)
+            G[i] = np.vdot(Tx,r) #Calculate correlation
+        
+        k = int(np.argmax(np.abs(G)))
+        f_hat = f_grid[k]
 
-        return np.array(G)
+        Rx_hat = Rx * np.exp(-1j * 2*np.pi * f_hat * n / fs)
+
+
+        return Rx_hat, G, k, f_hat
+    
+
 
 
         
