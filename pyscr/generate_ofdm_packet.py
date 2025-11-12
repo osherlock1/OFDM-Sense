@@ -95,6 +95,7 @@ def gen_random_packet(N_data_symb: int = 5, file_name:str = "rand_ofdm_packet", 
         "seed":seed,
         "N_data_symbols": N_data_symb,
         "binary_data:" : rand_data_ref,
+        "n_samples" : len(final_packet)
     }    
     json_path = data_file + file_name + "_ref.json"
     
