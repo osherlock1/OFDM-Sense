@@ -177,7 +177,16 @@ def main():
     pilot_symb_ref = PilotSymbol().symbol
     pilot_recieved = np.fft.fft(chunks[0])
     lambda_k = channel_estimation(pilot_recieved, pilot_symb_ref)
-    #plt.show()
+    
+    fs = 100e6
+    G_vector = om.cfo_adjustment(Tx = pilot_symb_ref, Rx = pilot_recieved, fs = fs)
+
+    plt.figure()
+    plt.plot(np.abs(G_vector))
+    plt.show()
+
+
+
 
     # Y_test = np.fft.fft(chunks[1])
     # Y_test = Y_test[data_idx]

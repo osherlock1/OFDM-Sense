@@ -240,4 +240,18 @@ class OFDMManager():
 
  
 
+    def cfo_adjustment(self, Tx:np.ndarray, Rx:np.ndarray, fs:int) -> np.ndarray:
+        frequency_bins = np.linspace(-fs, fs, len(Tx))
+        #print(frequency_bins)
 
+        G = []
+
+        for w in frequency_bins:
+            gi = np.corrcoef(Tx, np.conj(Rx * (np.e ** (-1j * w))))
+            print(gi)
+            G.append(gi[0][1])
+
+        return np.array(G)
+
+
+        
