@@ -17,8 +17,10 @@ def main():
     # CLI ARGS
     parser = argparse.ArgumentParser()
     parser.add_argument('--sim', type=bool, default = False)
+    parser.add_argument('--channel', '-c', type=str, default = "B")
     args = parser.parse_args()
     SIMULATION = args.sim
+    CHANNEL_SEL = args.channel
 
 
 
@@ -29,10 +31,19 @@ def main():
     #Store read out file 
     RX_FILE_PATH = "data_files/rand_ofdm_packet_rx.dat"
     REF_FILE_PATH = "data_files/rand_ofdm_packet_ref.json"
+
+
+
     """
-    FIXME: HARDCODED DATA BELOW
+    FIXME: TAKING # OF DATA SYMBOLS FROM REFERSE .json file NEED TO IMPLEMENT THIS IS TRAINIG SYMBOL
     """
-    N_data_symbols = 5
+    with open(REF_FILE_PATH, 'r') as file:
+        data = json.load(file)
+        N_data_symbols = data["N_data_symbols"]
+    
+    print(N_data_symbols)
+
+    
     N_symbols = N_data_symbols + 1
     pilot_values = np.array([1,1,1,1], dtype=complex)
     pilot_idx = [map.idx(map.pilots_k[i]) for i in range(len(pilot_values))]
@@ -54,7 +65,7 @@ def main():
     OTW = "sc16"
     TYPE = "float"
     FILE_NAME = RX_FILE_PATH
-    NSAMPLES = "1000"
+    NSAMPLES = "4000"
     SETTLING = "0"
     TX_FILE = TX_FILE_PATH
     #TX_FILE = "data_files/ofdm_iq_interleaved.dat" #NAME OF FILE YOU WANT TO READ AND SEND
@@ -63,8 +74,20 @@ def main():
     TX_REPEAT = "false"
     RX_CHANNEL = "0" #Specify number of active channel (0 = one channel, 1 = both (2) channels)
     TX_CHANNEL = "0"
-    RX_SUBDEV = "B:0"
-    TX_SUBDEV = "B:0"
+
+
+    if CHANNEL_SEL == "A":
+        print("CHANNEL SELECTED A:0")
+        RX_SUBDEV = "A:0"
+        TX_SUBDEV = "A:0"
+    elif CHANNEL_SEL == "B":
+        print("CHANNEL SELECTED B:0")
+        RX_SUBDEV = "B:0"
+        TX_SUBDEV = "B:0"
+    else:
+        print(f"WARNING: INVALID CHANNEL SELCTION {CHANNEL_SEL}.  SETTING CHANNEL TO B:0")
+        RX_SUBDEV = "B:0"
+        TX_SUBDEV = "B:0"
 
     #Build the command to run
     run_cmd = [
