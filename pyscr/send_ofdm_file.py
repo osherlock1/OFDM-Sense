@@ -174,7 +174,6 @@ def main():
 
     pilot_symb_ref = PilotSymbol().symbol
     pilot_recieved = np.fft.fft(chunks[0])
-
     n_bins = 2 ** 12
     f_grid = np.linspace(-FS/2 , FS/2 , n_bins)
     G, k, f_hat = om.cfo_correct(Tx = pilot_symb_ref, Rx = pilot_recieved, fs = FS, n_bins = n_bins)
@@ -228,11 +227,16 @@ def main():
     # Y_test = np.fft.fft(chunks[1])
     # Y_test = Y_test[data_idx]
     # Y_test = Y_test / lambda_k
-
+    
 
     Y = []
     data_chunks = chunks[1:]
     for chunk in data_chunks:
+
+        
+
+
+
         chunk_fft = np.fft.fft(chunk)
         Y_tst = chunk_fft[data_idx]
         Y_tst = Y_tst / lambda_k
