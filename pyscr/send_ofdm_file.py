@@ -51,13 +51,13 @@ def main():
 
 
     SAMPLE_BUFFER = 500 #Number of additional samples to transfer from the length of the OFDM packet
-
+    FS = 100e6
     #CPP ARGS
     BUILD_PATH = "./build/TXRX_FROM_FILE"
     TX_ADDR = "addr=192.168.30.2"
     RX_ADDR = "addr=192.168.30.2"
-    TX_RATE = "100e6"
-    RX_RATE = "100e6"
+    TX_RATE = str(FS)
+    RX_RATE = str(FS)
     TX_FREQ = "60e6"
     RX_FREQ = "60e6"
     WAVE_TYPE = "SINE"
@@ -141,6 +141,11 @@ def main():
     # UNPACK RX OFDM SYMBOL
     # --------------------------------
 
+
+    #----------
+    #COARSE SYNQ
+    #------------
+
     print("Unpacking OFDM Symbol...\n \n \n")
     file_size = os.path.getsize(file_name)
     iq = np.fromfile(file_name, dtype = np.complex64)
@@ -166,8 +171,45 @@ def main():
     ofdm_symbols = get_ofdm_symbols(iq, payload_valid_est)
     #print(f"len of OFDM SYMBOLS IS: {len(ofdm_symbols)}")
     chunks = np.split(ofdm_symbols, N_data_symbols)
-    #chunk = chunks[0]
-    #Perform FFT
+
+    pilot_symb_ref = PilotSymbol().symbol
+    pilot_recieved = np.fft.fft(chunks[0])
+
+    n_bins = 2 ** 12
+    f_grid = np.linspace(-FS/2 , FS/2 , n_bins)
+    G, k, f_hat = om.cfo_correct(Tx = pilot_symb_ref, Rx = pilot_recieved, fs = FS, n_bins = n_bins)
+
+    #Do the phase change
+    n_len = len(iq)
+    n = np.arange(n_len)
+
+    iq_cfo_corr = iq * np.exp(-1j * 2*np.pi * f_hat * n / FS)
+
+    #--------------------
+    #Fine correction
+    #--------------------
+    print("Calculating M Values... \n")
+    M_Values = calc_M_values(iq_cfo_corr)
+    print("Done!\n")
+
+    #Filter M Values
+    M_filtered = filter_M(M_Values)
+
+    #Get starting point
+    zero_crossings = find_sync_start(M_Values, M_filtered)
+
+    #Get Sync and Payload Idx
+    b_preamble = np.zeros(map.N + N_symbols * (map.N + map.cp_len))
+    b_preamble[:map.N] = 1
+
+    #Estimate payload and preamble valid
+    preamble_valid_est = estimate_preamble_valid(N_symbols, zero_crossings)
+    payload_valid_est = estimate_payload_valid(N_symbols, N_data_symbols, zero_crossings)
+    
+    #Get the OFDM symbols - CP
+    ofdm_symbols = get_ofdm_symbols(iq, payload_valid_est)
+    #print(f"len of OFDM SYMBOLS IS: {len(ofdm_symbols)}")
+    chunks_cfo = np.split(ofdm_symbols, N_data_symbols)
 
     #----------------------
     #CHANNEL ESTIMATION
@@ -175,15 +217,10 @@ def main():
     data_k = map.data_bins
     data_idx = np.array([map.idx(k) for k in data_k])
     pilot_symb_ref = PilotSymbol().symbol
-    pilot_recieved = np.fft.fft(chunks[0])
+    pilot_recieved = np.fft.fft(chunks_cfo[0])
     lambda_k = channel_estimation(pilot_recieved, pilot_symb_ref)
     
-    fs = 100e6
-    G_vector = om.cfo_adjustment(Tx = pilot_symb_ref, Rx = pilot_recieved, fs = fs)
 
-    plt.figure()
-    plt.plot(np.abs(G_vector))
-    plt.show()
 
 
 
