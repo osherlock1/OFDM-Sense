@@ -178,12 +178,19 @@ def main():
     f_grid = np.linspace(-FS/2 , FS/2 , n_bins)
     G, k, f_hat = om.cfo_correct(Tx = pilot_symb_ref, Rx = pilot_recieved, fs = FS, n_bins = n_bins)
 
+    plt.figure()
+    plt.plot(f_grid, abs(G))
+
+
+
     #Do the phase change
     n_len = len(iq)
     n = np.arange(n_len)
 
     iq_cfo_corr = iq * np.exp(-1j * 2*np.pi * f_hat * n / FS)
-
+    plt.figure()
+    plt.plot(iq_cfo_corr)
+    plt.plot(iq)
     #--------------------
     #Fine correction
     #--------------------
@@ -222,22 +229,23 @@ def main():
 
 
 
-
-
-    # Y_test = np.fft.fft(chunks[1])
-    # Y_test = Y_test[data_idx]
-    # Y_test = Y_test / lambda_k
-    
-
     Y = []
     data_chunks = chunks[1:]
     for chunk in data_chunks:
 
-        
-
-
-
         chunk_fft = np.fft.fft(chunk)
+        n_len = len(chunk_fft)
+        n = np.arange(n_len)
+        #Do fine CFO adjustment
+        Rx_pilots = chunk_fft[pilot_idx]
+        print(Rx_pilots)
+        print(pilot_values)
+        G, k, f_hat = om.cfo_correct(Rx = Rx_pilots, Tx = pilot_values, n_bins = n_bins, fs = FS)
+        chunk_fft = chunk_fft * np.exp(-1j * 2*np.pi * f_hat * n / FS)
+
+
+
+
         Y_tst = chunk_fft[data_idx]
         Y_tst = Y_tst / lambda_k
         Y.append(Y_tst)
@@ -336,6 +344,7 @@ def main():
     plt.show()
     
     print("Plot Complete!")
+    print(f_hat)
 
 
 
