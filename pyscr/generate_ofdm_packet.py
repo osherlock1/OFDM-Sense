@@ -80,22 +80,27 @@ def gen_random_packet(N_data_symb: int = 5, file_name:str = "rand_ofdm_packet", 
         final_packet = dg.add_noise(final_packet, snr_db)
 
     buffer = np.zeros(100, dtype=complex)
-    final_packet = np.concatenate([buffer, final_packet, buffer])
+    
     final_packet = final_packet * scaling_factor
+    final_packet_real = (np.real(final_packet)).tolist()
+    final_packet_imag = (np.imag(final_packet)).tolist()
+    final_packet_buf = np.concatenate([buffer, final_packet, buffer])
 
     print(f"Generation Copmlete! \n")
 
     #Save final packet to a file
     data_file = "data_files/"
     save_path = data_file + file_name + ".dat"
-    final_packet.astype(np.complex64).tofile(save_path)
+    final_packet_buf.astype(np.complex64).tofile(save_path)
     print(f"Saved OFDM Packet to {save_path}!")
     #Save binary reference
     referense_data = {
         "seed":seed,
         "N_data_symbols": N_data_symb,
         "binary_data:" : rand_data_ref,
-        "n_samples" : len(final_packet)
+        "n_samples" : len(final_packet_buf),
+        "i_data" : final_packet_real,
+        "q_data" : final_packet_imag
     }    
     json_path = data_file + file_name + "_ref.json"
     
