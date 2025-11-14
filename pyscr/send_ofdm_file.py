@@ -213,7 +213,7 @@ def main():
     payload_valid_est = estimate_payload_valid(N_symbols, N_data_symbols, zero_crossings)
     
     #Get the OFDM symbols - CP
-    ofdm_symbols = get_ofdm_symbols(iq, payload_valid_est)
+    ofdm_symbols = get_ofdm_symbols(iq_cfo_corr, payload_valid_est)
     #print(f"len of OFDM SYMBOLS IS: {len(ofdm_symbols)}")
     chunks_cfo = np.split(ofdm_symbols, N_data_symbols)
 
