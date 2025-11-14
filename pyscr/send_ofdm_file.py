@@ -12,7 +12,7 @@ import json
 from pilot_symbol import PilotSymbol
 import argparse
 def main():
-
+    map = SubcarrierMap()
 
     # CLI ARGS
     parser = argparse.ArgumentParser()
@@ -176,7 +176,7 @@ def main():
     pilot_recieved = np.fft.fft(chunks[0])
     n_bins = 2 ** 12
     f_grid = np.linspace(-FS/2 , FS/2 , n_bins)
-    G, k, f_hat = om.cfo_correct(Tx = pilot_symb_ref, Rx = pilot_recieved, fs = FS, n_bins = n_bins)
+    G,f_hat = om.cfo_correct(Tx = pilot_symb_ref, Rx = pilot_recieved, fs = FS, n_bins = n_bins)
 
     plt.figure()
     plt.plot(f_grid, abs(G))
@@ -227,24 +227,39 @@ def main():
     lambda_k = channel_estimation(pilot_recieved, pilot_symb_ref)
     
 
-
-
+    Tx_pilot = np.zeros(SubcarrierMap.N, dtype=complex)
+    Tx_pilot[pilot_idx] = 1 + 0j
+    
+    
+    
+    
     Y = []
     data_chunks = chunks[1:]
     for chunk in data_chunks:
 
         chunk_fft = np.fft.fft(chunk)
-        n_len = len(chunk_fft)
-        n = np.arange(n_len)
-        #Do fine CFO adjustment
-        Rx_pilots = chunk_fft[pilot_idx]
-        print(Rx_pilots)
-        print(pilot_values)
-        G, k, f_hat = om.cfo_correct(Rx = Rx_pilots, Tx = pilot_values, n_bins = n_bins, fs = FS)
-        chunk_fft = chunk_fft * np.exp(-1j * 2*np.pi * f_hat * n / FS)
+        Rx_pilot = chunk_fft
+        # #Zero out non pilot sub carriers
+        # for i in range(len(Rx_pilot)):
+        #     if i not in pilot_idx:
+        #         Rx_pilot[i] = 0
+        
+        # #Convert back to time
+        # rn_pilot = np.fft.ifft(Rx_pilot)
+        # tn_pilot = np.fft.ifft(Tx_pilot)
 
-
-
+        # #Calculate Fine CFO        
+        # n_len = len(Rx_pilot)
+        # n = np.arange(n_len)
+        # #Do fine CFO adjustment
+  
+        # G, f_hat = om.cfo_correct(Rx = rn_pilot, Tx = tn_pilot, n_bins = n_bins, fs = FS)
+        # print(f"F HAT IS {f_hat}")
+        # #plt.figure()
+        # #plt.plot(np.abs(G))
+        # #plt.show()
+        # cfo_corr = chunk_fft * np.exp(-1j * 2*np.pi * f_hat * n / FS)
+        # cfo_corr_fft = np.fft.fft(cfo_corr, map.N)
 
         Y_tst = chunk_fft[data_idx]
         Y_tst = Y_tst / lambda_k

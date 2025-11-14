@@ -252,8 +252,10 @@ class OFDMManager():
         G = np.empty(n_bins, dtype=np.complex128)
         #Calculate G array
         for i, f in enumerate(f_grid):
-            r = Rx * np.exp(-1j * 2*np.pi * f * n / fs)
-            G[i] = np.vdot(Tx,r) #Calculate correlation
+            r = Rx * (np.exp(-1j * 2*np.pi * f * n / fs))
+            #G[i] = np.vdot(Tx,r) #Calculate correlation
+            G[i] = np.correlate(Tx, r, mode = "valid")
+    
         
         k = int(np.argmax(np.abs(G)))
         f_hat = f_grid[k]
@@ -261,9 +263,6 @@ class OFDMManager():
         #Rx_hat = Rx * np.exp(-1j * 2*np.pi * f_hat * n / fs)
 
 
-        return G, k, f_hat
+        return G, f_hat
     
 
-
-
-        
