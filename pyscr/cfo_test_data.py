@@ -27,7 +27,7 @@ data_k = map.data_bins
 pilot_k = map.pilots_k
 pilot_idx = np.array([map.idx(k) for k in pilot_k])
 data_idx = np.array([map.idx(k) for k in data_k])
-CFO = 2343
+CFO = 22343
 n = np.arange(map.N)
 f_grid = np.linspace(-FS/2, FS/2, 2 ** 12)
 print(n)
@@ -39,8 +39,9 @@ txn = packet[-64:]
 rxn = txn * np.exp(-1j * 2*np.pi * CFO * n / FS)
 
 plt.figure()
-plt.plot(txn)
-plt.plot(rxn)
+plt.plot(txn, label = "tx")
+plt.plot(rxn, label = "rx")
+plt.legend()
 plt.title("Origianl Data Symbols Time Domain")
 plt.show()
 
@@ -63,9 +64,10 @@ for i in range(map.N):
     if i not in pilot_idx:
         RXk_pilot[i] = 0 + 0j
 plt.figure()
-plt.plot(np.abs(TXk_pilot))
-plt.plot(np.abs(RXk_pilot))
-plt.title("FTT result")
+plt.plot(np.abs(TXk_pilot), label="TX")
+plt.plot(np.abs(RXk_pilot), label="RX")
+plt.legend()
+plt.title("FTT magnitude result")
 plt.show()
 
 # for k in pilot_k:
@@ -79,9 +81,10 @@ txn_time = np.fft.ifft(TXk_pilot, 64)
 rxn_time = np.fft.ifft(RXk_pilot, 64)
     
 plt.figure()
-plt.plot(txn_time)
-plt.plot(rxn_time)
+plt.plot(txn_time, label = "tx")
+plt.plot(rxn_time, label = "rx")
 plt.title("Data Symbol Pilot Subcarriers Only IFFT Result")
+plt.legend()
 plt.show()
 #Calculate G
 G, f_hat = om.cfo_correct(Tx = txn_time, Rx = rxn_time, fs = FS)
@@ -91,4 +94,5 @@ print(f_hat)
 #print(laps)
 plt.figure()
 plt.plot(f_grid, np.abs(G))
+plt.title("|G(k)|")
 plt.show()

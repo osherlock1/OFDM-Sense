@@ -41,9 +41,13 @@ def main():
         data = json.load(file)
         N_data_symbols = data["N_data_symbols"]
         n_samples = data["n_samples"]
+        i_samples = data["i_data"]
+        q_samples = data["q_data"]
+    
+    iq_ref_samples = np.array(i_samples, dtype=complex) + 1j* np.array(q_samples, dtype=complex)
     print(N_data_symbols)
     print(n_samples)
-    
+    #N_data_symbols = N_data_symbols + 1
     N_symbols = N_data_symbols + 1
     pilot_values = np.array([1,1,1,1], dtype=complex)
     pilot_idx = [map.idx(map.pilots_k[i]) for i in range(len(pilot_values))]
@@ -165,21 +169,30 @@ def main():
 
     #Estimate payload and preamble valid
     preamble_valid_est = estimate_preamble_valid(N_symbols, zero_crossings)
-    payload_valid_est = estimate_payload_valid(N_symbols, N_data_symbols, zero_crossings)
+    payload_valid_est = estimate_payload_valid(N_symbols, N_data_symbols + 1, zero_crossings)
     
     #Get the OFDM symbols - CP
     ofdm_symbols = get_ofdm_symbols(iq, payload_valid_est)
     #print(f"len of OFDM SYMBOLS IS: {len(ofdm_symbols)}")
-    chunks = np.split(ofdm_symbols, N_data_symbols)
+    chunks = np.split(ofdm_symbols, N_data_symbols + 1)
 
-    pilot_symb_ref = PilotSymbol().symbol
-    pilot_recieved = np.fft.fft(chunks[0])
+
+
+
+    pilot_symb_ref = om.create_tx_block(PilotSymbol())
+    pilot_symb_ref = pilot_symb_ref[-64:]
+    pilot_recieved = chunks[0]
     n_bins = 2 ** 12
     f_grid = np.linspace(-FS/2 , FS/2 , n_bins)
-    G,f_hat = om.cfo_correct(Tx = pilot_symb_ref, Rx = pilot_recieved, fs = FS, n_bins = n_bins)
+    G,f_hat = om.cfo_correct(Tx = pilot_symb_ref, Rx = np.conj(pilot_recieved), fs = FS, n_bins = n_bins)
 
     plt.figure()
-    plt.plot(f_grid, abs(G))
+    plt.plot(pilot_recieved)
+    plt.plot(pilot_symb_ref)
+    plt.title("Plits")
+
+    plt.figure()
+    plt.plot(f_grid, np.abs(G))
 
 
 
@@ -234,7 +247,7 @@ def main():
     
     
     Y = []
-    data_chunks = chunks[1:]
+    data_chunks = chunks_cfo[1:]
     for chunk in data_chunks:
 
         chunk_fft = np.fft.fft(chunk)
