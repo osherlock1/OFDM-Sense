@@ -50,7 +50,7 @@ for i in range(map.N):
 
 #print(Tx_data_pilot_freq)
 
-cfo = -30241
+cfo = 30241
 n_p = len(Tx_pilot)
 n_p = np.arange(n_p)
 
@@ -72,7 +72,15 @@ frequencies = np.linspace(-fs, fs, bins)
 #print(frequencies)
 
 
-G, fhat= om.cfo_correct(Tx_pilot, Rx_pilot, fs)
+G, fhat= om.cfo_correct(Tx_data, Rx_data, fs)
+
+plt.figure()
+plt.plot(Tx_data, label="Tx data")
+plt.plot(Rx_data, label="Rx Data")
+plt.title("Tx vs Rx Simulated CFO")
+plt.legend()
+
+
 print(G)
 #Rx_pilot_corr = Rx_pilot * np.exp(-1j * 2*np.pi * f_hat * n_p / fs)
 plt.figure()
@@ -83,38 +91,3 @@ k = int(np.argmax(np.abs(G) ** 2))
 #print(f"fhat is {f_hat}")
 plt.show()
 
-
-
-
-
-
-
-#correlation = correlate((Tx_data), np.conj((Rx_data)), mode='full')
-#correlation /= np.sqrt(np.dot(Tx_data, Tx_data) * (np.dot(Rx_data, Rx_data)))
-
-#corr_sum = np.sum(correlation)
-#print(np.abs(corr_sum))
-
-"""
-
-fs = 100e3
-
-
-
-
-frequency_bins = np.linspace(-fs, fs, len(Tx_data))
-print(len(frequency_bins))
-
-G_vector = om.cfo_adjustment(Tx_data, Rx_data, fs)
-print(len(G_vector))
-
-
-plt.figure()
-plt.plot(frequency_bins, np.abs(G_vector))
-
-plt.figure()
-plt.plot(Rx_data)
-plt.plot(Tx_data)
-
-plt.show()
-"""
