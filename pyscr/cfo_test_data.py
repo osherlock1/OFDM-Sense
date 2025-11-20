@@ -25,9 +25,10 @@ packet = dg.generate_random_packet(1)
 FS = 100e3
 data_k = map.data_bins
 pilot_k = map.pilots_k
+
 pilot_idx = np.array([map.idx(k) for k in pilot_k])
 data_idx = np.array([map.idx(k) for k in data_k])
-CFO = 22343
+CFO = 4000
 n = np.arange(map.N)
 f_grid = np.linspace(-FS/2, FS/2, 2 ** 12)
 print(n)
@@ -36,7 +37,7 @@ print(n)
 txn = packet[-64:]
 
 #Apply CFO to Received Signal
-rxn = txn * np.exp(-1j * 2*np.pi * CFO * n / FS)
+rxn = txn * np.exp(1j * 2*np.pi * CFO * n / FS)
 
 plt.figure()
 plt.plot(txn, label = "tx")
@@ -57,12 +58,12 @@ for i in range(map.N):
         TXk_pilot[i] = 0 + 0j
 
 
-
-
 RXk_pilot = RXk
 for i in range(map.N):
     if i not in pilot_idx:
         RXk_pilot[i] = 0 + 0j
+
+
 plt.figure()
 plt.plot(np.abs(TXk_pilot), label="TX")
 plt.plot(np.abs(RXk_pilot), label="RX")
@@ -96,3 +97,4 @@ plt.figure()
 plt.plot(f_grid, np.abs(G))
 plt.title("|G(k)|")
 plt.show()
+
