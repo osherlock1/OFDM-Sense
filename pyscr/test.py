@@ -6,34 +6,29 @@ from sync_symbol import SyncSymbol
 import matplotlib.pyplot as plt
 import random
 import subprocess
-
+from data_generator import DataGenerator
 import sys
-values = np.linspace(1, 16, 16)
-print(values)
-scale_factor =[]
-for value in values:
-    scale_factor.append(str(round(value)))
-print(scale_factor)
 
 
-#scale_factor = "1"
+om = OFDMManager()
+dg =DataGenerator()
+map = SubcarrierMap()
 
 
-for value in scale_factor:
-    gen_cmd = [
-        sys.executable,
-        "pyscr/generate_ofdm_packet.py",
-        "--snr", "100",
-        "--seed", "42",
-        "-s", value,
-    ]
+rand_binary = dg.generate_random_binary(len(map.data_bins) * 4)
 
-    run_cmd = [
-        sys.executable,
-        "pyscr/send_ofdm_file.py"
-    ]
+parsed_binary = dg._parse_string(rand_binary, 4)
+
+iq_samples = np.array([om.binary_to_iq(bin) for bin in parsed_binary], dtype = np.complex128)
+
+pilots = np.ones(12, dtype=np.complex128)  * 3 / (np.sqrt(10))
 
 
-    result = subprocess.run(gen_cmd, check=True)
-    send = subprocess.run(run_cmd, check=True)
+ofdm_packet = dg.generate_random_packet(N_data_symbols=1)
+
+datasymbol = ofdm_packet[-64:]
+data_fft = np.fft.fft(datasymbol)
+print(data_fft[map.pilots_k])
+
+
 

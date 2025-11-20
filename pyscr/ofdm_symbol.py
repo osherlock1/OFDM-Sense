@@ -11,7 +11,6 @@ class OFDMSymbol:
         self.data_k = self.submap.data_bins
         self.pilots_data = pilots_data 
         self.symbol = np.zeros(64, dtype=complex) #initiate the ofdm array
-        print(len(self.data_k))
         #Check if data samples matches subcarrier map
         if len(self.iq_samples) != len(self.data_k):
             raise ValueError(
