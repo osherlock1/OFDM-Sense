@@ -35,6 +35,7 @@ def gen_random_packet(N_data_symb: int = 5, file_name:str = "rand_ofdm_packet", 
     
     map = SubcarrierMap()
     om = OFDMManager()
+
     if seed is not None: 
         dg = DataGenerator(seed = seed)
     else:
@@ -42,7 +43,7 @@ def gen_random_packet(N_data_symb: int = 5, file_name:str = "rand_ofdm_packet", 
 
     # --------- FIX LATER -----------------
     #for now just hard hard coded pilots
-    pilots = np.array([1, 1, 1, 1], dtype=complex)
+    pilots = np.ones(len(map.pilots_k), dtype=np.complex128) * map.pilots_val
 
 
     ofdm_data_symbols = []
@@ -64,7 +65,7 @@ def gen_random_packet(N_data_symb: int = 5, file_name:str = "rand_ofdm_packet", 
 
         #Build the OFDM symbol and add to packet list
         input_array = np.array(iq_input, dtype = complex)
-        ofdm_symbol = OFDMSymbol(iq_samples48=input_array, pilots4=pilots)
+        ofdm_symbol = OFDMSymbol(iq_samples=input_array, pilots_data=pilots)
         ofdm_tx = om.create_tx_block(ofdm_symbol)
         ofdm_data_symbols.append(ofdm_tx)
     
