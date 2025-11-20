@@ -8,9 +8,15 @@ from sync_symbol import SyncSymbol
 
 class DataGenerator:
     def __init__(self, seed = None):
+        #Initiate helpers
         self.map = SubcarrierMap()
         self.om = OFDMManager()
-        self.pilots = np.array([1 + 0j, 1 + 0j, 1+0j, 1+0j], dtype=complex)
+        
+        
+
+        #Generate pilots array
+        self.pilots_value = self.map.pilots_val
+        self.pilots = np.ones(self.map.num_pilots, dtype=np.complex128) * self.pilots_value
         self.seed = seed
         if self.seed is not None:
             np.random.seed(seed)
@@ -38,7 +44,7 @@ class DataGenerator:
         
         ofdm_data_symbols= [] 
         for i in range(N_data_symbols):
-            size = 48 * 4
+            size = len(self.map.data_bins) * 4
             input = self.generate_random_binary(size)
             parsed_input = self._parse_string(input, 4)
 
@@ -46,8 +52,8 @@ class DataGenerator:
             for word in parsed_input:
                 iq_input.append(self.om.binary_to_iq(word))
 
-            input_array = np.array(iq_input, dtype = complex)
-            ofdm_symbol = OFDMSymbol(iq_samples48=input_array, pilots4=self.pilots)
+            input_array = np.array(iq_input, dtype = np.complex128)
+            ofdm_symbol = OFDMSymbol(iq_samples=input_array, pilots_data=self.pilots)
             ofdm_symbol_time = self.om.create_tx_block(ofdm_symbol)
             ofdm_data_symbols.append(ofdm_symbol_time)
 
