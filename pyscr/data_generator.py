@@ -15,8 +15,8 @@ class DataGenerator:
         
 
         #Generate pilots array
-        self.pilots_value = self.map.pilots_val
-        self.pilots = np.ones(self.map.num_pilots, dtype=np.complex128) * self.pilots_value
+       
+        self.pilots = np.array(self.map.pilot_vals)
         self.seed = seed
         if self.seed is not None:
             np.random.seed(seed)

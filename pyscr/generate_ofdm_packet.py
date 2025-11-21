@@ -43,7 +43,7 @@ def gen_random_packet(N_data_symb: int = 5, file_name:str = "rand_ofdm_packet", 
 
     # --------- FIX LATER -----------------
     #for now just hard hard coded pilots
-    pilots = np.ones(len(map.pilots_k), dtype=np.complex128) * map.pilots_val
+    pilots = np.array(map.pilot_vals, dtype=np.complex128)
 
 
     ofdm_data_symbols = []
