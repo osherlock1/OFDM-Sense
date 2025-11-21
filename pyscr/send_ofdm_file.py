@@ -229,7 +229,7 @@ def main():
         chunk_fft = np.fft.fft(chunk)
         Rx_pilot = chunk_fft.copy()
         nt = np.arange(len(Rx_pilot))
-        print(nt)
+        #print(nt)
         #-------------
         #CFO CORRECTION
         #--------------
