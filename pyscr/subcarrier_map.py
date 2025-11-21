@@ -3,9 +3,22 @@ import numpy as np
 
 class SubcarrierMap:
     N: int = 64
-    num_pilots = 4
-    pilots_val = 3 / np.sqrt(10)
+    num_pilots = 18
+    
+    
     random.seed(42)
+
+
+    @property
+    def pilot_vals(self):
+        random.seed(42)
+        qam16_vals = [-3, -1, 1, 3] / np.sqrt(10)
+        pilot_vals = []
+        for i in range(self.num_pilots):
+            pilot_vals.append(random.choice(qam16_vals))
+        return pilot_vals
+
+        
 
 
     @property
