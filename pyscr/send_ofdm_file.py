@@ -172,6 +172,8 @@ def main():
     payload_valid_est = estimate_payload_valid(N_symbols, N_data_symbols + 1, zero_crossings)
     
     #Get the OFDM symbols - CP
+    print(f"len iq = {len(iq)}")
+    print(f" len payload_valid_est = {len(payload_valid_est)}")
     ofdm_symbols = get_ofdm_symbols(iq, payload_valid_est)
     #print(f"len of OFDM SYMBOLS IS: {len(ofdm_symbols)}")
     chunks = np.split(ofdm_symbols, N_data_symbols + 1)
@@ -200,35 +202,9 @@ def main():
     n_len = len(iq)
     n = np.arange(n_len)
 
-    iq_cfo_corr = iq * np.exp(-1j * 2*np.pi * f_hat * n / FS)
-    plt.figure()
-    plt.plot(iq_cfo_corr)
-    plt.plot(iq)
-    #--------------------
-    #Fine correction
-    #--------------------
-    print("Calculating M Values... \n")
-    M_Values = calc_M_values(iq_cfo_corr)
-    print("Done!\n")
+    #iq_cfo_corr = iq * np.exp(-1j * 2*np.pi * f_hat * n / FS)
 
-    #Filter M Values
-    M_filtered = filter_M(M_Values)
-
-    #Get starting point
-    zero_crossings = find_sync_start(M_Values, M_filtered)
-
-    #Get Sync and Payload Idx
-    b_preamble = np.zeros(map.N + N_symbols * (map.N + map.cp_len))
-    b_preamble[:map.N] = 1
-
-    #Estimate payload and preamble valid
-    preamble_valid_est = estimate_preamble_valid(N_symbols, zero_crossings)
-    payload_valid_est = estimate_payload_valid(N_symbols, N_data_symbols, zero_crossings)
-    
-    #Get the OFDM symbols - CP
-    ofdm_symbols = get_ofdm_symbols(iq_cfo_corr, payload_valid_est)
-    #print(f"len of OFDM SYMBOLS IS: {len(ofdm_symbols)}")
-    chunks_cfo = np.split(ofdm_symbols, N_data_symbols)
+   
 
     #----------------------
     #CHANNEL ESTIMATION
@@ -236,7 +212,7 @@ def main():
     data_k = map.data_bins
     data_idx = np.array([map.idx(k) for k in data_k])
     pilot_symb_ref = PilotSymbol().symbol
-    pilot_recieved = np.fft.fft(chunks_cfo[0])
+    pilot_recieved = np.fft.fft(chunks[0])
     lambda_k = channel_estimation(pilot_recieved, pilot_symb_ref)
     
 
@@ -247,7 +223,7 @@ def main():
     
     
     Y = []
-    data_chunks = chunks_cfo[1:]
+    data_chunks = chunks[1:]
     for chunk in data_chunks:
 
         chunk_fft = np.fft.fft(chunk)
@@ -314,18 +290,15 @@ def main():
     ref_iq_16qam = ref_iq_16qam[0]
 
     
-
-    print(f"------- Metrics --------")
     #CALCUALTE BIT ERROR RATE
     bit_error_rate = om.calc_BER(ref_data, rx_binary)
-    print(f"BER: {bit_error_rate}")
+    
     #CALCUALTE SYMBOL ERROR RATE (SER)
     ser = om.calc_SER(ref_iq_16qam, Y_scaled)
-    print(f"SER: {ser}")
+    
     #Calculate ERROR VECTOR MAGNITUDE (EVM)
     evm = om.calc_EVM(Y_scaled, ref_iq_16qam)
-    print(f"EVM: {evm}")
-    print((f"------------------------"))
+
 
 
     #------------------------------
@@ -369,11 +342,22 @@ def main():
     plt.title("Constalation Diagram (16-QAM)")
     plt.xlabel("Real Axis")
     plt.ylabel("Imaginary Axis")
+
+    #----------------------
+    #PRINT METRICS
+    #-----------------------
+    print(f"------- Metrics --------")
+    print(f"BER: {bit_error_rate}")
+    print(f"SER: {ser}")
+    print(f"EVM: {evm}")
+    print((f"------------------------"))
+
+
+    #Show plot
     plt.show()
     
     print("Plot Complete!")
-    print(f_hat)
-
+    
 
 
 
@@ -437,6 +421,15 @@ def estimate_payload_valid(N_symbols, N_data_symbols, zeroCrossing_3):
 
 
 def get_ofdm_symbols(iq, payload_valid_est):
+
+    if len(iq) != len(payload_valid_est):
+        min_len = min(len(iq), len(payload_valid_est))
+        iq = iq[:min_len]
+        payload_valid_est = payload_valid_est[:min_len]
+        print("############### get_ofdm_symbols VECTOR LENGTH MISMATCH ###################")
+        print(f"Length of recieved iq samples {len(iq)} does not match length of calculated payload valid estimate {len(payload_valid_est)}")
+        print(f"Truncating to both length = {min_len}")
+
 
     payload_idx = np.where(payload_valid_est >0)[0]
 

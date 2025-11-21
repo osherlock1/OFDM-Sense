@@ -50,11 +50,11 @@ for i in range(map.N):
 
 #print(Tx_data_pilot_freq)
 
-cfo = 30241
+cfo = 142e5
 n_p = len(Tx_pilot)
 n_p = np.arange(n_p)
 
-fs = 100e3
+fs = 100e6
 bins = 2 ** 12
 f_grid = np.linspace(-fs/2, fs/2, bins, endpoint = False)
 n = len(Tx_data)
@@ -81,13 +81,18 @@ plt.title("Tx vs Rx Simulated CFO")
 plt.legend()
 
 
-print(G)
+#print(G)
 #Rx_pilot_corr = Rx_pilot * np.exp(-1j * 2*np.pi * f_hat * n_p / fs)
 plt.figure()
 plt.plot(f_grid, np.abs(G))
-plt.xlabel("Frequency fs = 100e3")
-plt.title("|G(k)|")
+plt.xlabel("Frequency")
+plt.title("|G(k)|" + "fs =" + str(fs / 1000000) + "MHz")
 k = int(np.argmax(np.abs(G) ** 2))
 #print(f"fhat is {f_hat}")
 plt.show()
 
+print(f"pilots k = {map.pilots_k}")
+print(f"Number of Pilot Subcarrier = {len(map.pilots_k)}")
+print(f"Calculated CFO = {fhat:.2f}")
+print(f"Actual CFO = {cfo:.2f}")
+print(f"Percent Difference = {(((np.abs(fhat - cfo)) / np.abs(cfo)) * 100):.2f}%")
