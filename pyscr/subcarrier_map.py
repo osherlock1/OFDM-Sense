@@ -3,7 +3,7 @@ import numpy as np
 
 class SubcarrierMap:
     N: int = 64
-    num_pilots = 18
+    num_pilots = 22
     
     
     random.seed(42)

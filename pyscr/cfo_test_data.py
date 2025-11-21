@@ -28,7 +28,7 @@ pilot_k = map.pilots_k
 
 pilot_idx = np.array([map.idx(k) for k in pilot_k])
 data_idx = np.array([map.idx(k) for k in data_k])
-CFO = 4e6
+CFO = 1e6
 n = np.arange(map.N)
 num_thing = 2 ** 14
 f_grid = np.linspace(-FS/2, FS/2, num_thing)
