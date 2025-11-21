@@ -29,6 +29,7 @@ ofdm_packet = dg.generate_random_packet(N_data_symbols=1)
 datasymbol = ofdm_packet[-64:]
 data_fft = np.fft.fft(datasymbol)
 print(data_fft[map.pilots_k])
+print(len(map.pilot_vals))
 
 
 
