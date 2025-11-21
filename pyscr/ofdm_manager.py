@@ -161,6 +161,14 @@ class OFDMManager():
         Y_ref: Reference array of IQ samples
         Y: Recieved array of IQ samples from transfer
         """
+        if len(Y_ref) != len(Y):
+            print("""####### SER CALCULATION LENGTH ERROR #######""")
+            print(f"Len Y_ref = {len(Y_ref)} does not equal Len Y = {len(Y)}")
+            min_len = min(len(Y_ref), len(Y))
+            print(f"Truncating both arrays to {min_len}")
+            Y_ref = Y_ref[:min_len]
+            Y = Y[:min_len]
+
 
         Y_mapped = []
         for iq_sample in Y:
@@ -183,6 +191,17 @@ class OFDMManager():
         """
         Calculate the Average Vector Magnitude Error
         """
+        if len(Y_ref) != len(Y):
+            print("""####### EVM CALCULATION LENGTH ERROR #######""")
+            print(f"Len Y_ref = {len(Y_ref)} does not equal Len Y = {len(Y)}")
+            min_len = min(len(Y_ref), len(Y))
+            print(f"Truncating both arrays to {min_len}")
+            Y_ref = Y_ref[:min_len]
+            Y = Y[:min_len]
+        
+        
+        
+        
         normalization = np.abs(np.sum(Y_ref))
         
         #Calc mean square error
