@@ -266,8 +266,9 @@ def main():
         # plt.plot(Tx_psub_t, label = "Tx")
         # plt.legend()
 
-        # plt.figure()
-        # plt.plot(f_grid, np.abs(G))
+        plt.figure()
+        plt.plot(f_grid, np.abs(G))
+        plt.title("CFO is: " + str(f_hat / 1e6) + "Mhz")
         
         # plt.show()
 
