@@ -50,7 +50,7 @@ def main():
     #N_data_symbols = N_data_symbols + 1
     N_symbols = N_data_symbols + 1
     pilot_values = np.array([1,1,1,1], dtype=complex)
-    pilot_idx = [map.idx(map.pilots_k[i]) for i in range(len(pilot_values))]
+    pilots_idx = np.array([map.idx(k) for k in map.pilots_k])
     
 
 
@@ -184,7 +184,7 @@ def main():
     pilot_symb_ref = om.create_tx_block(PilotSymbol())
     pilot_symb_ref = pilot_symb_ref[-64:]
     pilot_recieved = chunks[0]
-    n_bins = 2 ** 12
+    n_bins = 2 ** 14
     f_grid = np.linspace(-FS/2 , FS/2 , n_bins)
     G,f_hat = om.cfo_correct(Tx = pilot_symb_ref, Rx = np.conj(pilot_recieved), fs = FS, n_bins = n_bins)
 
@@ -217,7 +217,7 @@ def main():
     
 
     Tx_pilot = np.zeros(SubcarrierMap.N, dtype=complex)
-    Tx_pilot[pilot_idx] = 1 + 0j
+    Tx_pilot[pilots_idx] = np.array([map.pilot_vals], np.complex128)
     
     
     
@@ -227,30 +227,54 @@ def main():
     for chunk in data_chunks:
 
         chunk_fft = np.fft.fft(chunk)
-        Rx_pilot = chunk_fft
-        # #Zero out non pilot sub carriers
-        # for i in range(len(Rx_pilot)):
-        #     if i not in pilot_idx:
-        #         Rx_pilot[i] = 0
+        Rx_pilot = chunk_fft.copy()
+        nt = np.arange(len(Rx_pilot))
+        print(nt)
+        #-------------
+        #CFO CORRECTION
+        #--------------
+        Rx_zeroed = Rx_pilot.copy()
+        for i in range(64):
+            if i not in pilots_idx:
+                Rx_zeroed[i] = 0 + 0j
         
-        # #Convert back to time
-        # rn_pilot = np.fft.ifft(Rx_pilot)
-        # tn_pilot = np.fft.ifft(Tx_pilot)
 
-        # #Calculate Fine CFO        
-        # n_len = len(Rx_pilot)
-        # n = np.arange(n_len)
-        # #Do fine CFO adjustment
-  
-        # G, f_hat = om.cfo_correct(Rx = rn_pilot, Tx = tn_pilot, n_bins = n_bins, fs = FS)
-        # print(f"F HAT IS {f_hat}")
-        # #plt.figure()
-        # #plt.plot(np.abs(G))
-        # #plt.show()
-        # cfo_corr = chunk_fft * np.exp(-1j * 2*np.pi * f_hat * n / FS)
-        # cfo_corr_fft = np.fft.fft(cfo_corr, map.N)
+        #Convert Zeroed to time
+        Rx_psub_t = np.fft.ifft(Rx_zeroed)
+        Tx_psub_t = np.fft.ifft(Tx_pilot)
 
-        Y_tst = chunk_fft[data_idx]
+        G, f_hat = om.cfo_correct(Tx = Tx_psub_t, Rx = Rx_psub_t, fs = FS, n_bins = n_bins)
+
+        print(f"FHAT IS EQUAL TO {f_hat}")
+        corrected_rxn = chunk * np.exp(-1j * 2*np.pi * f_hat * nt / FS)
+        corrected_RXk = np.fft.fft(corrected_rxn)
+
+        # plt.figure()
+        # plt.plot(Rx_zeroed, label = "Rx")
+        # plt.plot(Tx_pilot, label = "Tx")
+        # plt.legend()
+        # plt.plot()
+
+        # plt.figure()
+        # plt.title("rxn corrected vs rx")
+        # plt.plot(corrected_rxn, label = "corrected rxn")
+        # plt.plot(chunk, label = "rx")
+        # plt.legend()
+
+        # plt.figure()
+        # plt.plot(Rx_psub_t, label = "Rx")
+        # plt.plot(Tx_psub_t, label = "Tx")
+        # plt.legend()
+
+        # plt.figure()
+        # plt.plot(f_grid, np.abs(G))
+        
+        # plt.show()
+
+
+        #FIXME: FIX BELOW
+        #Y_tst = chunk_fft[data_idx]
+        Y_tst = corrected_RXk[data_idx]
         Y_tst = Y_tst / lambda_k
         Y.append(Y_tst)
     Y = np.concatenate(Y)

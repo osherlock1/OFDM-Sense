@@ -74,10 +74,19 @@ frequencies = np.linspace(-fs, fs, bins)
 
 G, fhat= om.cfo_correct(Tx_data, Rx_data, fs)
 
+
+corrected_rx = Rx_data * np.exp(-1j * 2*np.pi * fhat * n / fs)
+
+
 plt.figure()
 plt.plot(Tx_data, label="Tx data")
 plt.plot(Rx_data, label="Rx Data")
 plt.title("Tx vs Rx Simulated CFO")
+plt.legend()
+
+plt.figure()
+plt.plot(corrected_rx, label= "corrected Rx")
+plt.plot(Tx_data, label = "Tx")
 plt.legend()
 
 

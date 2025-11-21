@@ -28,7 +28,7 @@ pilot_k = map.pilots_k
 
 pilot_idx = np.array([map.idx(k) for k in pilot_k])
 data_idx = np.array([map.idx(k) for k in data_k])
-CFO = 2.243e6
+CFO = 4e6
 n = np.arange(map.N)
 num_thing = 2 ** 14
 f_grid = np.linspace(-FS/2, FS/2, num_thing)
@@ -53,13 +53,13 @@ TXk = np.fft.fft(txn, map.N)
 RXk = np.fft.fft(rxn, map.N)
 
 #Zero out pilot carrier
-TXk_pilot = TXk
+TXk_pilot = TXk.copy()
 for i in range(map.N):
     if i not in pilot_idx:
         TXk_pilot[i] = 0 + 0j
 
 
-RXk_pilot = RXk
+RXk_pilot = RXk.copy()
 for i in range(map.N):
     if i not in pilot_idx:
         RXk_pilot[i] = 0 + 0j
@@ -91,6 +91,17 @@ plt.show()
 #Calculate G
 G, f_hat = om.cfo_correct(Tx = txn_time, Rx = rxn_time, fs = FS, n_bins = num_thing)
 
+
+corrected_rx = rxn * np.exp(-1j * 2*np.pi * f_hat * n / FS)
+
+
+plt.figure()
+plt.plot(corrected_rx, label = "corrected rx")
+plt.plot(txn, label= "TX")
+plt.legend()
+plt.title("cfo correctikon")
+
+
 print(f"calculated CFO {f_hat}")
 print(f"actual cfo {CFO}")
 print(f"Difference = {((np.abs(f_hat - CFO)) / 1e6):.2f}MHz, Percent Diff = {(((np.abs(f_hat - CFO)) / np.abs(CFO)) * 100):.2f}%")
@@ -98,6 +109,7 @@ print(f"Relative Difference = {(((np.abs(f_hat - CFO)) / FS) * 100):.2f}%")
 print(f"pilots k = {map.pilots_k}")
 print(f"Number of Pilot Subcarrier = {len(map.pilots_k)}")
 
+#Corrected Recieved Signal
 
 
 #print(laps)
