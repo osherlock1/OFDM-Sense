@@ -7,13 +7,13 @@ class OFDMManager():
         self.map = SubcarrierMap()
         self.N = self.map.N # Number of subcarries in a OFDM symbol
         self.N_data_symbols = 5 #Number of payload symbols per OFDM packet
-
+        self.cp_len = self.map.cp_len
 
     def ifft(self, symbol_freq:np.ndarray):
         """
         Compute IFFT of the QAM Frequency Packet (Default 64 Point)
         """
-        symbol_freq.symbol = np.fft.ifft(symbol_freq.symbol, self.N) #* np.sqrt(self.N) #/ (len(self.map.data_bins) + len(self.map.pilots_k)))
+        symbol_freq.symbol = (np.fft.ifft(symbol_freq.symbol, self.N) * np.sqrt(self.map.N))#* np.sqrt(self.N) #/ (len(self.map.data_bins) + len(self.map.pilots_k)))
         
     
     def fft(self, symbol_time:np.ndarray):
@@ -23,14 +23,14 @@ class OFDMManager():
         symbol_time.symbol = np.fft.fft(symbol_time.symbol, self.map.N)
         
     
-    def add_cycle_prefix(self, symbol:np.ndarray, prefix_len:int = 8) -> np.ndarray:
+    def add_cycle_prefix(self, symbol:np.ndarray) -> np.ndarray:
         """Add the cyclacle prefix the synbol (Default is 8)
         
             IMPORTANT! After you call this method the output will no longer be an OFDM symbol object for now I will just have
             it output a np array which will be the TX Block sent to the USRP
         
         """
-        prefix = symbol.symbol[self.map.N-prefix_len:]
+        prefix = symbol.symbol[self.map.N-self.cp_len:]
         TX_block = np.concatenate([prefix,symbol.symbol]).astype(complex)
         return TX_block
     
