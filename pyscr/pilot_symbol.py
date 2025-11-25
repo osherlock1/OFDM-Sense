@@ -8,10 +8,6 @@ class PilotSymbol():
         self.N = self.map.N #Expect N = 64
         self.symbol = np.zeros(SubcarrierMap().N, dtype = complex) #Subcarrier bins
         
-        #Define Used frequency bins
-        # used_neg = list(range(-26, 0))
-        # used_pos = list(range(1, 27))
-        # self.used_k = used_neg + used_pos
         self.used_k = self.map.data_bins
 
         self.seed = seed

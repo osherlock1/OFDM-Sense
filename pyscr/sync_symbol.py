@@ -7,10 +7,12 @@ class SyncSymbol():
         self.map = SubcarrierMap()
         self.N = self.map.N #Expect N = 64
         self.symbol = np.zeros(SubcarrierMap().N, dtype = complex) #Subcarrier bins
-        
+        self.guard_len = self.map.guard_len
+
+
         #Define Used frequency bins
-        used_neg = list(range(-26, 0))
-        used_pos = list(range(1, 27))
+        used_neg = list(range(-(self.N // 2) + self.guard_len, 0))
+        used_pos = list(range(1,(self.N // 2) - self.guard_len))
         used_k = used_neg + used_pos
 
         #Get Even Indicies
@@ -29,7 +31,7 @@ class SyncSymbol():
         """
         Generated random binary numbers to fill in the even indicies of the sync symbol
         """      
-        bpsk_seq = np.random.choice([-1, 1], size=int(self.N // 2))
+        bpsk_seq = np.random.choice([-3 / np.sqrt(10), 3 / np.sqrt(10)], size=int(self.N // 2))
         return(bpsk_seq)
         
     def _add_even(self, even_k):

@@ -2,10 +2,17 @@ import random
 import numpy as np
 
 class SubcarrierMap:
-    N: int = 2 ** 10
+
+    #-------------------
+    # OFDM SYMBOL MAPPING
+    #--------------------
+    N = 2 ** 10
     num_pilots = 128
     cp_len = 10
     guard_len = 5
+
+
+
     random.seed(42)
 
 

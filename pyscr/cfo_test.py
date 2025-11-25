@@ -30,20 +30,20 @@ pilots_idx = np.array([map.idx(k) for k in pilots_k])
 print(pilots_idx)
 print(pilots_k)
 
-data = packet[-64:]
+data = packet[-map.N:]
 pilot_data = data[pilots_idx]
 print(pilot_data)
 
 
 data_idx = np.array([map.idx(k) for k in data_k])
 
-Tx = packet[-64:]
+Tx = packet[-map.N:]
 Tx_data = Tx[data_idx]
 
 Tx_pilot = om.create_tx_block(PilotSymbol())
-Tx_pilot = Tx_pilot[-64:]
+Tx_pilot = Tx_pilot[-map.N:]
 
-Tx_data_pilot_freq = np.fft.fft(data, 64)
+Tx_data_pilot_freq = np.fft.fft(data, map.N)
 for i in range(map.N):
     if i not in pilots_idx:
         Tx_data_pilot_freq[i] = 0 + 0j

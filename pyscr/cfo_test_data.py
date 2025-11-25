@@ -35,7 +35,7 @@ f_grid = np.linspace(-FS/2, FS/2, num_thing)
 
 
 #Unpack Data Symbol
-txn = packet[-64:]
+txn = packet[-map.N:]
 
 #Apply CFO to Received Signal
 rxn = txn * np.exp(1j * 2*np.pi * CFO * n / FS)
@@ -79,8 +79,8 @@ plt.show()
 #     print(RXk_pilot[map.idx(k)])
 
 #Go back to time domain
-txn_time = np.fft.ifft(TXk_pilot, 64)
-rxn_time = np.fft.ifft(RXk_pilot, 64)
+txn_time = np.fft.ifft(TXk_pilot, map.N)
+rxn_time = np.fft.ifft(RXk_pilot, map.N)
 
 plt.figure()
 plt.plot(txn_time, label = "tx")
