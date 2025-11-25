@@ -216,26 +216,6 @@ def main():
     pilot_symb_ref = PilotSymbol().symbol
     pilot_recieved = np.fft.fft(pilot_symbol)
     lambda_k = channel_estimation(recieved_pilot_symbol=pilot_recieved, known_pilot_symbol=pilot_symb_ref)
-    print("FFFFFFFFFFFFFFFFASLDFAILGHBALKHBALKVGLSKDHV")
-
-    print(np.array(map.data_bins) - np.array(PilotSymbol().used_k))
-
-
-    plt.figure()
-    plt.plot(np.angle(lambda_k))
-    plt.show()
-    data_symbol = np.fft.fft(chunks[1])
-    pilot_corr = pilot_recieved[data_idx] / lambda_k
-    data_corr = data_symbol[data_idx] / lambda_k
-    plt.figure()
-    plt.plot(pilot_recieved[data_idx], label = "RX")
-    plt.plot(pilot_corr, label = "corr")
-    plt.plot(data_corr, label = "Data corr")
-    plt.legend()
-    plt.show()
-
-    
-
 
     Y = []
     #data_chunks = chunks[1:]
@@ -285,13 +265,13 @@ def main():
 
     
     #CALCUALTE BIT ERROR RATE
-    #bit_error_rate = om.calc_BER(ref_data, rx_binary)
+    bit_error_rate = om.calc_BER(ref_data, rx_binary)
     
     #CALCUALTE SYMBOL ERROR RATE (SER)
-    #ser = om.calc_SER(ref_iq_16qam, Y_scaled)
+    ser = om.calc_SER(ref_iq_16qam, Y_scaled)
     
     #Calculate ERROR VECTOR MAGNITUDE (EVM)
-    #evm = om.calc_EVM(Y_scaled, ref_iq_16qam)
+    evm = om.calc_EVM(Y_scaled, ref_iq_16qam)
 
 
 
@@ -308,18 +288,21 @@ def main():
     
     #Plot of Sync Algorithm 
     plt.subplot(4, 3, 2)
-    plt.plot(iq, label = "OFDM Packet")
-    plt.plot(M_Values, label = "M Values")
-    plt.plot(M_filtered, label = "Filtered M")
-    #plt.plot(D, label = "Derivative of M_filter")
-    #plt.plot(zeroCrossing_3, label = "zero crossings")
-    #plt.plot(ignore_times, label = "Ignore window")
-   # plt.plot(actual_synq, label = "Actual Sync packet")
-    plt.plot(preamble_valid_est, label = "Estiamtion of valid Sync")
-    plt.plot(payload_valid_est, label = "Estimation of valid payload")
-    #plt.legend()
-    plt.title("Shmidil Cox Sync Algoirthm")
-    plt.xlabel("Samples")
+    plt.plot(np.angle(lambda_k))
+    plt.title("Lambda K Angle")
+    plt.xlabel("Data bins")
+#     plt.plot(iq, label = "OFDM Packet")
+#     plt.plot(M_Values, label = "M Values")
+#     plt.plot(M_filtered, label = "Filtered M")
+#     #plt.plot(D, label = "Derivative of M_filter")
+#     #plt.plot(zeroCrossing_3, label = "zero crossings")
+#     #plt.plot(ignore_times, label = "Ignore window")
+#    # plt.plot(actual_synq, label = "Actual Sync packet")
+#     plt.plot(preamble_valid_est, label = "Estiamtion of valid Sync")
+#     plt.plot(payload_valid_est, label = "Estimation of valid payload")
+#     #plt.legend()
+#     plt.title("Shmidil Cox Sync Algoirthm")
+#     plt.xlabel("Samples")
 
     #Chanel Estimation lambda plot
     plt.subplot(4, 3 , 3)
@@ -341,9 +324,9 @@ def main():
     #PRINT METRICS
     #-----------------------
     print(f"------- Metrics --------")
-    #print(f"BER: {bit_error_rate}")
-    #print(f"SER: {ser}")
-    #print(f"EVM: {evm}")
+    print(f"BER: {bit_error_rate}")
+    print(f"SER: {ser}")
+    print(f"EVM: {evm}")
     print((f"------------------------"))
 
 
