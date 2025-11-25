@@ -24,7 +24,7 @@ class OFDMManager():
         
     
     def add_cycle_prefix(self, symbol:np.ndarray) -> np.ndarray:
-        """Add the cyclacle prefix the synbol (Default is 8)
+        """Add the cyclacle prefix the synbol
         
             IMPORTANT! After you call this method the output will no longer be an OFDM symbol object for now I will just have
             it output a np array which will be the TX Block sent to the USRP
