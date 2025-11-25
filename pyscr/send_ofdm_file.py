@@ -32,8 +32,6 @@ def main():
     RX_FILE_PATH = "data_files/rand_ofdm_packet_rx.dat"
     REF_FILE_PATH = "data_files/rand_ofdm_packet_ref.json"
 
-
-
     """
     FIXME: TAKING # OF DATA SYMBOLS FROM REFERSE .json file NEED TO IMPLEMENT THIS IS TRAINIG SYMBOL
     """
@@ -49,6 +47,8 @@ def main():
     print(n_samples)
     #N_data_symbols = N_data_symbols + 1
     N_symbols = N_data_symbols + 1
+    N_PILOT_SYMBOLS = 1
+    N_SYNC_SYMBOLS = 1
     pilot_values = np.array([1,1,1,1], dtype=complex)
     pilots_idx = np.array([map.idx(k) for k in map.pilots_k])
     
@@ -162,7 +162,7 @@ def main():
 
     #Get starting point
     zero_crossings = find_sync_start(M_Values, M_filtered)
-
+    start_idx = np.nonzero(zero_crossings)[0]
     #Get Sync and Payload Idx
     b_preamble = np.zeros(map.N + N_symbols * (map.N + map.cp_len))
     b_preamble[:map.N] = 1
@@ -178,33 +178,35 @@ def main():
     #print(f"len of OFDM SYMBOLS IS: {len(ofdm_symbols)}")
     chunks = np.split(ofdm_symbols, N_data_symbols + 1)
 
+    #Unpack total OFDM packet after starting point
+    packet_len = (map.N + map.cp_len) * (N_data_symbols + N_PILOT_SYMBOLS + N_SYNC_SYMBOLS)
+    ofdm_packet = iq[start_idx[0] : start_idx[0] + packet_len]
+    symbols = np.split(ofdm_packet, N_data_symbols + N_PILOT_SYMBOLS + N_SYNC_SYMBOLS)
+
+    symbols_no_cp = []
+    for symbol in symbols:
+        symbols_no_cp.append(symbol[:-map.cp_len])
+
+    chunks = symbols_no_cp[N_SYNC_SYMBOLS + N_SYNC_SYMBOLS :]
+    print(f"LENGTH OF CHUNKS = {len(chunks)}")
+    #FIXME: BELOW ARE HARDCODED VALUES NEEDS TO BE UPDATED LATER
+    sync_symbol = symbols_no_cp[0]
+    pilot_symbol = symbols_no_cp[1]
 
 
+    # pilot_symb_ref = om.create_tx_block(PilotSymbol())
+    # pilot_symb_ref = pilot_symb_ref[map.cp_len:]
+    # pilot_recieved = chunks[0]
+    # n_bins = 2 ** 14
+    # f_grid = np.linspace(-FS/2 , FS/2 , n_bins)
+    # G,f_hat = om.cfo_correct(Tx = pilot_symb_ref, Rx = (pilot_symbol), fs = FS, n_bins = n_bins)
+    # print(f"FHAT IS {f_hat}")
+    # plt.plot(f_grid, G)
+    # plt.show()
+    # #Do the phase change
+    # n_len = len(iq)
+    # n = np.arange(n_len)
 
-    pilot_symb_ref = om.create_tx_block(PilotSymbol())
-    pilot_symb_ref = pilot_symb_ref[-64:]
-    pilot_recieved = chunks[0]
-    n_bins = 2 ** 14
-    f_grid = np.linspace(-FS/2 , FS/2 , n_bins)
-    G,f_hat = om.cfo_correct(Tx = pilot_symb_ref, Rx = np.conj(pilot_recieved), fs = FS, n_bins = n_bins)
-
-    plt.figure()
-    plt.plot(pilot_recieved)
-    plt.plot(pilot_symb_ref)
-    plt.title("Plits")
-
-    plt.figure()
-    plt.plot(f_grid, np.abs(G))
-
-
-
-    #Do the phase change
-    n_len = len(iq)
-    n = np.arange(n_len)
-
-    #iq_cfo_corr = iq * np.exp(-1j * 2*np.pi * f_hat * n / FS)
-
-   
 
     #----------------------
     #CHANNEL ESTIMATION
@@ -212,76 +214,43 @@ def main():
     data_k = map.data_bins
     data_idx = np.array([map.idx(k) for k in data_k])
     pilot_symb_ref = PilotSymbol().symbol
-    pilot_recieved = np.fft.fft(chunks[0])
-    lambda_k = channel_estimation(pilot_recieved, pilot_symb_ref)
+    pilot_recieved = np.fft.fft(pilot_symbol)
+    lambda_k = channel_estimation(recieved_pilot_symbol=pilot_recieved, known_pilot_symbol=pilot_symb_ref)
+    print("FFFFFFFFFFFFFFFFASLDFAILGHBALKHBALKVGLSKDHV")
+
+    print(np.array(map.data_bins) - np.array(PilotSymbol().used_k))
+
+
+    plt.figure()
+    plt.plot(np.angle(lambda_k))
+    plt.show()
+    data_symbol = np.fft.fft(chunks[1])
+    pilot_corr = pilot_recieved[data_idx] / lambda_k
+    data_corr = data_symbol[data_idx] / lambda_k
+    plt.figure()
+    plt.plot(pilot_recieved[data_idx], label = "RX")
+    plt.plot(pilot_corr, label = "corr")
+    plt.plot(data_corr, label = "Data corr")
+    plt.legend()
+    plt.show()
+
     
 
-    Tx_pilot = np.zeros(SubcarrierMap.N, dtype=complex)
-    Tx_pilot[pilots_idx] = np.array([map.pilot_vals], np.complex128)
-    
-    
-    
-    
+
     Y = []
-    data_chunks = chunks[1:]
-    for chunk in data_chunks:
+    #data_chunks = chunks[1:]
+    for chunk in chunks:
 
         chunk_fft = np.fft.fft(chunk)
-        Rx_pilot = chunk_fft.copy()
-        nt = np.arange(len(Rx_pilot))
-        #print(nt)
-        #-------------
-        #CFO CORRECTION
-        #--------------
-        Rx_zeroed = Rx_pilot.copy()
-        for i in range(64):
-            if i not in pilots_idx:
-                Rx_zeroed[i] = 0 + 0j
-        
-
-        #Convert Zeroed to time
-        Rx_psub_t = np.fft.ifft(Rx_zeroed)
-        Tx_psub_t = np.fft.ifft(Tx_pilot)
-
-        G, f_hat = om.cfo_correct(Tx = Tx_psub_t, Rx = Rx_psub_t, fs = FS, n_bins = n_bins)
-
-        print(f"FHAT IS EQUAL TO {f_hat}")
-        corrected_rxn = chunk * np.exp(-1j * 2*np.pi * f_hat * nt / FS)
-        corrected_RXk = np.fft.fft(corrected_rxn)
-
-        # plt.figure()
-        # plt.plot(Rx_zeroed, label = "Rx")
-        # plt.plot(Tx_pilot, label = "Tx")
-        # plt.legend()
-        # plt.plot()
-
-        # plt.figure()
-        # plt.title("rxn corrected vs rx")
-        # plt.plot(corrected_rxn, label = "corrected rxn")
-        # plt.plot(chunk, label = "rx")
-        # plt.legend()
-
-        # plt.figure()
-        # plt.plot(Rx_psub_t, label = "Rx")
-        # plt.plot(Tx_psub_t, label = "Tx")
-        # plt.legend()
-
-        # plt.figure()
-        # plt.plot(f_grid, np.abs(G))
-        # plt.title("CFO is: " + str(f_hat / 1e6) + "Mhz")
-        
-        # plt.show()
-
-
         #FIXME: FIX BELOW
-        #Y_tst = chunk_fft[data_idx]
-        Y_tst = corrected_RXk[data_idx]
+        Y_tst = chunk_fft[data_idx]
+        #Y_tst = corrected_RXk[data_idx]
         Y_tst = Y_tst / lambda_k
         Y.append(Y_tst)
     Y = np.concatenate(Y)
     Y_scaled = Y * np.sqrt(10)
 
-
+    
     #-------------------------
     # CALCULATE METRICS
     #------------------------
@@ -316,13 +285,13 @@ def main():
 
     
     #CALCUALTE BIT ERROR RATE
-    bit_error_rate = om.calc_BER(ref_data, rx_binary)
+    #bit_error_rate = om.calc_BER(ref_data, rx_binary)
     
     #CALCUALTE SYMBOL ERROR RATE (SER)
-    ser = om.calc_SER(ref_iq_16qam, Y_scaled)
+    #ser = om.calc_SER(ref_iq_16qam, Y_scaled)
     
     #Calculate ERROR VECTOR MAGNITUDE (EVM)
-    evm = om.calc_EVM(Y_scaled, ref_iq_16qam)
+    #evm = om.calc_EVM(Y_scaled, ref_iq_16qam)
 
 
 
@@ -372,9 +341,9 @@ def main():
     #PRINT METRICS
     #-----------------------
     print(f"------- Metrics --------")
-    print(f"BER: {bit_error_rate}")
-    print(f"SER: {ser}")
-    print(f"EVM: {evm}")
+    #print(f"BER: {bit_error_rate}")
+    #print(f"SER: {ser}")
+    #print(f"EVM: {evm}")
     print((f"------------------------"))
 
 

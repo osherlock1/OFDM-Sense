@@ -9,9 +9,10 @@ class PilotSymbol():
         self.symbol = np.zeros(SubcarrierMap().N, dtype = complex) #Subcarrier bins
         
         #Define Used frequency bins
-        used_neg = list(range(-26, 0))
-        used_pos = list(range(1, 27))
-        used_k = used_neg + used_pos
+        # used_neg = list(range(-26, 0))
+        # used_pos = list(range(1, 27))
+        # self.used_k = used_neg + used_pos
+        self.used_k = self.map.data_bins
 
         self.seed = seed
         #Build deterministic BPSK sequence
@@ -19,7 +20,7 @@ class PilotSymbol():
         self.bpsk_seq = self._BPSK_form()
 
         #Fill in even bins
-        self._add_even(used_k)
+        self._add_even(self.used_k)
         
  
 
@@ -27,6 +28,7 @@ class PilotSymbol():
         """
         Generated random binary numbers to fill in the even indicies of the sync symbol
         """      
+        np.random.seed(self.seed)
         bpsk_seq = np.random.choice([-1, 1], size=int(self.N))
         return(bpsk_seq)
         
