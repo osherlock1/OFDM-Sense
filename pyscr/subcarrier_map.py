@@ -2,10 +2,10 @@ import random
 import numpy as np
 
 class SubcarrierMap:
-    N: int = 64
-    num_pilots = 4
-    
-    
+    N: int = 2 ** 10
+    num_pilots = 128
+    cp_len = 10
+    guard_len = 5
     random.seed(42)
 
 
@@ -19,13 +19,13 @@ class SubcarrierMap:
         return pilot_vals
 
         
-
+    #FIXME: HARDCODED USED NEG AND USED POS VALUES
 
     @property
     def pilots_k(self):
         random.seed(42)
-        used_neg = list(range(-26, 0))
-        used_pos = list(range(1,27))
+        used_neg = list(range(-(self.N // 2) + self.guard_len, 0))
+        used_pos = list(range(1,(self.N // 2) - self.guard_len))
         pilot_bins = []
         used_p_bins = used_neg + used_pos
 
@@ -35,7 +35,7 @@ class SubcarrierMap:
         return pilot_bins
 
 
-    cp_len = 8
+    
     def idx(self, k:int) -> int:
         return k % self.N
     

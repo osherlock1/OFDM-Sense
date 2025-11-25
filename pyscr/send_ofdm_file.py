@@ -265,13 +265,13 @@ def main():
 
     
     #CALCUALTE BIT ERROR RATE
-    bit_error_rate = om.calc_BER(ref_data, rx_binary)
+    #bit_error_rate = om.calc_BER(ref_data, rx_binary)
     
     #CALCUALTE SYMBOL ERROR RATE (SER)
-    ser = om.calc_SER(ref_iq_16qam, Y_scaled)
+    #ser = om.calc_SER(ref_iq_16qam, Y_scaled)
     
     #Calculate ERROR VECTOR MAGNITUDE (EVM)
-    evm = om.calc_EVM(Y_scaled, ref_iq_16qam)
+    #evm = om.calc_EVM(Y_scaled, ref_iq_16qam)
 
 
 
@@ -324,9 +324,9 @@ def main():
     #PRINT METRICS
     #-----------------------
     print(f"------- Metrics --------")
-    print(f"BER: {bit_error_rate}")
-    print(f"SER: {ser}")
-    print(f"EVM: {evm}")
+    # print(f"BER: {bit_error_rate}")
+    # print(f"SER: {ser}")
+    # print(f"EVM: {evm}")
     print((f"------------------------"))
 
 
