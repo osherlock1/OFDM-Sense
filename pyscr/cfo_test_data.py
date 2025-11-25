@@ -28,7 +28,7 @@ pilot_k = map.pilots_k
 
 pilot_idx = np.array([map.idx(k) for k in pilot_k])
 data_idx = np.array([map.idx(k) for k in data_k])
-CFO = 1e6
+CFO = -34.23432e6
 n = np.arange(map.N)
 num_thing = 2 ** 14
 f_grid = np.linspace(-FS/2, FS/2, num_thing)
@@ -49,15 +49,33 @@ plt.show()
 
 
 #Convert txn and rxn to freq domain
-TXk = np.fft.fft(txn, map.N)
-RXk = np.fft.fft(rxn, map.N)
+TXk = np.fft.fft(txn)
+RXk = np.fft.fft(rxn)
 
 #Zero out pilot carrier
-TXk_pilot = TXk.copy()
+n_data = int(len(map.data_bins))
+TXk_pilot_copy = TXk.copy()
+random_binary = dg.generate_random_binary(n_data * 4)
+random_binary_parsed = dg._parse_string(random_binary,4)
+random_iq = []
+for bin in random_binary_parsed:
+    random_iq.append(om.binary_to_iq(bin))
+random_iq_np = np.array([random_iq], dtype=np.complex128)
+print(random_iq_np)
+TXk_pilot = OFDMSymbol(iq_samples=random_iq, pilots_data=map.pilot_vals).symbol
+
+plt.figure()
+plt.plot(TXk_pilot)
+plt.plot(TXk_pilot_copy, label = "copy")
+plt.legend()
+plt.title("COPY TEST")
+
+
 for i in range(map.N):
     if i not in pilot_idx:
         TXk_pilot[i] = 0 + 0j
-
+print(TXk_pilot)
+print(map.pilot_vals)
 
 RXk_pilot = RXk.copy()
 for i in range(map.N):

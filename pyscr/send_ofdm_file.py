@@ -197,7 +197,7 @@ def main():
     # pilot_symb_ref = om.create_tx_block(PilotSymbol())
     # pilot_symb_ref = pilot_symb_ref[map.cp_len:]
     # pilot_recieved = chunks[0]
-    # n_bins = 2 ** 14
+    n_bins = 2 ** 14
     # f_grid = np.linspace(-FS/2 , FS/2 , n_bins)
     # G,f_hat = om.cfo_correct(Tx = pilot_symb_ref, Rx = (pilot_symbol), fs = FS, n_bins = n_bins)
     # print(f"FHAT IS {f_hat}")
@@ -217,9 +217,39 @@ def main():
     pilot_recieved = np.fft.fft(pilot_symbol)
     lambda_k = channel_estimation(recieved_pilot_symbol=pilot_recieved, known_pilot_symbol=pilot_symb_ref)
 
+
+    #Build Reference Data Pilot Symbols
+    TXk_pilot = dg.generate_random_packet(1)
+    TXk_pilot = TXk_pilot[-map.N:]
+    TXk_pilot = np.fft.fft(TXk_pilot)
+    for i in range(map.N):
+        if i not in pilots_idx:
+            TXk_pilot[i] = 0 + 0j
+
+    print(TXk_pilot)
     Y = []
-    #data_chunks = chunks[1:]
     for chunk in chunks:
+
+        #CFO Adjustment
+
+        #Convert to Frequency Domain
+        RXk = np.fft.fft(chunk)
+        RXk_pilot = RXk.copy()
+        for i in range(map.N):
+            if i not in pilots_idx:
+                RXk_pilot[i] = 0 + 0j
+
+        txn_time = np.fft.ifft(TXk_pilot)
+        rxn_time = np.fft.ifft(RXk_pilot)
+
+        #Calculate G
+        G, f_hat = om.cfo_correct(Tx = txn_time, Rx = rxn_time, fs=FS, n_bins = n_bins)
+        print(f"FHAT is {f_hat}")
+        plt.figure()
+        plt.plot(np.abs(G))
+        plt.show()
+
+        #Chanenl Estimation
 
         chunk_fft = np.fft.fft(chunk)
         #FIXME: FIX BELOW

@@ -8,6 +8,7 @@ class OFDMSymbol:
         
         self.iq_samples = iq_samples
         self.pilots_k = self.submap.pilots_k
+        self.pilots_idx = np.array([self.submap.idx(k) for k in self.pilots_k])
         self.data_k = self.submap.data_bins
         self.pilots_data = pilots_data 
         self.symbol = np.zeros(self.submap.N, dtype=complex) #initiate the ofdm array
@@ -58,11 +59,11 @@ class OFDMSymbol:
     
     @property
     def pilots(self) -> np.ndarray:
-        return self.symbol[np.array(self.pilots_k)]
+        return self.symbol[np.array(self.pilots_idx)]
     
     @property
     def data(self) -> np.ndarray:
-        return self.symbol[np.array(self.data_k)]
+        return self.symbol[np.array(self.data_k)] #FIXME: THIS IS WRONG 
 
         
     

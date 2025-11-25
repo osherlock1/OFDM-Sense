@@ -7,8 +7,8 @@ class SubcarrierMap:
     # OFDM SYMBOL MAPPING
     #--------------------
     N = 2 ** 10
-    num_pilots = 128
-    cp_len = 10
+    num_pilots = N // 4
+    cp_len = 8
     guard_len = 5
 
 
@@ -48,8 +48,8 @@ class SubcarrierMap:
     
     @property
     def data_bins(self):
-        used_neg = list(range(-26, 0))
-        used_pos = list(range(1,27))
+        used_neg = list(range(-(self.N // 2) + self.guard_len, 0))
+        used_pos = list(range(1,(self.N // 2) - self.guard_len))
         used_bins = []
         
         for k in (used_neg + used_pos):

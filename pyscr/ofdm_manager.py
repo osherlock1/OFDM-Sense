@@ -13,7 +13,7 @@ class OFDMManager():
         """
         Compute IFFT of the QAM Frequency Packet (Default 64 Point)
         """
-        symbol_freq.symbol = (np.fft.ifft(symbol_freq.symbol, self.N) * np.sqrt(self.map.N))#* np.sqrt(self.N) #/ (len(self.map.data_bins) + len(self.map.pilots_k)))
+        symbol_freq.symbol = (np.fft.ifft(symbol_freq.symbol, self.N)) #* np.sqrt(self.N) #/ (len(self.map.data_bins) + len(self.map.pilots_k)))
         
     
     def fft(self, symbol_time:np.ndarray):
