@@ -159,13 +159,14 @@ def main():
 
     #Filter M Values
     M_filtered = filter_M(M_Values)
-
+    sync_idx = np.argmax(M_filtered)
+    start_idx = np.array([sync_idx]) + 1
     #Get starting point
     zero_crossings = find_sync_start(M_Values, M_filtered)
-    start_idx = np.nonzero(zero_crossings)[0]
+    #start_idx = np.nonzero(zero_crossings)[0] + 2
     #Get Sync and Payload Idx
-    b_preamble = np.zeros(map.N + N_symbols * (map.N + map.cp_len))
-    b_preamble[:map.N] = 1
+    #b_preamble = np.zeros(map.N + N_symbols * (map.N + map.cp_len))
+    #b_preamble[:map.N] = 1
 
     #Estimate payload and preamble valid
     preamble_valid_est = estimate_preamble_valid(N_symbols, zero_crossings)
@@ -176,7 +177,8 @@ def main():
     #---------------
     print(P_Values)
     print(f"START IDX = {start_idx}")
-    P_peak = P_Values[int(start_idx)]
+    current_start_idx = start_idx[0]
+    P_peak = P_Values[current_start_idx]
     theta = np.angle(P_peak)
     f_hat = (theta * FS) / (np.pi * map.N)
     print(f"Estimated CFO: {f_hat} Hz")
@@ -213,7 +215,14 @@ def main():
     sync_symbol = symbols_no_cp[0]
     pilot_symbol = symbols_no_cp[1]
 
+    pilot_symbol_ref = PilotSymbol().symbol
+    pilot_symbol_ref = np.fft.ifft(pilot_symbol_ref)
 
+    G, f_hat = om.cfo_correct(Tx = pilot_symbol_ref, Rx = pilot_symbol, fs=FS)
+
+    plt.figure()
+    plt.plot(np.abs(G))
+    plt.show()
     # pilot_symb_ref = om.create_tx_block(PilotSymbol())
     # pilot_symb_ref = pilot_symb_ref[map.cp_len:]
     # pilot_recieved = chunks[0]
