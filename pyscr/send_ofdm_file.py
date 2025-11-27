@@ -154,7 +154,7 @@ def main():
     file_size = os.path.getsize(file_name)
     iq = np.fromfile(file_name, dtype = np.complex64)
     print("Calculating M Values... \n")
-    M_Values = calc_M_values(iq)
+    M_Values, P_Values = calc_M_values(iq)
     print("Done!\n")
 
     #Filter M Values
@@ -171,6 +171,26 @@ def main():
     preamble_valid_est = estimate_preamble_valid(N_symbols, zero_crossings)
     payload_valid_est = estimate_payload_valid(N_symbols, N_data_symbols + 1, zero_crossings)
     
+    #---------------
+    # COARSE CFO CORRECTION
+    #---------------
+    print(P_Values)
+    print(f"START IDX = {start_idx}")
+    P_peak = P_Values[int(start_idx)]
+    theta = np.angle(P_peak)
+    f_hat = (theta * FS) / (np.pi * map.N)
+    print(f"Estimated CFO: {f_hat} Hz")
+
+    t_vector = np.arange(len(iq)) / FS
+
+    correction_vector = np.exp(-1j * 2 * np.pi * f_hat * t_vector)
+    #Apply correction
+    iq = iq * correction_vector
+    print("Coarse CFO Correction Applied")
+
+
+
+
     #Get the OFDM symbols - CP
     print(f"len iq = {len(iq)}")
     print(f" len payload_valid_est = {len(payload_valid_est)}")
@@ -245,9 +265,9 @@ def main():
         #Calculate G
         G, f_hat = om.cfo_correct(Tx = txn_time, Rx = rxn_time, fs=FS, n_bins = n_bins)
         print(f"FHAT is {f_hat}")
-        plt.figure()
-        plt.plot(np.abs(G))
-        plt.show()
+        # plt.figure()
+        # plt.plot(np.abs(G))
+        # plt.show()
 
         #Chanenl Estimation
 
@@ -375,10 +395,12 @@ def main():
 
 def calc_M_values(iq_samples:np.ndarray):
     M_values = []
+    P_values = []
     for i in range(len(iq_samples)):
         P, R, M = om.schmidl_cox_metrics_P_R_M(iq_samples, delay = i)
         M_values.append(M)
-    return M_values
+        P_values.append(P)
+    return M_values, P_values
 
 
 def init_globals():
