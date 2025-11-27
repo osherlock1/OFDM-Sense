@@ -187,7 +187,7 @@ def main():
     #---------------
     # COARSE CFO CORRECTION
     #---------------
-    print(P_Values)
+    #print(P_Values)
     print(f"START IDX = {start_idx}")
     current_start_idx = start_idx[0]
     P_peak = P_Values[current_start_idx]
