@@ -294,7 +294,7 @@ def main():
         #Chanenl Estimation
         corrected_rx = chunk * np.exp(-1j * 2*np.pi * f_hat * nt / FS)
 
-        chunk_fft = np.fft.fft(chunk)
+        chunk_fft = np.fft.fft(corrected_rx)
         #FIXME: FIX BELOW
         Y_tst = chunk_fft[data_idx]
         #Y_tst = corrected_RXk[data_idx]
