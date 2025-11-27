@@ -269,6 +269,7 @@ def main():
 
     print(TXk_pilot)
     Y = []
+    nt = np.arange(map.N)
     for chunk in chunks:
 
         #CFO Adjustment
@@ -291,6 +292,7 @@ def main():
         plt.show()
 
         #Chanenl Estimation
+        corrected_rx = chunk * np.exp(-1j * 2*np.pi * f_hat * nt / FS)
 
         chunk_fft = np.fft.fft(chunk)
         #FIXME: FIX BELOW
