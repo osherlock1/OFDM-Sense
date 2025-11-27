@@ -287,9 +287,9 @@ def main():
         #Calculate G
         G, f_hat = om.cfo_correct(Tx = txn_time, Rx = rxn_time, fs=FS, n_bins = n_bins)
         print(f"FHAT is {f_hat}")
-        plt.figure()
-        plt.plot(np.abs(G))
-        plt.show()
+        # plt.figure()
+        # plt.plot(np.abs(G))
+        # plt.show()
 
         #Chanenl Estimation
         corrected_rx = chunk * np.exp(-1j * 2*np.pi * f_hat * nt / FS)
