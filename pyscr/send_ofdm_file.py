@@ -11,6 +11,7 @@ from scipy.interpolate import interp1d
 import json
 from pilot_symbol import PilotSymbol
 import argparse
+from sync_symbol import SyncSymbol
 def main():
     map = SubcarrierMap()
 
@@ -162,12 +163,23 @@ def main():
     sync_idx = np.argmax(M_filtered)
     start_idx = np.array([sync_idx]) + 1
     #Get starting point
+
+    #=----------
+    #Fine Synq
+    #-----------
+
+    #Generate Ref sync symbol
+    known_sync_symbol = om.create_tx_block(SyncSymbol())
+    refined_start_idx = fine_time_sync(iq, int(start_idx[0]), known_sync_symbol, search_window=30) + map.cp_len
+    print(f"Coarse Index: {start_idx[0]} --> Refined Index: {refined_start_idx}")
+    start_idx = np.array([refined_start_idx])
+
     zero_crossings = find_sync_start(M_Values, M_filtered)
     #start_idx = np.nonzero(zero_crossings)[0] + 2
     #Get Sync and Payload Idx
     #b_preamble = np.zeros(map.N + N_symbols * (map.N + map.cp_len))
     #b_preamble[:map.N] = 1
-
+    
     #Estimate payload and preamble valid
     preamble_valid_est = estimate_preamble_valid(N_symbols, zero_crossings)
     payload_valid_est = estimate_payload_valid(N_symbols, N_data_symbols + 1, zero_crossings)
@@ -274,9 +286,9 @@ def main():
         #Calculate G
         G, f_hat = om.cfo_correct(Tx = txn_time, Rx = rxn_time, fs=FS, n_bins = n_bins)
         print(f"FHAT is {f_hat}")
-        # plt.figure()
-        # plt.plot(np.abs(G))
-        # plt.show()
+        plt.figure()
+        plt.plot(np.abs(G))
+        plt.show()
 
         #Chanenl Estimation
 
@@ -557,7 +569,27 @@ def channel_estimation(recieved_pilot_symbol:np.ndarray, known_pilot_symbol:np.n
     channel_gain = (r * s_conj) / sqr_mag_s
     return channel_gain
 
+def fine_time_sync(rx_signal, coarse_index, known_preamble, search_window = 20):
 
+    N = len(known_preamble)
+
+    #Define a search range around coarse index
+    start_search = max(0, coarse_index - search_window)
+    end_search = min(len(rx_signal), coarse_index + N + search_window)
+
+    #Extract the chunk of received signal
+    rx_chunk = rx_signal[start_search : end_search]
+
+    #Cross correlate
+    correlation = np.correlate(rx_chunk, known_preamble, mode='valid')
+
+    #Find the peak cross correlation
+    peak_offset = np.argmax(np.abs(correlation))
+
+    #Calculate the true index
+    true_index = start_search + peak_offset
+
+    return true_index
 
 if __name__ == "__main__":
     main()
