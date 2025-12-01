@@ -8,7 +8,11 @@ class SubcarrierMap:
     #--------------------
     N = 2 ** 10
     num_pilots = N // 4
+<<<<<<< HEAD
     cp_len = 200
+=======
+    cp_len = 100
+>>>>>>> 7509b9bf5df3ef6e1082d28bfc00ee8c45bfb293
     guard_len = 5
 
 
