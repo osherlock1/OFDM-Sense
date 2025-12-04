@@ -207,7 +207,7 @@ def main():
 
     n_total = np.arange(len(iq)) / FS
 
-    iq = iq * np.exp(1j * 2*np.pi*cfo * n_total)
+    #iq = iq * np.exp(1j * 2*np.pi*cfo * n_total)
 
 
 
