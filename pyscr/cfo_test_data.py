@@ -109,8 +109,22 @@ plt.show()
 #Calculate G
 G, f_hat = om.cfo_correct(Tx = txn_time, Rx = rxn_time, fs = FS, n_bins = num_thing)
 
+tk = np.fft.fft(txn)
+rk = np.fft.fft(rxn)
 
-corrected_rx = rxn * np.exp(-1j * 2*np.pi * f_hat * n / FS)
+corrected_rx = rxn * np.exp(1j * 2*np.pi * f_hat * n / FS)
+rk_corr = np.fft.fft(corrected_rx)
+#### Plot the constalation before CFO adjustment
+plt.figure()
+#plt.plot(np.real(rk), np.imag(rk), '.')
+plt.plot(np.real(rk_corr), np.imag(rk_corr), '.', label = "corrected")
+plt.plot(np.real(tk), np.imag(tk), '.')
+plt.legend()
+plt.show()
+
+
+
+
 
 
 plt.figure()

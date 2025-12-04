@@ -202,15 +202,22 @@ def main():
     iq = iq * correction_vector
     print("Coarse CFO Correction Applied")
 
+    cfo = 3e5
+    print(f"Applying Artificial CFO {cfo} hz")
+
+    n_total = np.arange(len(iq)) / FS
+
+    iq = iq * np.exp(1j * 2*np.pi*cfo * n_total)
+
 
 
 
     #Get the OFDM symbols - CP
-    print(f"len iq = {len(iq)}")
-    print(f" len payload_valid_est = {len(payload_valid_est)}")
-    ofdm_symbols = get_ofdm_symbols(iq, payload_valid_est)
+    #print(f"len iq = {len(iq)}")
+    #print(f" len payload_valid_est = {len(payload_valid_est)}")
+    #ofdm_symbols = get_ofdm_symbols(iq, payload_valid_est)
     #print(f"len of OFDM SYMBOLS IS: {len(ofdm_symbols)}")
-    chunks = np.split(ofdm_symbols, N_data_symbols + 1)
+    #chunks = np.split(ofdm_symbols, N_data_symbols + 1)
 
     #Unpack total OFDM packet after starting point
     packet_len = (map.N + map.cp_len) * (N_data_symbols + N_PILOT_SYMBOLS + N_SYNC_SYMBOLS)
@@ -229,24 +236,19 @@ def main():
 
     pilot_symbol_ref = PilotSymbol().symbol
     pilot_symbol_ref = np.fft.ifft(pilot_symbol_ref)
+    n_bins = 2 ** 14
+    G, f_hat = om.cfo_correct(Tx = pilot_symbol_ref, Rx = pilot_symbol, fs=FS, n_bins = n_bins)
 
-    G, f_hat = om.cfo_correct(Tx = pilot_symbol_ref, Rx = pilot_symbol, fs=FS)
+    
+    f_grid = np.linspace(-FS/2 , FS/2 , n_bins)
 
     plt.figure()
-    plt.plot(np.abs(G))
+    plt.plot(f_grid, np.abs(G))
+    plt.title("Pilot CFO")
     plt.show()
-    # pilot_symb_ref = om.create_tx_block(PilotSymbol())
-    # pilot_symb_ref = pilot_symb_ref[map.cp_len:]
-    # pilot_recieved = chunks[0]
-    n_bins = 2 ** 14
-    # f_grid = np.linspace(-FS/2 , FS/2 , n_bins)
-    # G,f_hat = om.cfo_correct(Tx = pilot_symb_ref, Rx = (pilot_symbol), fs = FS, n_bins = n_bins)
-    # print(f"FHAT IS {f_hat}")
-    # plt.plot(f_grid, G)
-    # plt.show()
-    # #Do the phase change
-    # n_len = len(iq)
-    # n = np.arange(n_len)
+
+    n_pilot = np.arange(len(pilot_symbol))
+    pilot_symbol = pilot_symbol * np.exp(-1j * 2*np.pi * f_hat * n_pilot)
 
 
     #----------------------
@@ -273,7 +275,7 @@ def main():
     for chunk in chunks:
 
         #CFO Adjustment
-
+        Rxn = chunk
         #Convert to Frequency Domain
         RXk = np.fft.fft(chunk)
         RXk_pilot = RXk.copy()
@@ -287,18 +289,19 @@ def main():
         #Calculate G
         G, f_hat = om.cfo_correct(Tx = txn_time, Rx = rxn_time, fs=FS, n_bins = n_bins)
         print(f"FHAT is {f_hat}")
-        #plt.figure()
-        #plt.plot(np.abs(G))
-        #plt.show()
+        plt.figure()
+        plt.plot(f_grid, np.abs(G))
+        plt.title("data CFO")
+        plt.show()
 
         #Chanenl Estimation
-        corrected_rx = chunk * np.exp(-1j * 2*np.pi * f_hat * nt / FS)
+        corrected_rx = Rxn * np.exp(-1j * 2*np.pi * f_hat * nt / FS)
 
         chunk_fft = np.fft.fft(corrected_rx)
         #FIXME: FIX BELOW
         Y_tst = chunk_fft[data_idx]
         #Y_tst = corrected_RXk[data_idx]
-        Y_tst = Y_tst / lambda_k
+        #Y_tst = Y_tst / lambda_k
         Y.append(Y_tst)
     Y = np.concatenate(Y)
     Y_scaled = Y * np.sqrt(10)
