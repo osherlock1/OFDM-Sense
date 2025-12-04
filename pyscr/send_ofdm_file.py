@@ -170,7 +170,7 @@ def main():
 
     #Generate Ref sync symbol
     known_sync_symbol = om.create_tx_block(SyncSymbol())
-    refined_start_idx = fine_time_sync(iq, int(start_idx[0]), known_sync_symbol, search_window=30) + map.cp_len
+    refined_start_idx = fine_time_sync(iq, int(start_idx[0]), known_sync_symbol, search_window=map.cp_len) + map.cp_len
     print(f"Coarse Index: {start_idx[0]} --> Refined Index: {refined_start_idx}")
     start_idx = np.array([refined_start_idx])
 
