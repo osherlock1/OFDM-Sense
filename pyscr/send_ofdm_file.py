@@ -154,6 +154,9 @@ def main():
     print("Unpacking OFDM Symbol...\n \n \n")
     file_size = os.path.getsize(file_name)
     iq = np.fromfile(file_name, dtype = np.complex64)
+
+
+
     print("Calculating M Values... \n")
     M_Values, P_Values = calc_M_values(iq)
     print("Done!\n")
@@ -174,22 +177,22 @@ def main():
     print(f"Coarse Index: {start_idx[0]} --> Refined Index: {refined_start_idx}")
     start_idx = np.array([refined_start_idx])
 
-    zero_crossings = find_sync_start(M_Values, M_filtered)
+    #zero_crossings = find_sync_start(M_Values, M_filtered)
     #start_idx = np.nonzero(zero_crossings)[0] + 2
     #Get Sync and Payload Idx
     #b_preamble = np.zeros(map.N + N_symbols * (map.N + map.cp_len))
     #b_preamble[:map.N] = 1
     
     #Estimate payload and preamble valid
-    preamble_valid_est = estimate_preamble_valid(N_symbols, zero_crossings)
-    payload_valid_est = estimate_payload_valid(N_symbols, N_data_symbols + 1, zero_crossings)
+    #preamble_valid_est = estimate_preamble_valid(N_symbols, zero_crossings)
+    #payload_valid_est = estimate_payload_valid(N_symbols, N_data_symbols + 1, zero_crossings)
     
     #---------------
     # COARSE CFO CORRECTION
     #---------------
     #print(P_Values)
     print(f"START IDX = {start_idx}")
-    current_start_idx = start_idx[0]
+    current_start_idx = start_idx[0] 
     P_peak = P_Values[current_start_idx]
     theta = np.angle(P_peak)
     f_hat = (theta * FS) / (np.pi * map.N)
@@ -202,7 +205,9 @@ def main():
     iq = iq * correction_vector
     print("Coarse CFO Correction Applied")
 
-    cfo = 3e5
+ 
+
+    cfo = 1000000
     print(f"Applying Artificial CFO {cfo} hz")
 
     n_total = np.arange(len(iq)) / FS
@@ -221,7 +226,10 @@ def main():
 
     #Unpack total OFDM packet after starting point
     packet_len = (map.N + map.cp_len) * (N_data_symbols + N_PILOT_SYMBOLS + N_SYNC_SYMBOLS)
-    ofdm_packet = iq[start_idx[0] : start_idx[0] + packet_len]
+    print(f"Packe_len = {packet_len}")
+    ofdm_packet = iq[current_start_idx : current_start_idx + packet_len]
+    print(f"Length of ofdm_packet {len(ofdm_packet)}")
+    print(f"Length of split {N_data_symbols + N_PILOT_SYMBOLS + N_SYNC_SYMBOLS}")
     symbols = np.split(ofdm_packet, N_data_symbols + N_PILOT_SYMBOLS + N_SYNC_SYMBOLS)
 
     symbols_no_cp = []
@@ -236,10 +244,10 @@ def main():
 
     pilot_symbol_ref = PilotSymbol().symbol
     pilot_symbol_ref = np.fft.ifft(pilot_symbol_ref)
-    n_bins = 2 ** 14
+    n_bins = 2 ** 16
     G, f_hat = om.cfo_correct(Tx = pilot_symbol_ref, Rx = pilot_symbol, fs=FS, n_bins = n_bins)
 
-    
+    print(f"Pilot CFO Calc: {f_hat}")    
     f_grid = np.linspace(-FS/2 , FS/2 , n_bins)
 
     plt.figure()
@@ -247,8 +255,8 @@ def main():
     plt.title("Pilot CFO")
     plt.show()
 
-    n_pilot = np.arange(len(pilot_symbol))
-    pilot_symbol = pilot_symbol * np.exp(-1j * 2*np.pi * f_hat * n_pilot)
+    n_pilot = np.arange(len(pilot_symbol)) 
+    #pilot_symbol = pilot_symbol * np.exp(-1j * 2*np.pi * f_hat * n_pilot / FS)
 
 
     #----------------------
@@ -259,7 +267,14 @@ def main():
     pilot_symb_ref = PilotSymbol().symbol
     pilot_recieved = np.fft.fft(pilot_symbol)
     lambda_k = channel_estimation(recieved_pilot_symbol=pilot_recieved, known_pilot_symbol=pilot_symb_ref)
-
+    plt.figure()
+    plt.subplot(2,1,1)
+    plt.plot(np.angle(lambda_k))
+    plt.title("Angle")
+    plt.subplot(2,1,2)
+    plt.plot(np.abs(lambda_k))
+    plt.title("Mag")
+    plt.plot()
 
     #Build Reference Data Pilot Symbols
     TXk_pilot = dg.generate_random_packet(1)
@@ -269,7 +284,7 @@ def main():
         if i not in pilots_idx:
             TXk_pilot[i] = 0 + 0j
 
-    print(TXk_pilot)
+    #print(TXk_pilot)
     Y = []
     nt = np.arange(map.N)
     for chunk in chunks:
@@ -289,15 +304,15 @@ def main():
         #Calculate G
         G, f_hat = om.cfo_correct(Tx = txn_time, Rx = rxn_time, fs=FS, n_bins = n_bins)
         print(f"FHAT is {f_hat}")
-        plt.figure()
-        plt.plot(f_grid, np.abs(G))
-        plt.title("data CFO")
-        plt.show()
+        # plt.figure()
+        # plt.plot(f_grid, np.abs(G))
+        # plt.title("data CFO")
+        # plt.show()
 
         #Chanenl Estimation
         corrected_rx = Rxn * np.exp(-1j * 2*np.pi * f_hat * nt / FS)
 
-        chunk_fft = np.fft.fft(corrected_rx)
+        chunk_fft = np.fft.fft(chunk)
         #FIXME: FIX BELOW
         Y_tst = chunk_fft[data_idx]
         #Y_tst = corrected_RXk[data_idx]

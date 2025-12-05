@@ -30,7 +30,7 @@ pilot_idx = np.array([map.idx(k) for k in pilot_k])
 data_idx = np.array([map.idx(k) for k in data_k])
 CFO = -34.23432e6
 n = np.arange(map.N)
-num_thing = 2 ** 14
+num_thing = 2 ** 15
 f_grid = np.linspace(-FS/2, FS/2, num_thing)
 
 
