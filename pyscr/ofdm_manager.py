@@ -296,12 +296,14 @@ class OFDMManager():
         :param n_bins: Resolution of G
         """
 
+        f_range = np.linspace(-FS / 2, FS /2, n_bins)
+
         tx_len = len(tx)
         dup_tx = np.concatenate([tx, tx]) #Duplcated TX to shift delays
 
         final_G = [] #Final G matrix 
         max_G = 0 #Max G for each G
-        final_f = 0 #Final frequency bin of max correlation
+        final_f_idx = 0 #Final frequency bin of max correlation
 
         for delay in range(delay_range):
             current_tx = dup_tx[delay: delay + tx_len] #Take delayed sample
@@ -310,9 +312,9 @@ class OFDMManager():
             g = max(np.abs(G)) #Calc the max value for current delay
             if g > max_G:
                 max_G = g 
-                final_f = np.argmax(G)
-
-        return final_f, final_G
+                final_f_idx = np.argmax(G)
+        final_f = f_range[final_f_idx]
+        return f_hat, final_f_idx, final_G
 
         
     
