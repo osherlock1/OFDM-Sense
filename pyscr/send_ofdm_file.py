@@ -12,6 +12,7 @@ import json
 from pilot_symbol import PilotSymbol
 import argparse
 from sync_symbol import SyncSymbol
+
 def main():
     map = SubcarrierMap()
 
@@ -243,12 +244,20 @@ def main():
     pilot_symbol = symbols_no_cp[1]
 
     pilot_symbol_ref = PilotSymbol().symbol
-    pilot_symbol_ref = np.fft.ifft(pilot_symbol_ref)
-    n_bins = 2 ** 16
-    G, f_hat = om.cfo_correct(Tx = pilot_symbol_ref, Rx = pilot_symbol, fs=FS, n_bins = n_bins)
-
+    pilot_ref = np.fft.ifft(pilot_symbol_ref)
+    n_bins = 2 ** 12
+    f_hat, final_f_idx, G_matrix = om.cfo_calc(tx=pilot_ref, rx = pilot_symbol, FS = FS, n_bins = n_bins)
+    
     print(f"Pilot CFO Calc: {f_hat}")    
+
     f_grid = np.linspace(-FS/2 , FS/2 , n_bins)
+    print(f"Final F_hat = {f_grid[final_f_idx]}")
+    for G in G_matrix:
+        plt.figure()
+        plt.plot(f_grid, np.abs(G))
+        plt.title("G TESTING")
+        plt.show()
+    
 
     plt.figure()
     plt.plot(f_grid, np.abs(G))
@@ -356,13 +365,13 @@ def main():
 
     
     #CALCUALTE BIT ERROR RATE
-    #bit_error_rate = om.calc_BER(ref_data, rx_binary)
+    bit_error_rate = om.calc_BER(ref_data, rx_binary)
     
     #CALCUALTE SYMBOL ERROR RATE (SER)
-    #ser = om.calc_SER(ref_iq_16qam, Y_scaled)
+    ser = om.calc_SER(ref_iq_16qam, Y_scaled)
     
     #Calculate ERROR VECTOR MAGNITUDE (EVM)
-    #evm = om.calc_EVM(Y_scaled, ref_iq_16qam)
+    evm = om.calc_EVM(Y_scaled, ref_iq_16qam)
 
 
 
@@ -415,9 +424,9 @@ def main():
     #PRINT METRICS
     #-----------------------
     print(f"------- Metrics --------")
-    # print(f"BER: {bit_error_rate}")
-    # print(f"SER: {ser}")
-    # print(f"EVM: {evm}")
+    print(f"BER: {bit_error_rate}")
+    print(f"SER: {ser}")
+    print(f"EVM: {evm}")
     print((f"------------------------"))
 
 

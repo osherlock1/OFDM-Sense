@@ -296,7 +296,7 @@ class OFDMManager():
         :param n_bins: Resolution of G
         """
 
-        f_range = np.linspace(-FS / 2, FS /2, n_bins)
+        f_grid = np.linspace(-FS/2 , FS/2 , n_bins)
 
         tx_len = len(tx)
         dup_tx = np.concatenate([tx, tx]) #Duplcated TX to shift delays
@@ -313,7 +313,7 @@ class OFDMManager():
             if g > max_G:
                 max_G = g 
                 final_f_idx = np.argmax(G)
-        final_f = f_range[final_f_idx]
+        final_f = f_grid[final_f_idx]
         return f_hat, final_f_idx, final_G
 
         

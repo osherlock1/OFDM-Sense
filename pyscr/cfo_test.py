@@ -15,6 +15,19 @@ from scipy.signal import correlate
 
 
 
+def slide_tx(tx:np.ndarray, delay_range:int = 20):
+    #For delay in slide range
+    tx_len = len(tx)
+    dup_tx = np.array([tx, tx])
+
+    print(f"Duptx: {dup_tx}")
+
+    for delay in range(delay_range):
+        current_tx = dup_tx[delay: delay + tx_len]
+        print(current_tx)
+    
+    
+
 
 
 om = OFDMManager()
@@ -39,6 +52,9 @@ data_idx = np.array([map.idx(k) for k in data_k])
 
 Tx = packet[-map.N:]
 Tx_data = Tx[data_idx]
+
+Tx = np.arange(64)
+slide_tx(Tx)
 
 Tx_pilot = om.create_tx_block(PilotSymbol())
 Tx_pilot = Tx_pilot[-map.N:]
