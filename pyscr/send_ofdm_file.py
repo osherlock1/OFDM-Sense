@@ -252,20 +252,16 @@ def main():
 
     f_grid = np.linspace(-FS/2 , FS/2 , n_bins)
     print(f"Final F_hat = {f_grid[final_f_idx]}")
-    for G in G_matrix:
-        plt.figure()
-        plt.plot(f_grid, np.abs(G))
-        plt.title("G TESTING")
-        plt.show()
+    f_hat = f_grid[final_f_idx]
+    # for G in G_matrix:
+    #     plt.figure()
+    #     plt.plot(f_grid, np.abs(G))
+    #     plt.title("G TESTING")
+    #     plt.show()
     
 
-    plt.figure()
-    plt.plot(f_grid, np.abs(G))
-    plt.title("Pilot CFO")
-    plt.show()
-
     n_pilot = np.arange(len(pilot_symbol)) 
-    #pilot_symbol = pilot_symbol * np.exp(-1j * 2*np.pi * f_hat * n_pilot / FS)
+    pilot_symbol = pilot_symbol * np.exp(-1j * 2*np.pi * f_hat * n_pilot / FS)
 
 
     #----------------------
@@ -311,17 +307,19 @@ def main():
         rxn_time = np.fft.ifft(RXk_pilot)
 
         #Calculate G
-        G, f_hat = om.cfo_correct(Tx = txn_time, Rx = rxn_time, fs=FS, n_bins = n_bins)
+        f_hat, final_f_idx, G_matrix = om.cfo_calc(tx=txn_time, rx = rxn_time, FS = FS, n_bins = n_bins)
+        f_hat = f_grid[final_f_idx]
         print(f"FHAT is {f_hat}")
-        # plt.figure()
-        # plt.plot(f_grid, np.abs(G))
-        # plt.title("data CFO")
-        # plt.show()
+        # for G in G_matrix:
+        #     plt.figure()
+        #     plt.plot(f_grid, np.abs(G))
+        #     plt.title("data CFO")
+        #     plt.show()
 
         #Chanenl Estimation
         corrected_rx = Rxn * np.exp(-1j * 2*np.pi * f_hat * nt / FS)
 
-        chunk_fft = np.fft.fft(chunk)
+        chunk_fft = np.fft.fft(corrected_rx)
         #FIXME: FIX BELOW
         Y_tst = chunk_fft[data_idx]
         #Y_tst = corrected_RXk[data_idx]
