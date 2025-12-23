@@ -284,4 +284,36 @@ class OFDMManager():
 
         return G, f_hat
     
+    def cfo_calc(self, tx, rx, FS, delay_range:int = 20, n_bins:int = 2 ** 12):
+        """
+        Docstring for cfo_calc
+        
+        :param self: Description
+        :param tx: Reference Symbol
+        :param rx: Recieved Symbol
+        :param FS: Sample Frequnecy
+        :param delay_range: Sweep range over the possible delays
+        :param n_bins: Resolution of G
+        """
+
+        tx_len = len(tx)
+        dup_tx = np.concatenate([tx, tx]) #Duplcated TX to shift delays
+
+        final_G = [] #Final G matrix 
+        max_G = 0 #Max G for each G
+        final_f = 0 #Final frequency bin of max correlation
+
+        for delay in range(delay_range):
+            current_tx = dup_tx[delay: delay + tx_len] #Take delayed sample
+            G, f_hat = self.cfo_correct(Tx = current_tx, Rx = rx, fs = FS, n_bins = n_bins) #Calc correlation
+            final_G.append(G) 
+            g = max(np.abs(G)) #Calc the max value for current delay
+            if g > max_G:
+                max_G = g 
+                final_f = np.argmax(G)
+
+        return final_f, final_G
+
+        
+    
 
