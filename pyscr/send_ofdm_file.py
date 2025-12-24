@@ -208,12 +208,12 @@ def main():
 
  
 
-    cfo = 1000000
+    cfo = 123456
     print(f"Applying Artificial CFO {cfo} hz")
 
     n_total = np.arange(len(iq)) / FS
 
-    #iq = iq * np.exp(1j * 2*np.pi*cfo * n_total)
+    iq = iq * np.exp(1j * 2*np.pi*cfo * n_total)
 
 
 
@@ -323,7 +323,7 @@ def main():
         #FIXME: FIX BELOW
         Y_tst = chunk_fft[data_idx]
         #Y_tst = corrected_RXk[data_idx]
-        #Y_tst = Y_tst / lambda_k
+        Y_tst = Y_tst / lambda_k
         Y.append(Y_tst)
     Y = np.concatenate(Y)
     Y_scaled = Y * np.sqrt(10)

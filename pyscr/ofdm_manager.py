@@ -1,6 +1,9 @@
 import numpy as np
 from subcarrier_map import SubcarrierMap
+import scipy
 
+
+map = SubcarrierMap()
 
 class OFDMManager():
     def __init__(self):
@@ -304,6 +307,7 @@ class OFDMManager():
         final_G = [] #Final G matrix 
         max_G = 0 #Max G for each G
         final_f_idx = 0 #Final frequency bin of max correlation
+        final_delay = 0
 
         for delay in range(delay_range):
             current_tx = dup_tx[delay: delay + tx_len] #Take delayed sample
@@ -313,9 +317,44 @@ class OFDMManager():
             if g > max_G:
                 max_G = g 
                 final_f_idx = np.argmax(G)
+                final_delay = delay
         final_f = f_grid[final_f_idx]
-        return f_hat, final_f_idx, final_G
+        return f_hat, final_f_idx, final_G, final_delay
+    
+    def calc_M_values(self, iq_samples:np.ndarray):
+        """
+        Docstring for calc_M_values
+        Calculates values for syncronization
+        :param self: Description
+        :param iq_samples: Full recieved Iq Samples
+        """
+        M_values = []
+        P_values = []
+        for i in range(len(iq_samples)):
+            P, R, M = self.schmidl_cox_metrics_P_R_M(iq_samples, delay = i)
+            M_values.append(M)
+            P_values.append(P)
+        return M_values, P_values
 
+    def filter_M(self, M_values):
+        ofdm_CP = map.cp_len
+        b_toPeak = np.ones(ofdm_CP) / ofdm_CP
+        a = (1,)
+        M_filter = scipy.signal.lfilter(b_toPeak, a, M_values)
+        return M_filter
+    
+    def channel_estimation(self, recieved_pilot_symbol:np.ndarray, known_pilot_symbol:np.ndarray):
+        data_k = map.data_bins
+        data_idx = np.array([map.idx(k) for k in data_k])
         
+        
+        r = recieved_pilot_symbol[data_idx]
+        s = known_pilot_symbol[data_idx]
+        print(s)
+        s_conj = np.conj(s)
+        sqr_mag_s = np.abs(s) ** 2
+        print(sqr_mag_s)
+        channel_gain = (r * s_conj) / sqr_mag_s
+        return channel_gain
     
 

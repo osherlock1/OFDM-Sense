@@ -9,6 +9,10 @@ import matplotlib.pyplot as plt
 import json
 from pilot_symbol import PilotSymbol
 
+
+#FIXME: ALL DATA SYMBOLS ARE THE SAME
+
+
 def main():
     #Create parser
     parser = argparse.ArgumentParser()
