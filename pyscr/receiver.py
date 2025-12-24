@@ -198,33 +198,33 @@ def main():
 
     
     #FIXME: TEMP DEBUG PLOTTING
-    plt.figure()
-    plt.plot(pilot_final, label="Final Pilot")
-    plt.plot(pilot_ref_k[SymbolConfig.data_idx], label ="Ref")
-    plt.legend()
-    plt.title("Pilot Final")
-    plt.show()
+    # plt.figure()
+    # plt.plot(pilot_final, label="Final Pilot")
+    # plt.plot(pilot_ref_k[SymbolConfig.data_idx], label ="Ref")
+    # plt.legend()
+    # plt.title("Pilot Final")
+    # plt.show()
 
-    plt.figure()
-    plt.subplot(2,1,1)
-    plt.plot(np.abs(lambda_k))
-    plt.title("Magnitude")
+    # plt.figure()
+    # plt.subplot(2,1,1)
+    # plt.plot(np.abs(lambda_k))
+    # plt.title("Magnitude")
 
-    plt.subplot(2,1,2)
-    plt.plot(np.angle(lambda_k))
-    plt.title("Angle")
-    plt.show()    
+    # plt.subplot(2,1,2)
+    # plt.plot(np.angle(lambda_k))
+    # plt.title("Angle")
+    # plt.show()    
 
     qam_16_iq = qam_values()
 
     #Constalation Plot
-    plt.subplot(4, 3, (8,15))
-    plt.plot(np.real(pilot_final) * np.sqrt(10)  , np.imag(pilot_final) * np.sqrt(10), '.', label = "Recieved OFDM packet")
-    plt.plot(np.real(qam_16_iq) * np.sqrt(10), np.imag(qam_16_iq) * np.sqrt(10), '.', label = "Constalation Map")
-    plt.title("Constalation Diagram (16-QAM)")
-    plt.xlabel("Real Axis")
-    plt.ylabel("Imaginary Axis")
-    plt.show()
+    # plt.subplot(4, 3, (8,15))
+    # plt.plot(np.real(pilot_final) * np.sqrt(10)  , np.imag(pilot_final) * np.sqrt(10), '.', label = "Recieved OFDM packet")
+    # plt.plot(np.real(qam_16_iq) * np.sqrt(10), np.imag(qam_16_iq) * np.sqrt(10), '.', label = "Constalation Map")
+    # plt.title("Constalation Diagram (16-QAM)")
+    # plt.xlabel("Real Axis")
+    # plt.ylabel("Imaginary Axis")
+    # plt.show()
 
 
     #--------Data unpacking---------
@@ -261,7 +261,7 @@ def unpack_data_symbols(symbol_time, TXk_pilot, delay):
 
     #Convert to Freq Domain
     RXk = np.fft.fft(symbol_time)
-    RXk_pilot = RXk[-map.N:].copy()
+    RXk_pilot = RXk[-(delay+map.N):-delay].copy()
     for i in range(map.N):
         if i not in SymbolConfig.pilots_idx:
             RXk_pilot[i] = 0 + 0j
@@ -274,7 +274,7 @@ def unpack_data_symbols(symbol_time, TXk_pilot, delay):
     f_hat, final_f_idx, final_G, final_delay = om.cfo_calc(tx = txn_time, rx = rxn_time, FS = FreqConfig.FS, delay_range=map.cp_len + 5, n_bins=FreqConfig.n_bins)
     f_hat = FreqConfig.f_grid[final_f_idx]
     print(f"Data Symbol Fhat:{f_hat}")
-    print(f"Data Symbol Delay{delay}")
+    print(f"Data Symbol Delay{final_delay}")
     #Adjust the recieved sybol with calced CFO
     corrected_rx = Rxn[-(delay+map.N):-delay] * np.exp(-1j * 2*np.pi * (f_hat) * FreqConfig.n_pilot)
 
@@ -282,11 +282,11 @@ def unpack_data_symbols(symbol_time, TXk_pilot, delay):
     corrected_Rk = np.fft.fft(corrected_rx)
 
     # #REMOVE AFTER DEBUG
-    # for G in final_G:
-    #     plt.figure()
-    #     plt.plot(np.abs(G))
-    #     plt.title('Data G')
-    #     plt.show()
+    for G in final_G:
+        plt.figure()
+        plt.plot(np.abs(G))
+        plt.title('Data G')
+        plt.show()
 
 
     return corrected_Rk
