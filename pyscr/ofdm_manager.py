@@ -350,10 +350,8 @@ class OFDMManager():
         
         r = recieved_pilot_symbol[data_idx]
         s = known_pilot_symbol[data_idx]
-        print(s)
         s_conj = np.conj(s)
         sqr_mag_s = np.abs(s) ** 2
-        print(sqr_mag_s)
         channel_gain = (r * s_conj) / sqr_mag_s
         return channel_gain
     
