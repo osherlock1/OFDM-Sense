@@ -169,7 +169,7 @@ def main():
     symbols_no_cp = [symbol[:-map.cp_len] for symbol in symbols]
 
 
-    data_symbols = symbols_no_cp[SymbolConfig.N_SYNC_SYMBOLS + SymbolConfig.N_PILOT_SYMBOLS:]
+    data_symbols = symbols[SymbolConfig.N_SYNC_SYMBOLS + SymbolConfig.N_PILOT_SYMBOLS:]
     #FIXME: HARDCODED VALUES
     sync_symbol = symbols[0]
     pilot_symbol = symbols[1]
@@ -229,11 +229,67 @@ def main():
 
     #--------Data unpacking---------
 
+    #Define Reference
+    TXk_pilot = dg.generate_random_packet(1)
+    TXk_pilot = TXk_pilot[-map.N:]
+    TXk_pilot = np.fft.fft(TXk_pilot)
+    for i in range(map.N):
+        if i not in SymbolConfig.pilots_idx:
+            TXk_pilot[i] = 0 + 0j
+
+    #Calculate and Correct for CFO in recieved data symbool
+    corrected_Rk = unpack_data_symbols(symbol_time=data_symbols[0], TXk_pilot=TXk_pilot, delay=delay)
+
+    #Correct the Data Symbol's channel gains
+    final_data_Rk = corrected_Rk[SymbolConfig.data_idx] / lambda_k
+
+
+    #Constalation Plot
+    plt.subplot(4, 3, (8,15))
+    plt.plot(np.real(final_data_Rk) * np.sqrt(10)  , np.imag(final_data_Rk) * np.sqrt(10), '.', label = "Recieved OFDM packet")
+    plt.plot(np.real(qam_16_iq) * np.sqrt(10), np.imag(qam_16_iq) * np.sqrt(10), '.', label = "Constalation Map")
+    plt.title("Constalation Diagram (16-QAM)")
+    plt.xlabel("Real Axis")
+    plt.ylabel("Imaginary Axis")
+    plt.show()
 
 
 
+def unpack_data_symbols(symbol_time, TXk_pilot, delay):
+
+    Rxn = symbol_time
+
+    #Convert to Freq Domain
+    RXk = np.fft.fft(symbol_time)
+    RXk_pilot = RXk[-map.N:].copy()
+    for i in range(map.N):
+        if i not in SymbolConfig.pilots_idx:
+            RXk_pilot[i] = 0 + 0j
+
+    #Convert to time domain + add cycle prefix to help with CFO
+    txn_time = create_tx_block(TXk_pilot)
+    rxn_time = create_tx_block(RXk_pilot)
+
+    #Calculate the CFO
+    f_hat, final_f_idx, final_G, final_delay = om.cfo_calc(tx = txn_time, rx = rxn_time, FS = FreqConfig.FS, delay_range=map.cp_len + 5, n_bins=FreqConfig.n_bins)
+    f_hat = FreqConfig.f_grid[final_f_idx]
+    print(f"Data Symbol Fhat:{f_hat}")
+    print(f"Data Symbol Delay{delay}")
+    #Adjust the recieved sybol with calced CFO
+    corrected_rx = Rxn[-(delay+map.N):-delay] * np.exp(-1j * 2*np.pi * (f_hat) * FreqConfig.n_pilot)
+
+    #Convert back to Freq
+    corrected_Rk = np.fft.fft(corrected_rx)
+
+    # #REMOVE AFTER DEBUG
+    # for G in final_G:
+    #     plt.figure()
+    #     plt.plot(np.abs(G))
+    #     plt.title('Data G')
+    #     plt.show()
 
 
+    return corrected_Rk
 
 
 
@@ -259,6 +315,30 @@ def qam_values():
     for word in qam_16:
         qam_16_iq.append(om.binary_to_iq(word))
     return qam_16_iq
+
+
+#FIXME: THIS STUFF NEEDS TO BE UPDATED
+def create_tx_block(symbol:np.ndarray)->np.ndarray:
+    """
+    Create convert OFDM Symbol from Frequency Domain to Time Domain and add Cyclacle Prefix
+    """
+    #Compute ifft
+    symbol = np.fft.ifft(symbol)
+    #Add cycle prefix
+    tx_block = add_cycle_prefix(symbol)
+    return tx_block
+
+def add_cycle_prefix(symbol:np.ndarray) -> np.ndarray:
+    """Add the cyclacle prefix the synbol
+    
+        IMPORTANT! After you call this method the output will no longer be an OFDM symbol object for now I will just have
+        it output a np array which will be the TX Block sent to the USRP
+    
+    """
+    prefix = symbol[map.N-map.cp_len:]
+    TX_block = np.concatenate([prefix,symbol]).astype(complex)
+    return TX_block
+
 
 if __name__ == "__main__":
     main()
