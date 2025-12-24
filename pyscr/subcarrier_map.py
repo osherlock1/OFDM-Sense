@@ -6,9 +6,9 @@ class SubcarrierMap:
     #-------------------
     # OFDM SYMBOL MAPPING
     #--------------------
-    N = 128
+    N = 2 ** 10
     num_pilots = N // 4
-    cp_len = 20
+    cp_len = 100
     guard_len = 5
 
 

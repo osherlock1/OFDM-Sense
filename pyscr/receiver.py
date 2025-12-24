@@ -184,17 +184,8 @@ def main():
     #Calc pilot cfo
     f_hat, final_f_idx, G_matrix, delay = om.cfo_calc(tx = pilot_ref_t, rx = pilot_symbol, FS = FreqConfig.FS, n_bins = FreqConfig.n_bins, delay_range=map.cp_len + 5)
     f_hat = FreqConfig.f_grid[final_f_idx]
-    print(f"delay is {delay}")
-    # for G in G_matrix:
-    #     plt.figure()
-    #     plt.plot(np.abs(G))
-    #     plt.title("Abs G")
-    #     plt.show()
-
-  
+    print(f"delay is {delay}") 
     print(f"Pilot CFO Calc: {f_hat}")
-    #Correct Pilot Symbol with Calced CFO
-    #delay = 19
     pilot_symbol_corr = pilot_symbol[-(delay+map.N):-delay] * np.exp(-1j * 2*np.pi * f_hat * FreqConfig.n_pilot)
 
     #-------Channel Estimation--------
@@ -206,7 +197,7 @@ def main():
     pilot_final = pilot_recieved_k[SymbolConfig.data_idx] / lambda_k
 
     
-
+    #FIXME: TEMP DEBUG PLOTTING
     plt.figure()
     plt.plot(pilot_final, label="Final Pilot")
     plt.plot(pilot_ref_k[SymbolConfig.data_idx], label ="Ref")
@@ -234,6 +225,17 @@ def main():
     plt.xlabel("Real Axis")
     plt.ylabel("Imaginary Axis")
     plt.show()
+
+
+    #--------Data unpacking---------
+
+
+
+
+
+
+
+
 
 def qam_values():
     qam_16 = ["0000",
