@@ -211,12 +211,12 @@ def main():
 
     
     #FIXME: TEMP DEBUG PLOTTING
-    # plt.figure()
-    # plt.plot(pilot_final, label="Final Pilot")
-    # plt.plot(pilot_ref_k[SymbolConfig.data_idx], label ="Ref")
-    # plt.legend()
-    # plt.title("Pilot Final")
-    # plt.show()
+    plt.figure()
+    plt.plot(pilot_final, label="Final Pilot")
+    plt.plot(pilot_ref_k[SymbolConfig.data_idx], label ="Ref")
+    plt.legend()
+    plt.title("Pilot Final")
+    plt.show()
 
     plt.figure()
     plt.subplot(2,1,1)
@@ -231,13 +231,13 @@ def main():
     qam_16_iq = qam_values()
 
     #Constalation Plot
-    # plt.subplot(4, 3, (8,15))
-    # plt.plot(np.real(pilot_final) * np.sqrt(10)  , np.imag(pilot_final) * np.sqrt(10), '.', label = "Recieved OFDM packet")
-    # plt.plot(np.real(qam_16_iq) * np.sqrt(10), np.imag(qam_16_iq) * np.sqrt(10), '.', label = "Constalation Map")
-    # plt.title("Constalation Diagram (16-QAM)")
-    # plt.xlabel("Real Axis")
-    # plt.ylabel("Imaginary Axis")
-    # plt.show()
+    plt.subplot(4, 3, (8,15))
+    plt.plot(np.real(pilot_final) * np.sqrt(10)  , np.imag(pilot_final) * np.sqrt(10), '.', label = "Recieved OFDM packet")
+    plt.plot(np.real(qam_16_iq) * np.sqrt(10), np.imag(qam_16_iq) * np.sqrt(10), '.', label = "Constalation Map")
+    plt.title("Constalation Diagram (16-QAM)")
+    plt.xlabel("Real Axis")
+    plt.ylabel("Imaginary Axis")
+    plt.show()
 
 
     #--------Data unpacking---------
