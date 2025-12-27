@@ -151,9 +151,9 @@ def main():
 
 
     #--------Add Artificial CFO---------
-    # CFO = 0
-    # t_iq = np.arange(len(iq)) / FreqConfig.FS
-    # iq = iq * np.exp(1j * 2 * np.pi * CFO * t_iq)
+    CFO = -200e3
+    t_iq = np.arange(len(iq)) / FreqConfig.FS
+    iq = iq * np.exp(1j * 2 * np.pi * CFO * t_iq)
 
     #-------- Synq ------------------
     print("Calculating M Values ....")
@@ -189,6 +189,13 @@ def main():
     
     #Calc pilot cfo
     f_hat, final_f_idx, G_matrix, delay = om.cfo_calc(tx = pilot_ref_t, rx = pilot_symbol, FS = FreqConfig.FS, n_bins = FreqConfig.n_bins, delay_range=map.cp_len + 5)
+
+    for G in G_matrix:
+        plt.figure()
+        plt.plot(FreqConfig.f_grid, np.abs(G))
+        plt.title("Pilot G")
+        plt.show()
+
     f_hat = FreqConfig.f_grid[final_f_idx]
     print(f"delay is {delay}") 
     print(f"Pilot CFO Calc: {f_hat}")
@@ -262,6 +269,11 @@ def main():
 
 
 def unpack_data_symbols(symbol_time, TXk_pilot, delay):
+
+    start_idx = map.cp_len + delay
+    end_idx = start_idx + map.N
+    print(start_idx)
+    print(end_idx)
 
     Rxn = symbol_time
     
