@@ -205,15 +205,15 @@ def main():
     # plt.title("Pilot Final")
     # plt.show()
 
-    # plt.figure()
-    # plt.subplot(2,1,1)
-    # plt.plot(np.abs(lambda_k))
-    # plt.title("Magnitude")
+    plt.figure()
+    plt.subplot(2,1,1)
+    plt.plot(np.abs(lambda_k))
+    plt.title("Magnitude")
 
-    # plt.subplot(2,1,2)
-    # plt.plot(np.angle(lambda_k))
-    # plt.title("Angle")
-    # plt.show()    
+    plt.subplot(2,1,2)
+    plt.plot(np.angle(lambda_k))
+    plt.title("Angle")
+    plt.show()    
 
     qam_16_iq = qam_values()
 
