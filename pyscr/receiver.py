@@ -151,9 +151,9 @@ def main():
 
 
     #--------Add Artificial CFO---------
-    CFO = -200e3
-    t_iq = np.arange(len(iq)) / FreqConfig.FS
-    iq = iq * np.exp(1j * 2 * np.pi * CFO * t_iq)
+    # CFO = -200e3
+    # t_iq = np.arange(len(iq)) / FreqConfig.FS
+    # iq = iq * np.exp(1j * 2 * np.pi * CFO * t_iq)
 
     #-------- Synq ------------------
     print("Calculating M Values ....")
@@ -190,11 +190,11 @@ def main():
     #Calc pilot cfo
     f_hat, final_f_idx, G_matrix, delay = om.cfo_calc(tx = pilot_ref_t, rx = pilot_symbol, FS = FreqConfig.FS, n_bins = FreqConfig.n_bins, delay_range=map.cp_len + 5)
 
-    for G in G_matrix:
-        plt.figure()
-        plt.plot(FreqConfig.f_grid, np.abs(G))
-        plt.title("Pilot G")
-        plt.show()
+    # for G in G_matrix:
+    #     plt.figure()
+    #     plt.plot(FreqConfig.f_grid, np.abs(G))
+    #     plt.title("Pilot G")
+    #     plt.show()
 
     f_hat = FreqConfig.f_grid[final_f_idx]
     print(f"delay is {delay}") 
@@ -302,11 +302,11 @@ def unpack_data_symbols(symbol_time, TXk_pilot, delay):
     corrected_Rk = np.fft.fft(corrected_rx)
 
     # #REMOVE AFTER DEBUG
-    for G in final_G:
-        plt.figure()
-        plt.plot(FreqConfig.f_grid, np.abs(G))
-        plt.title('Data G')
-        plt.show()
+    # for G in final_G:
+    #     plt.figure()
+    #     plt.plot(FreqConfig.f_grid, np.abs(G))
+    #     plt.title('Data G')
+    #     plt.show()
 
 
     return corrected_Rk
