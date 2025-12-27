@@ -279,7 +279,7 @@ class OFDMManager():
             G[i] = np.correlate(Tx, r, mode = "valid")
     
         
-        k = int(np.argmax(np.abs(G)))
+        k = np.argmax(np.abs(G))
         f_hat = f_grid[k]
 
         #Rx_hat = Rx * np.exp(-1j * 2*np.pi * f_hat * n / fs)
@@ -316,8 +316,9 @@ class OFDMManager():
             g = max(np.abs(G)) #Calc the max value for current delay
             if g > max_G:
                 max_G = g 
-                final_f_idx = np.argmax(G)
+                final_f_idx = np.argmax(np.abs(G))
                 final_delay = delay
+                
         final_f = f_grid[final_f_idx]
         return f_hat, final_f_idx, final_G, final_delay
     

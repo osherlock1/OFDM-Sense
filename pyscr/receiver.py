@@ -47,7 +47,7 @@ class SymbolConfig:
 @dataclass
 class FreqConfig:
     FS = 100e6
-    n_bins = 2 ** 14
+    n_bins = 2 ** 12
     f_grid = np.linspace(-FS / 2, FS / 2, n_bins, endpoint=False)
     n_pilot = np.arange(map.N) / FS
 
@@ -272,6 +272,7 @@ def unpack_data_symbols(symbol_time, TXk_pilot, delay):
 
     #Calculate the CFO
     f_hat, final_f_idx, final_G, final_delay = om.cfo_calc(tx = txn_time, rx = rxn_time, FS = FreqConfig.FS, delay_range=map.cp_len + 5, n_bins=FreqConfig.n_bins)
+
     f_hat = FreqConfig.f_grid[final_f_idx]
     print(f"Data Symbol Fhat:{f_hat}")
     print(f"Data Symbol Delay{final_delay}")
@@ -284,7 +285,7 @@ def unpack_data_symbols(symbol_time, TXk_pilot, delay):
     # #REMOVE AFTER DEBUG
     for G in final_G:
         plt.figure()
-        plt.plot(np.abs(G))
+        plt.plot(FreqConfig.f_grid, np.abs(G))
         plt.title('Data G')
         plt.show()
 
