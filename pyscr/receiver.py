@@ -149,6 +149,12 @@ def main():
     print("Unpacking OFDM Symbol....")
     iq = np.fromfile(file_name, dtype = np.complex64)
 
+
+    #--------Add Artificial CFO---------
+    CFO = 30e6
+    t_iq = np.arange(len(iq)) / FreqConfig.FS
+    iq = iq * np.exp(1j * 2 * np.pi * CFO * t_iq)
+
     #-------- Synq ------------------
     print("Calculating M Values ....")
     M_Values, P_Values = om.calc_M_values(iq)
@@ -258,10 +264,10 @@ def main():
 def unpack_data_symbols(symbol_time, TXk_pilot, delay):
 
     Rxn = symbol_time
-
+    
     #Convert to Freq Domain
-    RXk = np.fft.fft(symbol_time)
-    RXk_pilot = RXk[-(delay+map.N):-delay].copy()
+    RXk = np.fft.fft(symbol_time[-(delay+map.N):-delay])
+    RXk_pilot = RXk.copy()
     for i in range(map.N):
         if i not in SymbolConfig.pilots_idx:
             RXk_pilot[i] = 0 + 0j
@@ -274,6 +280,7 @@ def unpack_data_symbols(symbol_time, TXk_pilot, delay):
     f_hat, final_f_idx, final_G, final_delay = om.cfo_calc(tx = txn_time, rx = rxn_time, FS = FreqConfig.FS, delay_range=map.cp_len + 5, n_bins=FreqConfig.n_bins)
 
     f_hat = FreqConfig.f_grid[final_f_idx]
+    print(f"Final INdex: {final_f_idx}")
     print(f"Data Symbol Fhat:{f_hat}")
     print(f"Data Symbol Delay{final_delay}")
     #Adjust the recieved sybol with calced CFO

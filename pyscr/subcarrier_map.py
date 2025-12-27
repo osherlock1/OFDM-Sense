@@ -19,7 +19,7 @@ class SubcarrierMap:
     @property
     def pilot_vals(self):
         random.seed(42)
-        qam16_vals = [-3, -1, 1, 3] / np.sqrt(10)
+        qam16_vals = np.array([-3, -1, 1, 3]) / np.sqrt(10)
         pilot_vals = []
         for i in range(self.num_pilots):
             pilot_vals.append(random.choice(qam16_vals))
@@ -36,10 +36,7 @@ class SubcarrierMap:
         pilot_bins = []
         used_p_bins = used_neg + used_pos
 
-        for k in range(self.num_pilots):
-            random_k = random.choice(used_p_bins)
-            pilot_bins.append(random_k)
-        return pilot_bins
+        return random.sample(used_p_bins, self.num_pilots)
 
 
     

@@ -320,7 +320,7 @@ class OFDMManager():
                 final_delay = delay
                 
         final_f = f_grid[final_f_idx]
-        return f_hat, final_f_idx, final_G, final_delay
+        return final_f, final_f_idx, final_G, final_delay
     
     def calc_M_values(self, iq_samples:np.ndarray):
         """
