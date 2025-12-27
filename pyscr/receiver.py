@@ -151,9 +151,9 @@ def main():
 
 
     #--------Add Artificial CFO---------
-    CFO = 30e6
-    t_iq = np.arange(len(iq)) / FreqConfig.FS
-    iq = iq * np.exp(1j * 2 * np.pi * CFO * t_iq)
+    # CFO = 0
+    # t_iq = np.arange(len(iq)) / FreqConfig.FS
+    # iq = iq * np.exp(1j * 2 * np.pi * CFO * t_iq)
 
     #-------- Synq ------------------
     print("Calculating M Values ....")
