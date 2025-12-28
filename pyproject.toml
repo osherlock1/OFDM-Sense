@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ofdm"
+version = "0.1.0"
+description = "OFDM Transmitter and Receiver Library"
+requires-python = ">=3.8"
+authors = [
+  {name = "O'Malley Sherlock", email = "omalley.j.sherlock@gmail.com"},
+]
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"] 
