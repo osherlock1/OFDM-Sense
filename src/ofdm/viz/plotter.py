@@ -18,11 +18,34 @@ def plot_symbol_freq(
     k_pos = list(range(1,(n_symbol // 2) + 1))
     k = np.array(k_neg + k_pos) #Combine and convert to ndarray
 
-    ax.plot(k, np.real(symbol), label="Real")
-    ax.plot(k, np.imag(symbol), label="Imag")
+    ax.stem(k, np.real(symbol), label="Real")
+    ax.stem(k, np.imag(symbol), label="Imag")
 
     ax.set_title(title)
     ax.set_xlabel("Freq Bins")
     ax.legend(loc='upper right')
+
+    return ax
+
+def plot_time_series(
+        signal:np.ndarray,
+        fs:float = 1.0,
+        ax: Optional[plt.Axes] = None,
+        title: str = "Time Domain Signal"
+):
+    """
+    Plots raw IQ sampels over time
+    """
+    if ax is None:
+        fig, ax = plt.subplots(figsize = (10,4))
+
+    t = np.arange(len(signal)) / fs
+
+    ax.plot(t, np.real(signal), label="Real")
+    ax.plot(t, np.imag(signal), label="Imag")
+
+    ax.set_title(title)
+    ax.set_xlabel("Time (s)")
+    ax.legend(loc="upper right")
 
     return ax
