@@ -1,0 +1,87 @@
+import subprocess
+import sys
+from dataclasses import dataclass
+
+@dataclass
+class USRPConfig:
+    """Configuration of URSP Hardware"""
+    build_path: str = "./build/TXRX_FROM_FILE"
+    tx_addr: str = "addr=192.168.30.2"
+    rx_addr: str = "addr=192.168.30.2"
+    tx_rate: float = 100e6
+    rx_rate: float = 100e6
+    tx_freq: float = 60e6
+    rx_freq: float = 60e6
+    wave_type:str = "SINE"
+    wave_freq: float = "100e3"
+    ampl: float = 0.3
+    tx_gain: float = 0
+    rx_gain:float = 0
+    otw:str = "sc16"
+    type:str = "float"
+
+
+
+
+
+def run_transfer(
+        config: USRPConfig,
+        tx_file: str,
+        rx_file: str,
+        nsamps: int,
+        channel: str = "B",
+        simulate: bool = False
+):
+    """
+    Execute the C++ USRP driver via subprocess.
+    """
+    if simulate:
+        print(f"[SIMULATION] Skipping hardware transfer. Using {tx_file} as input.")
+        return
+    
+    #Channel Selection
+    subdev = "A:0" if channel == "A" else "B:0"
+
+    #Build command list
+    cmd = [
+        config.build_path,
+        "--tx-args", config.tx_addr,
+        "--rx-args", config.rx_addr,
+        "--tx-rate", str(config.tx_rate),
+        "--rx-rate", str(config.rx_rate),
+        "--tx-freq", str(config.tx_freq),
+        "--rx-freq", str(config.rx_freq),
+        "--tx-gain", str(config.tx_gain),
+        "--rx-gain", str(config.rx_gain),
+
+        #File I/O
+        "--file", rx_file,
+        "--tx-file", tx_file,
+        "--nsamps", str(nsamps),
+
+        #Channel Configuration
+        "--rx-subdev", subdev,
+        "--tx-subdev", subdev,
+        "--rx-channels", "0",
+        "--tx-channels", "0",
+
+        #Fixed constants (OTW format, types)
+        "--otw", "sc16",
+        "--type", "float",
+        "--tx-type", "float",
+        "--settling", "0",
+        "--tx-spb", "0",
+        "--tx-repeat", "false",
+    ]
+
+    print(f"\n[USRP] Executing: {' '.join(cmd)}")
+
+    try:
+        subprocess.run(cmd, check=True)
+        print("[USRP] Transfer Complete!\n")
+    except subprocess.CalledProcessError as e: #Check what this is 
+        print(f"[Error] USRP driver failed with exit code {e.returncode}")
+        sys.exit(1)
+    except FileNotFoundError:
+        print(f"[Error] Could not find executable at {config.build_path}")
+        sys.exit(1)
