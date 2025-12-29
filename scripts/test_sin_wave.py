@@ -51,7 +51,7 @@ def main():
     #Plot Ref data
     plotter.plot_time_series(signal=ref_signal, fs = FS, title = "Ref Sine Wave Real")
     plotter.plot_symbol_freq(symbol = np.fft.fft(signal), title="Ref FFT Plot")
-    
+    plt.show()
 
 def generate_tone(fs:float, freq:float, n_samples:float):
 
