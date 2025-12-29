@@ -3,9 +3,10 @@ import json
 import os
 import pathlib
 import argparse
+import matplotlib.pyplot as plt
 #Internal
 from ofdm.utils import usrp
-
+from ofdm.viz import plotter
 
 def main():
     parser = argparse.ArgumentParser(description="Generate Single Tone Sine wave for Testing Hardware")
@@ -31,6 +32,13 @@ def main():
     rx_file_path = "data_files/test_sin_rx.dat"
     usrp.run_transfer(channel=CHANNEL, config = usrp_conf, tx_file=test_file_tx_path, rx_file=rx_file_path, nsamps=N_SAMLPES)
 
+    #Unpack Data
+    print("[Test] Unpacking Data...")
+    signal = np.fromfile(rx_file_path, dtype=np.complex64)
+
+    #Plot data
+    plotter.plot_time_series(signal = signal, fs = FS, title="Test Sine Wave Real")
+    plt.show()
 
 def generate_tone(fs:float, freq:float, n_samples:float):
 
