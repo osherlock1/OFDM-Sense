@@ -2,15 +2,24 @@ import numpy as np
 import json
 import os
 import pathlib
+import argparse
 #Internal
 from ofdm.utils import usrp
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Generate Single Tone Sine wave for Testing Hardware")
+    parser.add_argument('--channel', '-c', type=str, default = "A", help="Select Communication Channel(A = Baseband, B = Frontend)")
+    parser.add_argument("--freq", type=float, default = 10e6, help = "Frequency of tone")
+    parser.add_argument("--n_samps", type=int, default=2000, help = "Number of Samples sent")
+    args = parser.parse_args()
+
+    
     FS = 100e6
-    FREQ = 10e6
-    N_SAMLPES = 2000
-    CHANNEL = "A"
+    FREQ = args.freq
+    N_SAMLPES = args.n_samps
+    CHANNEL = args.channel
+
     #Generate Test Tone
     generate_tone(fs=FS, freq=FREQ, n_samples= N_SAMLPES)
 
@@ -21,7 +30,7 @@ def main():
     test_file_tx_path = "data_files/test_sin.dat"
     rx_file_path = "data_files/test_sin_rx.dat"
     usrp.run_transfer(channel=CHANNEL, config = usrp_conf, tx_file=test_file_tx_path, rx_file=rx_file_path, nsamps=N_SAMLPES)
-    
+
 
 def generate_tone(fs:float, freq:float, n_samples:float):
 
