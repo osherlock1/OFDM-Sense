@@ -16,7 +16,7 @@ def main():
     #Hardware Configuration
     parser.add_argument("--channel", "-c", type=str, required=True, help="Channel Selection (A = Baseband, B = Frontend)")
     parser.add_argument("--tx_addr", type=str, default="192.168.30.2", help ="IP of TX")
-    parser.add_argument('--rx_addr', type=str, default ="addr=192.168.30.2", help ='IP of RX')
+    parser.add_argument('--rx_addr', type=str, default ="192.168.30.2", help ='IP of RX')
     parser.add_argument('--rate', type=float, default = 100e6, help="Samlpe Rate(Hz)")
     parser.add_argument('--freq', type=float, default=60e6, help="Carrier frequency (Hz)")
     parser.add_argument('--gain', type=float, default=0, help = "TX/RX Gain (dB)")
