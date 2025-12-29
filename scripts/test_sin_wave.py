@@ -43,6 +43,15 @@ def main():
         ref_signal_imag = np.array(data["signal_imag"])
     ref_signal = ref_signal_real + 1j * ref_signal_imag
 
+    #Calculate CFO
+    T = 1 / FS
+    freqs = np.fft.fftshift(np.fft.fftfreq(N_SAMLPES, T))
+
+    rx_freq_idx = np.argmax(np.abs(np.fft.fftshift(np.fft.fft(signal))))
+    rx_freq = freqs[rx_freq_idx]
+    print(f"[Test] Calculated RX Freq: {rx_freq}Hz")
+    print(f"[Test] Calculated CFO is {np.abs(rx_freq - FREQ)}")
+    
 
     #Plot Rx data
     plotter.plot_time_series(signal = signal, fs = FS, title="Test Sine Wave Real")
