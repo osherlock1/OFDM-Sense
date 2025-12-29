@@ -33,3 +33,4 @@ def extract_pilots(Rk_symbol:np.ndarray, config:OFDMConfig)->np.ndarray:
     Return a ndarray of just the pilot subcarriers
     """
     return Rk_symbol[config.pilot_carriers]
+
