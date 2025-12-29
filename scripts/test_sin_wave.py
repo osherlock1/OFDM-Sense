@@ -39,8 +39,8 @@ def main():
     #Unpack Ref Data
     with open("data_files/test_sin_ref.json", 'r') as f:
         data = json.load(f)
-        ref_signal_real = complex(data["signal_real"])
-        ref_signal_imag = complex(data["signal_imag"])
+        ref_signal_real = np.array(data["signal_real"])
+        ref_signal_imag = np.array(data["signal_imag"])
     ref_signal = ref_signal_real + 1j * ref_signal_imag
 
 
