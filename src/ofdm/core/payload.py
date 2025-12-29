@@ -15,11 +15,10 @@ def generate_ofdm_data_symbol(config:OFDMConfig, iq_data:np.ndarray, pilot_data:
         raise ValueError(f"Length of Pilot Data:{len(pilot_data)} does not match length of Pilot Carrier mapping {len(config.pilot_carriers)}")
     
     #Add IQ Data
-    symbol_freq[config._idx(config.data_carriers)] = iq_data
+    symbol_freq[config._idx(np.array(config.data_carriers))] = iq_data
 
     #Add Pilot Data
-    symbol_freq[config._idx(config.pilot_carriers)] = pilot_data
-
+    symbol_freq[config._idx(np.array(config.pilot_carriers))] = pilot_data
     return symbol_freq
 
 def extract_data(Rk_symbol:np.ndarray, config:OFDMConfig)->np.ndarray:
