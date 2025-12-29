@@ -28,7 +28,7 @@ def extract_data(Rk_symbol:np.ndarray, config:OFDMConfig)->np.ndarray:
     """
     return Rk_symbol[config.data_carriers]
 
-def extract_pilots(Rk_symbol:np.ndarray, config:OFDMConfig)->np.ndarray;
+def extract_pilots(Rk_symbol:np.ndarray, config:OFDMConfig)->np.ndarray:
     """
     Return a ndarray of just the pilot subcarriers
     """

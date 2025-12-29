@@ -1,5 +1,6 @@
 import numpy as np
 from ofdm.config import OFDMConfig
+import random
 
 def generate_sync_symbol(config: OFDMConfig, seed: int = 42) -> np.ndarray:
     """
@@ -47,3 +48,16 @@ def generate_pilot_symbol(config: OFDMConfig, seed: int =42) -> np.ndarray:
 
     symbol_freq[config._idx(used_k)] = bpsk_seq / np.sqrt(10)
     return symbol_freq
+
+def generate_pilot_vals(config: OFDMConfig, seed: int = 42) -> np.ndarray:
+    np.random.seed(seed)
+    
+    #Define Possile Values
+    qam16_vals = np.array([-3, -1, 1, 3]) / np.sqrt(10)
+
+    #Number of pilot values
+    n_pilots = len(config.pilot_carriers)
+
+    pilot_values = [random.choice(qam16_vals) for _ in range(n_pilots)]
+
+    return pilot_values
