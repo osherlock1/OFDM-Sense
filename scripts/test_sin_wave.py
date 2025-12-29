@@ -32,18 +32,31 @@ def main():
     rx_file_path = "data_files/test_sin_rx.dat"
     usrp.run_transfer(channel=CHANNEL, config = usrp_conf, tx_file=test_file_tx_path, rx_file=rx_file_path, nsamps=N_SAMLPES)
 
-    #Unpack Data
+    #Unpack Rx Data
     print("[Test] Unpacking Data...")
     signal = np.fromfile(rx_file_path, dtype=np.complex64)
 
-    #Plot data
+    #Unpack Ref Data
+    with open("data_files/test_sin_ref.json", 'r') as f:
+        data = json.load(f)
+        ref_signal_real = data["signal_real"]
+        ref_signal_imag = data["signal_imag"]
+    ref_signal = ref_signal_real + 1j * ref_signal_imag
+
+
+    #Plot Rx data
     plotter.plot_time_series(signal = signal, fs = FS, title="Test Sine Wave Real")
-    plt.show()
+    plotter.plot_symbol_freq(symbol = np.fft.fft(signal), title =f"Rx FFT Plot Freq = {FREQ}")
+
+    #Plot Ref data
+    plotter.plot_time_series(signal=ref_signal, fs = FS, title = "Ref Sine Wave Real")
+    plotter.plot_symbol_freq(symbol = np.fft.fft(signal), title="Ref FFT Plot")
+    
 
 def generate_tone(fs:float, freq:float, n_samples:float):
 
     t = np.arange(n_samples) / fs
-    signal = np.exp(1j * 2 * np.pi * t)
+    signal = np.exp(1j * 2 * np.pi * freq * t)
 
     final_tx = signal
 
