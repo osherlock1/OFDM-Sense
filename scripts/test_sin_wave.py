@@ -70,7 +70,7 @@ def generate_tone(fs:float, freq:float, n_samples:float):
         "fs":fs,
         "freq":freq,
         "n_samples":n_samples,
-        "singal_real":np.real(signal).tolist(),
+        "signal_real":np.real(signal).tolist(),
         "signal_imag":np.imag(signal).tolist()
     }
 
