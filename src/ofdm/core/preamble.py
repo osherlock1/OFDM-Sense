@@ -22,18 +22,28 @@ def generate_sync_symbol(config: OFDMConfig, seed: int = 42) -> np.ndarray:
     n_size = len(even_k != 0)
     bpsk_seq = np.random.choice([-3 / np.sqrt(10), 3 / np.sqrt(10)], size = n_size)
 
-
-    print(bpsk_seq)
-    print(f"Lenth of BPSK is {len(bpsk_seq)}")
-    print(f"Length of even_k is {len(even_k)}")
-    #symbol_freq[even_k] = bpsk_seq
-
     symbol_freq[config._idx(even_k)] = bpsk_seq
     return symbol_freq
     
 
-
-    pass
-
 def generate_pilot_symbol(config: OFDMConfig, seed: int =42) -> np.ndarray:
-    pass
+    """
+    Generated Pilot Symbol for Channel Estimation and CFO Calibration
+    """
+    np.random.seed(seed)
+
+    #Initiate empty symbol
+    symbol_freq = np.zeros(config.N, dtype=complex)
+
+    #Defined Used Freq Bins
+    #used_k = np.array(config.data_carriers)
+    used_idx = np.arange(config.N)
+    used_k = config._idx(used_idx)
+
+    
+    #Generate Random data
+    n_size = len(used_k)
+    bpsk_seq = np.random.choice([-3, -1, 1, 3], size = n_size)
+
+    symbol_freq[config._idx(used_k)] = bpsk_seq / np.sqrt(10)
+    return symbol_freq
