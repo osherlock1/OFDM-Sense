@@ -59,7 +59,12 @@ def main():
     M, P = sync.calculate_schmidl_cox_metrics(rx_signal=signal, config=ofdm_conf)
 
     #Get starting IDX
-    peak_idx = sync.find_start_idx(M=M, config=ofdm_conf)
+    peak_idx = sync.find_start_idx(
+        M_metric=M,
+        config=ofdm_conf, 
+        rx_signal=signal, 
+        known_sync_time=sync_tx,
+        )
 
     #Calculate Coarse CFO
     max_P = P[peak_idx]

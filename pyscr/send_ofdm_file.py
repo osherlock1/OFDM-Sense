@@ -157,7 +157,7 @@ def main():
     iq = np.fromfile(file_name, dtype = np.complex64)
 
 
-
+    #----- Sync_____
     print("Calculating M Values... \n")
     M_Values, P_Values = calc_M_values(iq)
     print("Done!\n")

@@ -1,7 +1,8 @@
 import numpy as np
-import scipy.signal
+import scipy.signal 
 from typing import Tuple, Optional
 from ofdm.config import OFDMConfig
+from scipy.signal import correlate
 
 #Temp debugg
 from ofdm.viz import plotter
@@ -51,20 +52,49 @@ def calculate_schmidl_cox_metrics(rx_signal: np.ndarray, config:OFDMConfig)->Tup
     return M, P
 
 
-def find_start_idx(M: np.ndarray, config: OFDMConfig, threshold: float = 0.8) -> int:
+def find_start_idx(M_metric: np.ndarray, 
+    config: OFDMConfig, 
+    rx_signal: np.ndarray,
+    known_sync_time: np.ndarray,
+    search_window: int = 20
+    ) -> int:
     """  
-    Find the start of the packet based on the M metric
+    Determine the exact sample index where the packet begins (Start of CP).
+    Args:
+        rx_signal: The raw recieved complex samples
+        M_metric: The Schmidl_Cox metric (get from calculate_schmidl_cox_metrics())
+        known_sync_time: Ideal time-domain sync symbol (with CP)
+        search_window: How many samlpes Left and Right to search during fine sync
+    Returns:
+        The exact idx of the packet start (beginning of CP)
     """
 
-    canidates = np.where(M > threshold)
+    #-------- Coarse Sync ---------
+    coarse_symbol_start = np.argmax(M_metric)
 
-    if len(canidates) == 0:
-        #Pick max
-        start_idx = np.argmax(M)
-        return start_idx
+    #Estimate packet start
+    coarse_packet_start = coarse_symbol_start - config.CP_LEN
     
-    peak_idx = np.argmax(M)
-    return peak_idx
+    #Prevent negative index
+    if coarse_packet_start < 0:
+        coarse_packet_start = 0
+
+    #-------- Fine Sync ---------
+    start_search = max(0, coarse_packet_start - search_window)
+    end_search = min(len(rx_signal), coarse_packet_start + len(known_sync_time) + search_window)
+
+    rx_chunk = rx_signal[start_search : end_search]
+
+    #Cross-Correlate
+    corr = correlate(rx_chunk, known_sync_time, mode='valid')
+
+    fine_offset = np.argmax(np.abs(corr))
+
+    #Calculate final index
+    exact_start_index = start_search + fine_offset
+
+    return exact_start_index
+
 
 def estimate_cfo_coarse(P_value: complex, config: OFDMConfig) -> float:
     #Calculate Phase difference with P metrics
