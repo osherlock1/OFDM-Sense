@@ -83,7 +83,11 @@ def main():
         "n_samples": len(final_tx_signal),
         "binary_data": binary_ref_list,
         "samples_real": np.real(final_tx_signal).tolist(),
-        "samples_imag": np.imag(final_tx_signal).tolist()
+        "samples_imag": np.imag(final_tx_signal).tolist(),
+        "sync_ref_real": np.real(sync_final).tolist(),
+        "sync_ref_imag": np.imag(sync_final).tolist(),
+        "pilot_ref_real": np.real(pilot_final).tolist(),
+        "pilot_ref_imag": np.imag(pilot_final).tolist() 
     }
 
     json_path = f"data_files/{args.out}_ref.json"

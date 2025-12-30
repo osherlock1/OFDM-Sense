@@ -52,7 +52,8 @@ def calculate_schmidl_cox_metrics(rx_signal: np.ndarray, config:OFDMConfig)->Tup
     return M, P
 
 
-def find_start_idx(M_metric: np.ndarray, 
+def find_start_idx(
+    M_metric: np.ndarray, 
     config: OFDMConfig, 
     rx_signal: np.ndarray,
     known_sync_time: np.ndarray,
