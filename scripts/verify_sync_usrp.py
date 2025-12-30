@@ -24,7 +24,7 @@ def main():
     sync_tx = waveform.create_time_domain_symbol(freq_data=sync_freq, cp_len = ofdm_conf.CP_LEN)
 
 
-    n_buffer = 0
+    n_buffer = 100
     buffer = np.zeros(n_buffer, dtype=complex) #Zeros for start and end
     final_tx = np.concatenate([buffer, sync_tx, buffer])
     final_tx_ref = final_tx.copy()
