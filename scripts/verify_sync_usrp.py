@@ -21,7 +21,7 @@ def main():
 
     #Generate Sync Symbol
     sync_freq = preamble.generate_sync_symbol(config=ofdm_conf, seed = args.seed)
-    sync_tx = waveform.create_time_domain_symbol(freq_data=sync_freq, cp_len = ofdm_conf.CP_LEN)
+    sync_tx = waveform.create_time_domain_symbol(freq_data=sync_freq, cp_len = ofdm_conf.CP_LEN) * 100
 
 
     n_buffer = 300
