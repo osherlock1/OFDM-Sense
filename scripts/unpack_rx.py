@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 #Internal
 from ofdm.config import OFDMConfig
 from ofdm.core import sync
+from ofdm.viz import plotter
 
 def main():
     parser = argparse.ArgumentParser(description="Unpack and Plot Recieved OFDM Packet")
@@ -46,6 +47,12 @@ def main():
     symbol_start_idx = start_idx + ofdm_conf.CP_LEN
     max_P = P[symbol_start_idx]
     coarse_cfo = sync.estimate_cfo_coarse(max_P, config=ofdm_conf)
+
+
+    plotter.plot_time_series(rx_raw)
+    plotter.plot_time_series(M)
+    plt.show()
+
 
     print(f"[Test] Coarse CFO:{coarse_cfo}, Start Idx:{start_idx}")
 
