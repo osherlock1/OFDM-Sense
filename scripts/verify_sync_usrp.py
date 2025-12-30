@@ -21,11 +21,11 @@ def main():
 
     #Generate Sync Symbol
     sync_freq = preamble.generate_sync_symbol(config=ofdm_conf, seed = args.seed)
-    sync_tx = waveform.create_time_domain_symbol(freq_data=sync_freq, cp_len = ofdm_conf.CP_LEN) * 10
+    sync_tx = waveform.create_time_domain_symbol(freq_data=sync_freq, cp_len = ofdm_conf.CP_LEN)
 
 
     n_buffer = 300
-    buffer = np.arange(n_buffer) #Zeros for start and end
+    buffer = np.zeros(n_buffer, dtype=complex) #Zeros for start and end
     final_tx = np.concatenate([buffer, sync_tx, buffer])
     final_tx_ref = final_tx.copy
     
