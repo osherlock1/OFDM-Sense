@@ -24,7 +24,7 @@ def main():
     sync_tx = waveform.create_time_domain_symbol(freq_data=sync_freq, cp_len = ofdm_conf.CP_LEN)
 
 
-    n_buffer = 100
+    n_buffer = 150
     buffer = np.zeros(n_buffer, dtype=complex) #Zeros for start and end
     final_tx = np.concatenate([buffer, sync_tx, buffer])
     final_tx_ref = final_tx.copy()
@@ -67,9 +67,16 @@ def main():
         )
 
     #Calculate Coarse CFO
-    max_P = P[peak_idx]
-    cfo = sync.estimate_cfo_coarse(P_value=max_P, config= ofdm_conf)
-    print(f"[Success! Estiamted Starting Idx:{peak_idx}, Estimated CFO:{cfo}Hz]")
+    symbol_start_idx = peak_idx + ofdm_conf.CP_LEN
+    
+    if symbol_start_idx < len(P):
+        max_P = P[symbol_start_idx]
+        cfo = sync.estimate_cfo_coarse(P_value=max_P, config=ofdm_conf)
+        print(f"[Success] Packet Start: {peak_idx}")
+        print(f"[Success] CFO Estimate: {cfo:.2f}Hz")
+    else:
+        print("[Error] Detected index out of bounds")
+    
     #Plot Results
     plt.figure()
     plt.plot(signal, label = "RX Signal")
