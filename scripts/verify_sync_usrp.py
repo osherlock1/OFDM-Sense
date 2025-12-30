@@ -39,7 +39,7 @@ def main():
     #Might not be necissary right now
 
     #Initiate USRP Config
-    usrp_conf = usrp.USRPConfig()
+    usrp_conf = usrp.USRPConfig(rx_gain=2, tx_gain=2)
     sync_test_path_rx = "data_files/sync_verification_rx"
 
     #Send Over USRP
