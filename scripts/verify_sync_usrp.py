@@ -64,11 +64,11 @@ def main():
     #Calculate Coarse CFO
     max_P = P[peak_idx]
     cfo = sync.estimate_cfo_coarse(P_value=max_P, config= ofdm_conf)
-
+    print(f"[Success! Estiamted Starting Idx:{peak_idx}, Estimated CFO:{cfo}Hz]")
     #Plot Results
     plt.figure()
     plt.plot(signal, label = "RX Signal")
-    #plt.plot(M, label = "M metric")
+    plt.plot(M, label = "M metric")
     plt.show()
 
 
