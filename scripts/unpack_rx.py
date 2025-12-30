@@ -49,8 +49,8 @@ def main():
     coarse_cfo = sync.estimate_cfo_coarse(max_P, config=ofdm_conf)
 
 
-    plotter.plot_time_series(rx_raw)
-    plotter.plot_time_series(M)
+    plotter.plot_time_series(rx_raw, title="Raw Rx")
+    plotter.plot_time_series(M, title="M")
     plt.show()
 
 
