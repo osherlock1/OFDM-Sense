@@ -69,7 +69,7 @@ def main():
     plt.figure()
     plt.plot(signal, label = "RX Signal")
     plt.plot(M, label = "M metric")
-    
+    plt.show()
 
 
     pass
