@@ -24,7 +24,7 @@ def main():
         ref_data = json.load(f)
     
     #Unpack Referense Sync Symbol
-    sync_ref_real = np.array(ref_data['ref_signal_real']).astype(complex)
+    sync_ref_real = np.array(ref_data['sync_ref_real']).astype(complex)
     sync_ref_imag = np.array(ref_data["sync_ref_imag"]).astype(complex)
     sync_ref_time = sync_ref_real + 1j * sync_ref_imag
 
