@@ -22,8 +22,6 @@ class USRPConfig:
 
 
 
-
-
 def run_transfer(
         config: USRPConfig,
         tx_file: str,

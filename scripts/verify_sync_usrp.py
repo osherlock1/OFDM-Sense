@@ -3,6 +3,7 @@ import json
 import os
 import pathlib
 import argparse
+import matplotlib.pyplot as plt
 #Internal
 from ofdm.config import OFDMConfig
 from ofdm.utils import usrp
@@ -65,7 +66,10 @@ def main():
     cfo = sync.estimate_cfo_coarse(P_value=max_P, config= ofdm_conf)
 
     #Plot Results
-
+    plt.figure()
+    plt.plot(signal, label = "RX Signal")
+    plt.plot(M, label = "M metric")
+    
 
 
     pass
