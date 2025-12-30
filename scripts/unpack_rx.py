@@ -28,7 +28,7 @@ def main():
     sync_ref_imag = np.array(ref_data["sync_ref_imag"]).astype(complex)
     sync_ref_time = sync_ref_real + 1j * sync_ref_imag
 
-    n_payload_syms = ref_data["n_data_symbols"]
+    n_payload_syms = ref_data["n_data_symb"]
 
     # ---------- Syncronization -------------
     #Calc M and P Metrics
