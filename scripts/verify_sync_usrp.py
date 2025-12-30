@@ -24,10 +24,10 @@ def main():
     sync_tx = waveform.create_time_domain_symbol(freq_data=sync_freq, cp_len = ofdm_conf.CP_LEN)
 
 
-    n_buffer = 300
+    n_buffer = 0
     buffer = np.zeros(n_buffer, dtype=complex) #Zeros for start and end
     final_tx = np.concatenate([buffer, sync_tx, buffer])
-    final_tx_ref = final_tx.copy
+    final_tx_ref = final_tx.copy()
     
     #Save File
     sync_test_path_tx = "data_files/sync_verification_tx.dat"
@@ -40,7 +40,7 @@ def main():
 
     #Initiate USRP Config
     usrp_conf = usrp.USRPConfig()
-    sync_test_path_rx = "data_files/sync_verification_rx"
+    sync_test_path_rx = "data_files/sync_verification_rx.dat"
 
     #Send Over USRP
     usrp.run_transfer(
