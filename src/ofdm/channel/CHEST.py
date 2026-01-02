@@ -39,11 +39,11 @@ def apply_gains(rx_symb_freq:np.ndarray, Lambda_est:np.ndarray)-> np.ndarray:
 
     return rx_symb_freq
 
-def chest_cacl(rx_pilot_freq:np.ndarray, tx_pilot_freq:np.ndarray, config:OFDMConfig)->np.ndarray:
+def chest_cacl(rx_pilot_freq:np.ndarray, tx_pilot_ref:np.ndarray, config:OFDMConfig)->np.ndarray:
     """  
     Other CHEST CALC
     """
-    tx_conj = np.conj(tx_pilot_freq)
-    sqr_mag_tx = np.abs(tx_pilot_freq) ** 2
+    tx_conj = np.conj(tx_pilot_ref)
+    sqr_mag_tx = np.abs(tx_pilot_ref) ** 2
     channel_gains = (rx_pilot_freq * tx_conj) / (sqr_mag_tx + 1e-12)
     return channel_gains
