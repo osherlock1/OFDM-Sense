@@ -84,8 +84,9 @@ def main():
     print(f"[Success] Packet Extraacted.")
     print(f"  -> {len(rx_payload_syms)} Payload Symbols extracted")
 
-    plotter.plot_time_series(np.abs(rx_pilot_sym), title="Pilot Symbol")
-    plt.show()
+    #Debugg Plotting
+    # plotter.plot_time_series(np.abs(rx_pilot_sym), title="Pilot Symbol")
+    # plt.show()
 
     # ------ Channel Estimation -----------
     #Remove CP

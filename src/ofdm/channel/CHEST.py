@@ -1,7 +1,7 @@
 import numpy as np
 from ofdm.config import OFDMConfig
 
-def channel_estimation_calc(self, rx_pilot_freq:np.ndarray, tx_pilot_ref: np.ndarray, config:OFDMConfig) -> np.ndarray:
+def channel_estimation_calc(rx_pilot_freq:np.ndarray, tx_pilot_ref: np.ndarray, config:OFDMConfig) -> np.ndarray:
     """  
     Performs Channel Estimation and returns subcarrier channel gains
     
