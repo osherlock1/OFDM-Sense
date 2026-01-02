@@ -4,9 +4,10 @@ import json
 import matplotlib.pyplot as plt
 #Internal
 from ofdm.config import OFDMConfig
-from ofdm.core import sync, waveform
+from ofdm.core import sync, waveform, preamble, payload
 from ofdm.viz import plotter
 from ofdm.channel import CHEST
+
 
 
 def main():
@@ -110,5 +111,28 @@ def main():
     plt.title("Lambda Angle")
     plt.show()
     
+    #----- Payload Extraction ---------
+    demodulated_data = []
+    for sym_time in rx_payload_syms:
+        #FFT
+        sym_no_cp = waveform.remove_cp(sym_time, cp_len=ofdm_conf.CP_LEN)
+        sym_freq = waveform.time_to_freq(sym_no_cp)
+
+        #Apply Channel gain
+        sym_chest = CHEST.apply_gains(sym_freq, Lambda_est=Lambda_est)
+
+        #Extract Data Bins
+        data_only = payload.extract_data(sym_chest, config=ofdm_conf)
+        demodulated_data.extend(data_only)
+    
+    plt.figure()
+    plt.scatter(np.real(demodulated_data), np.imag(demodulated_data), alpha=0.5)
+    plt.title="Constalation plot"
+    plt.show()
+
+
+
+
+
 if __name__ == "__main__":
     main()
