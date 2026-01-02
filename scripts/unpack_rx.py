@@ -72,7 +72,7 @@ def main():
         return
 
     #Sclice the packet
-    packet_time = rx_corrected[start_idx : start_idx + total_samlpes]
+    packet_time = rx_corrected[start_idx - 1 : start_idx + total_samlpes - 1]
 
     #Split into symbols
     all_symbols = np.split(packet_time, total_symbols)
