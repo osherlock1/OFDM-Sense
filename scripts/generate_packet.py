@@ -104,8 +104,9 @@ def main():
         json.dump(referense_data, f ,indent=2)
     print(f"[Success] Saved Referense Data to {json_path}")
 
-    plotter.plot_time_series(final_tx_signal, title="Final TX Signal")
-    plt.show()
+    #Debugg Plotting
+    # plotter.plot_time_series(final_tx_signal, title="Final TX Signal")
+    # plt.show()
 
 
 if __name__ == "__main__":
