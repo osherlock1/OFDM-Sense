@@ -66,6 +66,15 @@ def main():
     buffer = np.zeros(100, dtype=complex)
     final_tx_signal = np.concatenate([buffer, full_packet, buffer])
 
+    #Scale Signal between +-0.9
+    max_val = np.max(np.abs(final_tx_signal))
+
+    if max_val > 0:
+        scale_factor = 0.9 / max_val
+        final_tx_signal = final_tx_signal * scale_factor
+    
+
+
     #------Save Data to File-------
     
     #Create data dir if it does not exist
@@ -94,6 +103,10 @@ def main():
     with open(json_path, "w") as f:
         json.dump(referense_data, f ,indent=2)
     print(f"[Success] Saved Referense Data to {json_path}")
+
+    plotter.plot_time_series(final_tx_signal, title="Final TX Signal")
+    plt.show()
+
 
 if __name__ == "__main__":
     main()
