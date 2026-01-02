@@ -43,20 +43,47 @@ def main():
         known_sync_time=sync_ref_time
     )
 
-    #Estimate Coase CFO
+    #Estimate Coarse CFO
     symbol_start_idx = start_idx + ofdm_conf.CP_LEN
     max_P = P[symbol_start_idx]
     coarse_cfo = sync.estimate_cfo_coarse(max_P, config=ofdm_conf)
 
+    # Apply Coarse CFO Correction
+    print("Applying coarse CFO correction")
+    t = np.arange(len(rx_raw)) / ofdm_conf.FS
+    cfo_correction = np.exp(-1j * 2*np.pi * coarse_cfo * t)
 
-    plotter.plot_time_series(rx_raw, title="Raw Rx")
-    plotter.plot_time_series(M, title="M")
-    plt.show()
+    rx_corrected = rx_raw * cfo_correction
 
+    #------- Debugg Plotting ---------
+    # plotter.plot_time_series(rx_raw, title="Raw Rx")
+    # plotter.plot_time_series(M, title="M")
+    # plt.show()
 
     print(f"[Test] Coarse CFO:{coarse_cfo}, Start Idx:{start_idx}")
 
+    #---------- Extract Symbols ----------
+    sym_len = ofdm_conf.N + ofdm_conf.CP_LEN
+    total_symbols = 1 + 1 + n_payload_syms # (1 and 1 for Sync and Pilot) This needs to up updated eventually for dynamic 
+    total_samlpes = sym_len * total_symbols
 
+    #Safety Check
+    if start_idx + total_samlpes > len(rx_corrected):
+        print(f"[Error] Packet end index {start_idx + total_samlpes} exceeds file size{len(rx_corrected)}")
+        return
+
+    #Sclice the packet
+    packet_time = rx_corrected[start_idx : start_idx + total_samlpes]
+
+    #Split into symbols
+    all_symbols = np.split(packet_time, total_symbols)
+
+    rx_sync_sym = all_symbols[0]
+    rx_pilot_sym = all_symbols[1]
+    rx_payload_syms = all_symbols[2:]
+
+    print(f"[Success] Packet Extraacted.")
+    print(f"  -> {len(rx_payload_syms)} Payload Symbols extracted")
 
 if __name__ == "__main__":
     main()
