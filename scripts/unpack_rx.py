@@ -131,9 +131,10 @@ def main():
     plt.title="Constalation plot"
     plt.show()
 
-    for map in heatmap:
+    for i, map in enumerate(heatmap):
         plt.figure()
         plt.plot(map)
+        plt.title(f"Delay:{i}")
         plt.show()
 
 
