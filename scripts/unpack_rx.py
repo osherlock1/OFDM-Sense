@@ -93,10 +93,11 @@ def main():
     rx_pilot_freq = waveform.time_to_freq(rx_pilot_sym_no_cp)
 
     #Get TX pilot Ref
-    tx_pilot_ref = np.ndarray(ref_data['pilot_ref_real']).astype(complex) + 1j * np.ndarray(ref_data['pilot_ref_imag']).astype(complex)
-
+    tx_pilot_ref = np.array(ref_data['pilot_ref_real']).astype(complex) + 1j * np.array(ref_data['pilot_ref_imag']).astype(complex)
+    tx_pilot_no_cp = waveform.remove_cp(tx_pilot_ref, cp_len=ofdm_conf)
+    tx_pilot_freq = waveform.time_to_freq(tx_pilot_no_cp)
     #Calculate Channel Gains
-    Lambda_est = CHEST.channel_estimation_calc(rx_pilot_freq=rx_pilot_freq, tx_pilot_ref=tx_pilot_ref, config=ofdm_conf)
+    Lambda_est = CHEST.channel_estimation_calc(rx_pilot_freq=rx_pilot_freq, tx_pilot_ref=tx_pilot_freq, config=ofdm_conf)
 
     #Plot Channel Gains
     plt.figure()
