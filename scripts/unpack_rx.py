@@ -102,7 +102,7 @@ def main():
 
     #Plot Channel Gains
     plt.figure()
-    plt.plot(np.abs(Lambda_est))
+    plt.plot(np.fft.fftshift(np.abs(Lambda_est)))
     plt.title("Lambda ABS")
 
     plt.figure()
