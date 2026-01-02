@@ -131,6 +131,11 @@ def main():
     plt.title="Constalation plot"
     plt.show()
 
+    for map in heatmap:
+        plt.figure()
+        plt.plot(map)
+        plt.show()
+
 
 
 
