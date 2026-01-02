@@ -55,10 +55,7 @@ def main():
 
     rx_corrected = rx_raw * cfo_correction
 
-    #------- Debugg Plotting ---------
-    # plotter.plot_time_series(rx_raw, title="Raw Rx")
-    # plotter.plot_time_series(M, title="M")
-    # plt.show()
+
 
     print(f"[Test] Coarse CFO:{coarse_cfo}, Start Idx:{start_idx}")
 
@@ -84,6 +81,9 @@ def main():
 
     print(f"[Success] Packet Extraacted.")
     print(f"  -> {len(rx_payload_syms)} Payload Symbols extracted")
+
+    plotter.plot_time_series(np.abs(rx_pilot_sym), title="Pilot Symbol")
+    plt.show()
 
 if __name__ == "__main__":
     main()
