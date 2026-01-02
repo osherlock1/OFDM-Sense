@@ -132,9 +132,9 @@ def main():
     plt.show()
 
     for i, map in enumerate(heatmap):
+        print(i)
         plt.figure()
         plt.plot(map)
-        plt.title(f"Delay:{i}")
         plt.show()
 
 
