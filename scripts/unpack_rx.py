@@ -72,7 +72,7 @@ def main():
         return
 
     #Sclice the packet
-    packet_time = rx_corrected[start_idx - 1 : start_idx + total_samlpes - 1]
+    packet_time = rx_corrected[start_idx : start_idx + total_samlpes]
 
     #Split into symbols
     all_symbols = np.split(packet_time, total_symbols)
@@ -98,7 +98,7 @@ def main():
     tx_pilot_no_cp = waveform.remove_cp(tx_pilot_ref, cp_len=ofdm_conf.CP_LEN)
     tx_pilot_freq = waveform.time_to_freq(tx_pilot_no_cp)
     #Calculate Channel Gains
-    Lambda_est = CHEST.chest_cacl(rx_pilot_freq=rx_pilot_freq, tx_pilot_ref=tx_pilot_freq, config=ofdm_conf)
+    Lambda_est = CHEST.channel_estimation_calc(rx_pilot_freq=rx_pilot_freq, tx_pilot_ref=tx_pilot_freq, config=ofdm_conf)
 
     #Plot Channel Gains
     plt.figure()
