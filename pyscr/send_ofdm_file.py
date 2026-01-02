@@ -168,7 +168,7 @@ def main():
     start_idx = np.array([sync_idx]) + 1
     #Get starting point
 
-    #=----------
+    #-----------
     #Fine Synq
     #-----------
 

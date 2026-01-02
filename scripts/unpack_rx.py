@@ -18,7 +18,7 @@ def main():
 
     #Load Data
     print(f"Loading RX data from data_files/{args.file}...")
-    rx_raw = np.fromfile(f"data_files/{args.file}")
+    rx_raw = np.fromfile(f"data_files/{args.file}", dtype=np.complex64)
 
     print(f"Loading Referense Data from data_files/{args.ref}...")
     with open(f"data_files/{args.ref}") as f:
