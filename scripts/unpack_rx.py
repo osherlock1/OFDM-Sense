@@ -4,8 +4,10 @@ import json
 import matplotlib.pyplot as plt
 #Internal
 from ofdm.config import OFDMConfig
-from ofdm.core import sync
+from ofdm.core import sync, waveform
 from ofdm.viz import plotter
+from ofdm.channel import CHEST
+
 
 def main():
     parser = argparse.ArgumentParser(description="Unpack and Plot Recieved OFDM Packet")
@@ -85,5 +87,26 @@ def main():
     plotter.plot_time_series(np.abs(rx_pilot_sym), title="Pilot Symbol")
     plt.show()
 
+    # ------ Channel Estimation -----------
+    #Remove CP
+    rx_pilot_sym_no_cp = waveform.remove_cp(rx_pilot_sym, cp_len = ofdm_conf.CP_LEN)
+    rx_pilot_freq = waveform.time_to_freq(rx_pilot_sym_no_cp)
+
+    #Get TX pilot Ref
+    tx_pilot_ref = np.ndarray(ref_data['pilot_ref_real']).astype(complex) + 1j * np.ndarray(ref_data['pilot_ref_imag']).astype(complex)
+
+    #Calculate Channel Gains
+    Lambda_est = CHEST.channel_estimation_calc(rx_pilot_freq=rx_pilot_freq, tx_pilot_ref=tx_pilot_ref, config=ofdm_conf)
+
+    #Plot Channel Gains
+    plt.figure()
+    plt.plot(np.abs(Lambda_est))
+    plt.title("Lambda ABS")
+
+    plt.figure()
+    plt.plot(np.angle(Lambda_est))
+    plt.title("Lambda Angle")
+    plt.show()
+    
 if __name__ == "__main__":
     main()
