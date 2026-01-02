@@ -102,11 +102,11 @@ def main():
 
     #Plot Channel Gains
     plt.figure()
-    plt.plot(np.fft.fftshift(np.abs(Lambda_est)))
+    plt.plot(np.fft.fftshift(np.abs(Lambda_est)[ofdm_conf.data_carriers]))
     plt.title("Lambda ABS")
 
     plt.figure()
-    plt.plot(np.angle(Lambda_est))
+    plt.plot(np.angle(Lambda_est[ofdm_conf.data_carriers]))
     plt.title("Lambda Angle")
     plt.show()
     
