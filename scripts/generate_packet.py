@@ -63,7 +63,7 @@ def main():
         full_packet = noise.add_nosie(signal = full_packet, snr_db=args.snr, seed=args.seed)
     
     #Add buffer prefix
-    buffer = np.zeros(100, dtype=complex)
+    buffer = np.zeros(300, dtype=complex)
     final_tx_signal = np.concatenate([buffer, full_packet, buffer])
 
     #Scale Signal between +-0.9

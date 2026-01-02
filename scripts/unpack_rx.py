@@ -46,6 +46,8 @@ def main():
         known_sync_time=sync_ref_time
     )
 
+    start_idx = start_idx
+
     #Estimate Coarse CFO
     symbol_start_idx = start_idx + ofdm_conf.CP_LEN
     max_P = P[symbol_start_idx]

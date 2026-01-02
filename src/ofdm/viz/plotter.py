@@ -49,3 +49,17 @@ def plot_time_series(
     ax.legend(loc="upper right")
 
     return ax
+
+def plot_constellation(
+        iq_data: np.ndarray,
+        ax: Optional[plt.Axes] = None,
+        title: str = "Constellation Plot"
+):
+    """  
+    Plots RX IQ salmpes as QAM16 Format
+    """
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(6,6))\
+    
+    return
+    #Plot the grid
