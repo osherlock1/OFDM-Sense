@@ -192,12 +192,15 @@ def main():
     ber = eval.calc_BER(iq_rx = demodulated_data, iq_ref=ref_iq)
     print(f"BER:{ber*100:.2f}%")
 
-
+    # ---------- Plots ---------------
     plt.figure()
     plt.scatter(np.real(demodulated_data), np.imag(demodulated_data), alpha=0.5)
     plt.title="Constalation plot"
     plt.show()
 
+    #----------- Save Unpacked Data ---------- 
+    unpacked_file_name = "unpacked_data.json"
+    save_unpacked_data(demodulated_data, file_name=unpacked_file_name)
 
 
 def binary_ref_to_iq(binary_string:str, n_samples:int)->np.ndarray:
@@ -213,7 +216,35 @@ def binary_ref_to_iq(binary_string:str, n_samples:int)->np.ndarray:
     return np.array(iq_array) * np.sqrt(10)
     
     
+def save_unpacked_data(rx_iq:np.ndarray, file_name:str):
+    """  
+    Saves the unpacked data a json file
 
+    Args:
+        rx_iq: Unpacked RX iq data (scaled +-3)
+        file_name: name of file to save data (do not include data_files/)
+    """
+    #Convert IQ to Binary
+    binary_rx = [qam.iq_to_binary(sample) for sample in rx_iq]
+    
+    #Convert rx_iq to list
+    
+
+    unpacked_data = {
+        "unpacked_data_real":np.real(rx_iq).tolist(),
+        "unpacked_data_imag":np.imag(rx_iq).tolist(),
+        "unpacked_binary_data":binary_rx
+    }
+
+    json_path = f"data_files/{file_name}"
+    with open(json_path, "w") as f:
+        json.dump(unpacked_data, f, indent=2)
+    print(f"[Success] Saved Unpacked Data to {json_path}")
+
+    
+    
+
+    
     
 
 
