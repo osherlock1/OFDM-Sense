@@ -165,14 +165,10 @@ def main():
         phase_correction = np.exp(-1j * phase_drift)
         sym_final = sym_eq * phase_correction
 
-        print(f"Symbol Drift {np.degrees(phase_drift):.2f} degrees")
-
         #Extract Data
         data_only = payload.extract_data(sym_final, config=ofdm_conf)
         demodulated_data.extend(data_only)
         
-
-
     #Final Data
     demodulated_data = np.array(demodulated_data)
     demodulated_data = demodulated_data*np.sqrt(10)
