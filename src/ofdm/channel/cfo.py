@@ -115,4 +115,13 @@ def prepare_data_symbol(rx_signal:np.ndarray, config:OFDMConfig)->np.ndarray:
 
     return rxn_time, txn_time
 
+def estimate_phase_error(tx_ref:np.ndarray, rx_signal:np.ndarray):
+
+    #Calculate correlation
+    correlation = np.vdot(tx_ref, rx_signal)
+
+    #Get Phase Error
+    phase_error = np.angle(correlation)
+
+    return phase_error
     
