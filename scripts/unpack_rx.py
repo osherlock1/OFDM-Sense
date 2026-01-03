@@ -207,7 +207,6 @@ def main():
 def binary_ref_to_iq(binary_string:str, n_samples:int)->np.ndarray:
 
     full_string = "".join(binary_string)
-    print(f"Original Binary String {full_string}")
 
     #Parse String into 4 bit words
     word_len = 4
