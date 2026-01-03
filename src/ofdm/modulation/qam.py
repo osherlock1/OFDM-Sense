@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 
 
 QAM16_MAP: Dict[str, complex] = {
@@ -65,3 +65,6 @@ def get_reference_constalation(scale:float = DEFAULT_SCALE) -> np.ndarray:
 
     points = list(QAM16_MAP.values())
     return np.array(points) / scale
+
+
+    

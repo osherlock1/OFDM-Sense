@@ -7,7 +7,8 @@ from ofdm.config import OFDMConfig
 from ofdm.core import sync, waveform, preamble, payload
 from ofdm.viz import plotter
 from ofdm.channel import CHEST, cfo
-
+from ofdm.utils import eval
+from ofdm.modulation import qam
 
 
 
@@ -172,22 +173,44 @@ def main():
         
 
 
-    
+    #Final Data
     demodulated_data = np.array(demodulated_data)
     demodulated_data = demodulated_data*np.sqrt(10)
     
+
+    #--------- Evaluation ---------
+    #Get Referense Data
+    ref_binary = ref_data['binary_data']
+    n_ref_samples = ref_data['n_samples']
+    ref_iq = binary_ref_to_iq(binary_string=ref_binary, n_samples=n_ref_samples)
+
+    #Calculate EVM
+    evm = eval.calc_EVM(iq_rx=demodulated_data, iq_ref=ref_iq)
+    print(f"EVM:{evm}")
+
     plt.figure()
     plt.scatter(np.real(demodulated_data), np.imag(demodulated_data), alpha=0.5)
     plt.title="Constalation plot"
     plt.show()
 
-    # for i, map in enumerate(heatmap):
-    #     print(i)
-    #     plt.figure()
-    #     plt.plot(map)
-    #     plt.show()
 
 
+def binary_ref_to_iq(binary_string:str, n_samples:int)->np.ndarray:
+
+    full_string = "".join(binary_string)
+    print(f"Original Binary String {full_string}")
+
+    #Parse String into 4 bit words
+    word_len = 4
+    binary_word_list = np.array([full_string[i:word_len + i] for i in range(0 ,len(full_string), word_len)])
+    
+    #Convert to IQ
+    iq_array = [qam.binary_to_iq(word) for word in binary_word_list]
+    return np.array(iq_array) * np.sqrt(10)
+    
+    
+
+    
 
 
 
