@@ -58,6 +58,6 @@ def generate_pilot_vals(config: OFDMConfig, seed: int = 42) -> np.ndarray:
     #Number of pilot values
     n_pilots = len(config.pilot_carriers)
 
-    pilot_values = [random.choice(qam16_vals) for _ in range(n_pilots)]
+    pilot_values = [np.random.choice(qam16_vals) for _ in range(n_pilots)]
 
     return pilot_values
