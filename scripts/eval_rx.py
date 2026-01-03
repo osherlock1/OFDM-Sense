@@ -62,10 +62,19 @@ def per_subcarrier_eval(rx_iq_data:np.ndarray, ref_iq_data:np.ndarray, config:OF
     
     k = sc_metrics['indices']
     evm = sc_metrics['evm_db']
+
+    db_threshold = -4
+
+    for i, metric in enumerate(evm):
+        if metric >= db_threshold:
+            print(f"Subcarrier{k[i]}, EVM:{metric:.2f}dB")
     plt.figure()
     plt.stem(k, evm)
     plt.title("EVM per subcarrier")
     plt.show()
+
+    
+
 
     
     
