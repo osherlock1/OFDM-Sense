@@ -51,6 +51,40 @@ def main():
         known_sync_time=sync_ref_time
     )
 
+    #Find pilot symbol
+    sync_len = ofdm_conf.CP_LEN + ofdm_conf.N
+    pilot_len = ofdm_conf.CP_LEN + ofdm_conf.N
+
+    coarse_pilot_start = start_idx + sync_len
+
+    #Create a search window
+    search_margin = 10
+    pilot_chunk_start = coarse_pilot_start - search_margin
+    pilot_chunk_end = coarse_pilot_start + pilot_len + search_margin
+
+    rx_pilot_search_area = rx_raw[pilot_chunk_start: pilot_chunk_end]
+
+    #Prepare Reference
+    tx_pilot_ref = np.array(ref_data['pilot_ref_real']).astype(complex) + 1j * np.array(ref_data['pilot_ref_imag']).astype(complex)
+    tx_pilot_no_cp = waveform.remove_cp(tx_pilot_ref, cp_len=ofdm_conf.CP_LEN)
+
+    #Estimate
+    best_cfo, best_delay_rel, heatmap = cfo.estimate_cfo(
+        tx_ref = tx_pilot_ref,
+        rx_signal = rx_pilot_search_area,
+        fs = ofdm_conf.FS,
+        n_bins = 4096
+    )
+    print(f"Estimated CFO:{best_cfo}, Best Delay:{best_delay_rel}")
+
+    #Global Correction
+    actual_pilot_start = pilot_chunk_start + best_delay_rel
+    refined_packet_start = actual_pilot_start - sync_len
+
+    #Apply CFO to enite signal
+    time_vec = np.arange(len(rx_raw)) / ofdm_conf.FS
+    correction_vector = np.exp(-1j * 2 * np.pi * best_cfo * time_vec)
+    rx_corrected = rx_raw * correction_vector
 
     #---------- Extract Symbols ----------
     sym_len = ofdm_conf.N + ofdm_conf.CP_LEN
@@ -63,7 +97,7 @@ def main():
         return
 
     #Sclice the packet
-    packet_time = rx_raw[start_idx : start_idx + total_samlpes]
+    packet_time = rx_corrected[refined_packet_start: refined_packet_start + total_samlpes]
 
     #Split into symbols
     all_symbols = np.split(packet_time, total_symbols)
@@ -79,23 +113,14 @@ def main():
     tx_pilot_ref = np.array(ref_data['pilot_ref_real']).astype(complex) + 1j * np.array(ref_data['pilot_ref_imag']).astype(complex)
     tx_pilot_no_cp = waveform.remove_cp(tx_pilot_ref, cp_len=ofdm_conf.CP_LEN)
 
-    #Calculate CFO
-    best_cfo, best_delay, heatmap = cfo.estimate_cfo(
-        tx_ref = tx_pilot_no_cp,
-        rx_signal=rx_pilot_sym,
-        fs=ofdm_conf.FS,
-        search_window=10,
-        n_bins=4096
-    )
-    print(f"Calculated CFO:{best_cfo}, Calculated Delay:{best_delay}")
+    print(f"Calculated CFO:{best_cfo}, Calculated Delay:{best_delay_rel}")
 
-    #Apply CFO
-    corrected_pilot = cfo.apply_cfo(rx_signal=rx_pilot_sym[best_delay: best_delay + ofdm_conf.N], cfo=best_cfo, fs=ofdm_conf.FS)
 
 
     # ------ Channel Estimation Calc -----------
     #Remove CP of ref pilot
-    rx_pilot_freq = waveform.time_to_freq(corrected_pilot)
+    rx_pilot_sym_no_cp = waveform.remove_cp(rx_pilot_sym)
+    rx_pilot_freq = waveform.time_to_freq(rx_pilot_sym_no_cp)
 
     #Get TX pilot Ref
     tx_pilot_freq = waveform.time_to_freq(tx_pilot_no_cp)
@@ -116,7 +141,7 @@ def main():
     demodulated_data = []
     for sym_time in rx_payload_syms:
         #FFT
-        sym_no_cp = sym_time[best_delay: ofdm_conf.N + best_delay]
+        sym_no_cp = waveform.remove_cp(sym_time, cp_len=ofdm_conf.CP_LEN)
         sym_freq = waveform.time_to_freq(sym_no_cp)
 
         #Apply Channel gain
