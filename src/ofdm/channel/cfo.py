@@ -1,6 +1,8 @@
 import numpy as np
 from typing import Tuple
-
+#Internal
+from ofdm.config import OFDMConfig
+from ofdm.core import preamble, payload
 def estimate_cfo(
         tx_ref: np.ndarray,
         rx_signal: np.ndarray,
@@ -78,3 +80,39 @@ def apply_cfo(rx_signal:np.ndarray, cfo:float, fs:float) -> np.ndarray:
     t = np.arange(len(rx_signal)) / fs
     correction_vector = np.exp(-1j * 2 * np.pi * cfo * t)
     return rx_signal * correction_vector
+
+def prepare_data_symbol(rx_signal:np.ndarray, config:OFDMConfig)->np.ndarray:
+    """  
+    Builds the Pilot only 
+
+    Args:
+        rx_singal: Recieved data symbol no cp (Time Domain)
+        config: OFDMConfig()
+
+    Returns:
+        rxn_time: rx time signal with non pilot subcarriers zeroed out
+        txn_time: tx ref time signal with non pilot subcarriers zeroed out
+    """
+    #Pilot and Data Idx
+    pilot_idx = config._idx(np.array(config.pilot_carriers))
+    data_idx = config._idx(np.array(config.data_carriers))
+
+    #Create TX Ref
+    pilot_vals = preamble.generate_pilot_vals(config=config)
+    TXk_pilots = np.zeros_like(rx_signal, dtype=complex)
+    TXk_pilots[pilot_idx] = pilot_vals
+    
+    #Convert RX Signal to Frequency Domain
+    RXk = np.fft.fft(rx_signal)
+
+    #Zero out non pilots
+    RXk_pilots = np.zeros_like(RXk, dtype=complex)
+    RXk_pilots[pilot_idx] = RXk[pilot_idx]
+
+    #Convert to time domain
+    txn_time = np.fft.ifft(TXk_pilots)
+    rxn_time = np.fft.ifft(RXk_pilots)
+
+    return rxn_time, txn_time
+
+    

@@ -140,15 +140,33 @@ def main():
     #----- Payload Extraction ---------
     demodulated_data = []
     for sym_time in rx_payload_syms:
-        #FFT
+        #Remove CP
         sym_no_cp = waveform.remove_cp(sym_time, cp_len=ofdm_conf.CP_LEN)
-        sym_freq = waveform.time_to_freq(sym_no_cp)
+        
+        #Get Non Pilot Zerod out time signals
+        rxn_time, txn_time = cfo.prepare_data_symbol(rx_signal=sym_no_cp, config=ofdm_conf)
+
+        #Calculate Correlation
+        best_cfo_data, best_delay, heatmap = cfo.estimate_cfo(
+            tx_ref = txn_time,
+            rx_signal=rxn_time,
+            fs=ofdm_conf.FS,
+            n_bins=4096
+        )
+        print(f"Data Symbol CFO:{best_cfo_data}, Data Symbol Delay:{best_delay}")
+
+
+        #Apply CFO
+        data_symbol_corr = cfo.apply_cfo(rx_signal=sym_no_cp, cfo=best_cfo_data, fs=ofdm_conf.FS)
+
+        #Convert to Frequency Domain
+        data_symbol_corr_freq = waveform.time_to_freq(data_symbol_corr)
 
         #Apply Channel gain
-        sym_chest = CHEST.apply_gains(sym_freq, Lambda_est=Lambda_est)
+        final_data_sym = CHEST.apply_gains(data_symbol_corr_freq, Lambda_est=Lambda_est)
 
         #Extract Data Bins
-        data_only = payload.extract_data(sym_chest, config=ofdm_conf)
+        data_only = payload.extract_data(final_data_sym, config=ofdm_conf)
         demodulated_data.extend(data_only)
     
     demodulated_data = np.array(demodulated_data)
