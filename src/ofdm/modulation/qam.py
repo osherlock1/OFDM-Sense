@@ -42,7 +42,7 @@ def iq_to_binary(iq_sample: complex, scale:float = DEFAULT_SCALE) -> str:
     Takes an IQ sample and converts it into a binary string mapping of QAM 16
     """
 
-    sample_rescaled = iq_sample * scale
+    sample_rescaled = iq_sample# * scale
 
     min_dist = float('inf')
     closest_bits = "0000"

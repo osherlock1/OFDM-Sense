@@ -186,7 +186,16 @@ def main():
 
     #Calculate EVM
     evm = eval.calc_EVM(iq_rx=demodulated_data, iq_ref=ref_iq)
-    print(f"EVM:{evm}")
+    print(f"EVM:{evm}dB")
+
+    #Calculate SER
+    ser = eval.calc_SER(iq_rx=demodulated_data, iq_ref=ref_iq)
+    print(f"SER:{ser * 100:.2f}%")
+
+    #Calculate BER
+    ber = eval.calc_BER(iq_rx = demodulated_data, iq_ref=ref_iq)
+    print(f"BER:{ber*100:.2f}%")
+
 
     plt.figure()
     plt.scatter(np.real(demodulated_data), np.imag(demodulated_data), alpha=0.5)
