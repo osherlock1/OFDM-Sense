@@ -141,31 +141,37 @@ def main():
     plt.show()
     
     #----- Payload Extraction ---------
+    pilots_idx = ofdm_conf._idx(np.array(ofdm_conf.pilot_carriers))
+    tx_pilot_vals = preamble.generate_pilot_vals(config=ofdm_conf)
     demodulated_data = []
+
     for sym_time in rx_payload_syms:
         #Remove CP
         sym_no_cp = waveform.remove_cp(sym_time, cp_len=ofdm_conf.CP_LEN)
         
-        #Get Non Pilot Zerod out time signals
-        rxn_time, txn_time = cfo.prepare_data_symbol(rx_signal=sym_no_cp, config=ofdm_conf)
+        #Convert to Freq Domain
+        sym_freq = waveform.time_to_freq(sym_no_cp)
 
-        #Calculate Phase Angle Difference
-        phase_error = cfo.estimate_phase_error(tx_ref=txn_time, rx_signal=rxn_time)
+        #Apply Channel Gains
+        sym_eq = CHEST.apply_gains(sym_freq, Lambda_est=Lambda_est)
 
-        #Apply Phase Correction
-        phase_correction = np.exp(-1j * phase_error)
-        sym_corrected = sym_no_cp * phase_correction
-        print(f"Data Symbol Phase Error:{phase_error}")
+        #Estimate Phase Drift
+        rx_pilots_eq = sym_eq[pilots_idx]
+        correlation = np.vdot(tx_pilot_vals, rx_pilots_eq)
+        phase_drift = np.angle(correlation)
 
-        #Convert to Frequency Domain
-        data_symbol_corr_freq = waveform.time_to_freq(sym_corrected)
+        #Apply Phase correction
+        phase_correction = np.exp(-1j * phase_drift)
+        sym_final = sym_eq * phase_correction
 
-        #Apply Channel gain
-        final_data_sym = CHEST.apply_gains(data_symbol_corr_freq, Lambda_est=Lambda_est)
+        print(f"Symbol Drift {np.degrees(phase_drift):.2f} degrees")
 
-        #Extract Data Bins
-        data_only = payload.extract_data(final_data_sym, config=ofdm_conf)
+        #Extract Data
+        data_only = payload.extract_data(sym_final, config=ofdm_conf)
         demodulated_data.extend(data_only)
+        
+
+
     
     demodulated_data = np.array(demodulated_data)
     demodulated_data = demodulated_data*np.sqrt(10)
