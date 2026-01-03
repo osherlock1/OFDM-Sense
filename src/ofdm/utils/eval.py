@@ -24,16 +24,15 @@ def calc_EVM(iq_rx:np.ndarray, iq_ref:np.ndarray)->float:
         iq_ref = iq_ref[:min_len]
         print(f"[EVM] Truncating RX and Referense to {min_len} samples.")
     
-    N = len(iq_rx)
-    sum_result = 0
+    error_vector = iq_rx - iq_ref
 
-    for i in range(N):
-        Ierr = np.real(iq_rx[i] - np.real(iq_ref[i]))
-        Qerr = np.imag(iq_rx[i]) - np.imag(iq_ref[i])
-        sum_result += ((Ierr ** 2) + (Qerr ** 2)) / (np.abs(iq_ref[i]) ** 2)
+    #Calculate powers
+    p_error = np.mean(np.abs(error_vector) ** 2)
+    p_ref = np.mean(np.abs(iq_ref) ** 2)
+
+    #Calc EVM
+    evm = np.sqrt(p_error / p_ref)
     
-    evm = np.sqrt((1 / N) * sum_result)
-
     #Convert to dB
     return 20 * np.log10(evm)
 
