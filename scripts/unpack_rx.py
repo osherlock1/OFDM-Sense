@@ -116,7 +116,7 @@ def main():
     demodulated_data = []
     for sym_time in rx_payload_syms:
         #FFT
-        sym_no_cp = waveform.remove_cp(sym_time, cp_len=ofdm_conf.CP_LEN)
+        sym_no_cp = sym_time[best_delay: ofdm_conf.N + best_delay]
         sym_freq = waveform.time_to_freq(sym_no_cp)
 
         #Apply Channel gain
@@ -126,16 +126,19 @@ def main():
         data_only = payload.extract_data(sym_chest, config=ofdm_conf)
         demodulated_data.extend(data_only)
     
+    demodulated_data = np.array(demodulated_data)
+    demodulated_data = demodulated_data*np.sqrt(10)
+    
     plt.figure()
     plt.scatter(np.real(demodulated_data), np.imag(demodulated_data), alpha=0.5)
     plt.title="Constalation plot"
     plt.show()
 
-    for i, map in enumerate(heatmap):
-        print(i)
-        plt.figure()
-        plt.plot(map)
-        plt.show()
+    # for i, map in enumerate(heatmap):
+    #     print(i)
+    #     plt.figure()
+    #     plt.plot(map)
+    #     plt.show()
 
 
 

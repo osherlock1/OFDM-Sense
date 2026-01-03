@@ -21,7 +21,7 @@ def channel_estimation_calc(rx_pilot_freq:np.ndarray, tx_pilot_ref: np.ndarray, 
     Lambda_est = np.ones_like(rx_pilot_freq, dtype=complex)
 
     #Estiamtion channels
-    Lambda_est[active_bins] = rx_pilot_freq[active_bins] / (tx_pilot_ref[active_bins] + 1e-12)
+    Lambda_est = rx_pilot_freq / (tx_pilot_ref + 1e-12)
 
     return Lambda_est
 
@@ -33,11 +33,11 @@ def apply_gains(rx_symb_freq:np.ndarray, Lambda_est:np.ndarray)-> np.ndarray:
         rx_symb_freq: Recieved RX symbol after CFO with no CP
         Lamba_est: Channel gains calculated from channel_estimation_calc()
     """
-    safe_lambda = Lambda_est.copy()
-    threshold = 1e-2
-    safe_lambda[np.abs(safe_lambda) < threshold] = 1.0
+    # safe_lambda = Lambda_est.copy()
+    # threshold = 1e-2
+    # safe_lambda[np.abs(safe_lambda) < threshold] = 1.0
 
-    return rx_symb_freq
+    return rx_symb_freq / Lambda_est
 
 def chest_cacl(rx_pilot_freq:np.ndarray, tx_pilot_ref:np.ndarray, config:OFDMConfig)->np.ndarray:
     """  
