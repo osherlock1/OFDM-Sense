@@ -56,7 +56,7 @@ def calc_SER(iq_rx:np.ndarray, iq_ref:np.ndarray)->float:
     binary_ref = [qam.iq_to_binary(sample) for sample in iq_ref]
 
     #Length Check
-    if len(binary_rx) != binary_ref:
+    if len(binary_rx) != len(binary_ref):
         print(f"[SER] RX len:{len(binary_rx)} samples does not match referense length:{len(binary_ref)} samples")
         min_len = min(len(binary_ref), len(binary_rx))
         print(f"Truncating to min length:{min_len} samples")
