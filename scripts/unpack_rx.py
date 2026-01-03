@@ -75,7 +75,10 @@ def main():
         fs = ofdm_conf.FS,
         n_bins = 4096
     )
+    #FIXME: Using Opposite Sign on CFO since it seems to be revered(need to look into)
+    best_cfo = best_cfo * -1
     print(f"Estimated CFO:{best_cfo}, Best Delay:{best_delay_rel}")
+
 
     #Global Correction
     actual_pilot_start = pilot_chunk_start + best_delay_rel
