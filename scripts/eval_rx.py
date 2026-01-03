@@ -27,8 +27,8 @@ def main():
     n_sym = ref_data['n_data_symb']
     ref_iq = binary_ref_to_iq(binary_string=ref_binary_string, n_samples=n_samples)
     
-    sc_metrics = per_subcarrier_eval(rx_iq_data = rx_iq, ref_iq_data = ref_iq, config=ofdm_conf, n_sym = n_sym)
-    
+    #sc_metrics = per_subcarrier_eval(rx_iq_data = rx_iq, ref_iq_data = ref_iq, config=ofdm_conf, n_sym = n_sym)
+    diagnose_spectrum(rx_iq_data=rx_iq, ref_iq_data=ref_iq, config=ofdm_conf)
 
 def per_subcarrier_eval(rx_iq_data:np.ndarray, ref_iq_data:np.ndarray, config:OFDMConfig, n_sym:int):
     """  
@@ -108,6 +108,70 @@ def binary_ref_to_iq(binary_string:str, n_samples:int)->np.ndarray:
     #Convert to IQ
     iq_array = [qam.binary_to_iq(word) for word in binary_word_list]
     return np.array(iq_array) * np.sqrt(10)
+
+
+
+def diagnose_spectrum(rx_iq_data: np.ndarray, ref_iq_data: np.ndarray, config: OFDMConfig):
+    """
+    Plots the average magnitude of every subcarrier to spot interference/fading.
+    """
+    n_carriers = len(config.data_carriers)
+    
+    # Reshape to (Symbols, Subcarriers)
+    rx_grid = rx_iq_data.reshape(-1, n_carriers)
+    ref_grid = ref_iq_data.reshape(-1, n_carriers)
+
+    # Calculate Average Magnitude (Power) per subcarrier
+    # We use median to ignore random noise spikes
+    rx_mag = np.median(np.abs(rx_grid), axis=0)
+    ref_mag = np.median(np.abs(ref_grid), axis=0)
+    
+    # Calculate the Difference (Gain/Loss)
+    gain_diff = 20 * np.log10(rx_mag / (ref_mag + 1e-12))
+    
+    # Plot
+    plt.figure(figsize=(12, 6))
+    
+    # 1. Top: Magnitude Comparison
+    plt.subplot(2, 1, 1)
+    plt.title("Spectrum Magnitude Check")
+    plt.plot(config.data_carriers, ref_mag, label="Reference (TX)", marker='o', alpha=0.5)
+    plt.plot(config.data_carriers, rx_mag, label="Received (RX)", marker='x')
+    plt.ylabel("Magnitude")
+    plt.legend()
+    plt.grid(True)
+    
+    # 2. Bottom: Gain Error (Should be flat 0 dB)
+    plt.subplot(2, 1, 2)
+    plt.title("Gain Error per Subcarrier")
+    plt.stem(config.data_carriers, gain_diff, basefmt=" ")
+    plt.axhline(0, color='k')
+    plt.ylabel("Gain Error (dB)")
+    plt.xlabel("Subcarrier Index")
+    plt.grid(True)
+    
+    # Highlight the "bad" ones you listed
+    bad_indices = [4, 25, 27, 50, 84, 126]
+    # Ensure carriers is a numpy array for proper indexing
+    carriers_arr = np.array(config.data_carriers)
+    
+    # Create a mask: True where the carrier is in our "bad list"
+    mask = np.isin(carriers_arr, bad_indices)
+    
+    # Extract X and Y using the mask (No loops needed!)
+    bad_x = carriers_arr[mask]
+    bad_y = gain_diff[mask]
+    
+    # Plot all suspects at once
+    if len(bad_x) > 0:
+        plt.plot(bad_x, bad_y, 'ro', label="Suspects")
+        plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+
+
 
 if __name__ == "__main__":
     main()
