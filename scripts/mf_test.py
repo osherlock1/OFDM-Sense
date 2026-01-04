@@ -17,6 +17,15 @@ def main():
     raw_rx_data = np.fromfile("data_files/rand_ofdm_packet_rx.dat", dtype=complex)
     raw_tx_data = np.fromfile("data_files/rand_ofdm_packet.dat")
 
+
+    #Scale raw_rx_data
+    max_val = np.max(np.abs(raw_rx_data))
+
+    if max_val > 0:
+        scale_factor = 0.9 / max_val
+        raw_rx_data = raw_rx_data * scale_factor
+
+
     #Unpack Data
     #Get RX Data
     rx_data_file_name = "unpacked_data.json"
