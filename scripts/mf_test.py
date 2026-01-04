@@ -12,11 +12,12 @@ from ofdm.config import OFDMConfig
 # =========================
 def main():
 
+    #Define OFDM Configuration
     ofdm_conf = OFDMConfig()
     
+    #Unpack Raw RX and TX data
     raw_rx_data = np.fromfile("data_files/rand_ofdm_packet_rx.dat", dtype=np.complex64)
     raw_tx_data = np.fromfile("data_files/rand_ofdm_packet.dat", dtype=np.complex64)
-
 
     #Scale raw_rx_data
     max_val = np.max(np.abs(raw_rx_data))
@@ -25,39 +26,40 @@ def main():
         scale_factor = 0.9 / max_val
         raw_rx_data = raw_rx_data * scale_factor
 
-
-    #Unpack Data
-    #Get RX Data
-    rx_data_file_name = "unpacked_data.json"
-    rx_data = unpack_json(rx_data_file_name)
-    
-    #Get Ref Data
-    ref_data_file_name = "rand_ofdm_packet_ref.json"
-    ref_data = unpack_json(ref_data_file_name)
-
-    #Unpack Json Files
-    rx_iq = np.array(rx_data["unpacked_data_real"]) + 1j * np.array(rx_data["unpacked_data_imag"])
-    rx_binary = rx_data["unpacked_binary_data"]
-    
-    #Unpack Ref Data
-    ref_binary_string = ref_data['binary_data']
-    n_samples = ref_data['n_samples']
-    n_sym = ref_data['n_data_symb']
-    ref_iq = binary_ref_to_iq(binary_string=ref_binary_string, n_samples=n_samples)
-
-
+    #Calculate Matched Filter Delay
     z, lags = delay.matched_filter_calc(rx_iq = raw_rx_data, ref_iq=raw_tx_data, fs = ofdm_conf.FS)
+    z_mag = np.abs(z)
+    #Find Peak of correlation
+    peak_idx = np.argmax(z_mag)
 
-    delay_idx = np.argmax(z)
-    caled_delay = lags[delay_idx]
-    print(caled_delay)
+    #Interpolation for fine resoluation
+    window_radius = 5
+    start_idx = max(0, peak_idx - window_radius)
+    end_idx = min(len(z_mag), peak_idx + window_radius + 1)
 
+    lags_window = lags[start_idx:end_idx]
+    z_window = z_mag[start_idx:end_idx]
+
+    #Create interpolator function
+    f_interp = interp1d(lags_window, z_window, kind='cubic')
+
+    #Create a high-resolution time grid
+    fine_lags = np.linspace(lags_window[0], lags_window[-1], num = 10000)
+    fine_z = f_interp(fine_lags)
+
+    #Fine Exact Peak on fine grid
+    fine_peak_idx = np.argmax(fine_z)
+    fine_delay = fine_lags[fine_peak_idx]
+
+    #Calculate Distance
     SPEED_OF_LIGHT = 299792458
 
-    raw_distance = np.abs(caled_delay) * SPEED_OF_LIGHT
+    raw_distance = np.abs(fine_delay) * SPEED_OF_LIGHT
 
-    print(f"Calculated Time Delay: {caled_delay * 1e6:.2f} microseconds")
-    print(f"Estimated Raw Distance: {raw_distance:.2f} meters")
+    print(f"Coarse Delay: {lags[peak_idx]*1e6:.4f}us")
+    print(f"Fine Delay: {fine_delay*1e6:.4f}us")
+    print(f"Distance: {raw_distance:.2f}meters")
+    
 
     plt.figure()
     plt.plot(lags, np.abs(z))
