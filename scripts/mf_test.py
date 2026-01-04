@@ -6,10 +6,14 @@ from scipy.interpolate import interp1d
 import json
 from ofdm.channel import delay
 from ofdm.modulation import qam
+from ofdm.config import OFDMConfig
 # =========================
 # Main
 # =========================
 def main():
+
+    ofdm_conf = OFDMConfig()
+    
     #Unpack Data
     #Get RX Data
     rx_data_file_name = "unpacked_data.json"
@@ -30,10 +34,14 @@ def main():
     ref_iq = binary_ref_to_iq(binary_string=ref_binary_string, n_samples=n_samples)
 
 
-    z = delay.matched_filter_calc(rx_iq = rx_iq, ref_iq=ref_iq)
+    z, lags = delay.matched_filter_calc(rx_iq = rx_iq, ref_iq=ref_iq, fs = ofdm_conf.FS)
+
+    delay_idx = np.argmax(z)
+    caled_delay = lags[delay_idx]
+    print(caled_delay)
 
     plt.figure()
-    plt.plot(np.abs(z))
+    plt.plot(lags, np.abs(z))
     plt.show()
 
 
