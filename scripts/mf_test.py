@@ -14,8 +14,8 @@ def main():
 
     ofdm_conf = OFDMConfig()
     
-    raw_rx_data = np.fromfile("data_files/rand_ofdm_packet_rx.dat", dtype=complex)
-    raw_tx_data = np.fromfile("data_files/rand_ofdm_packet.dat")
+    raw_rx_data = np.fromfile("data_files/rand_ofdm_packet_rx.dat", dtype=np.complex64)
+    raw_tx_data = np.fromfile("data_files/rand_ofdm_packet.dat", dtype=np.complex64)
 
 
     #Scale raw_rx_data
