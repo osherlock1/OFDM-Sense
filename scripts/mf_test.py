@@ -33,23 +33,29 @@ def main():
     peak_idx = np.argmax(z_mag)
 
     #Interpolation for fine resoluation
-    window_radius = 5
-    start_idx = max(0, peak_idx - window_radius)
-    end_idx = min(len(z_mag), peak_idx + window_radius + 1)
+    K = 100
+    N = len(z)
+    N_padded = N * K
 
-    lags_window = lags[start_idx:end_idx]
-    z_window = z_mag[start_idx:end_idx]
+    #Freq Domain
+    Z_freq = np.fft.fft(z)
 
-    #Create interpolator function
-    f_interp = interp1d(lags_window, z_window, kind='cubic')
+    pivot = (N + 1) // 2
 
-    #Create a high-resolution time grid
-    fine_lags = np.linspace(lags_window[0], lags_window[-1], num = 10000)
-    fine_z = f_interp(fine_lags)
+    #Zero pad
+    Z_padded = np.zeros(N_padded, dtype=np.complex64)
+    Z_padded[:pivot] = Z_freq[:pivot]
+    Z_padded[-(N-pivot):] = Z_freq[-(N-pivot):]
 
-    #Fine Exact Peak on fine grid
-    fine_peak_idx = np.argmax(fine_z)
-    fine_delay = fine_lags[fine_peak_idx]
+    #Move pack to time domain
+    z_upsampled = np.fft.ifft(Z_padded) * K
+
+    #High res lags
+    lags_upsampled = np.linspace(lags[0], lags[-1], N_padded)
+
+    z_mag_up = np.abs(z_upsampled)
+    fine_peak_idx = np.argmax(z_mag_up)
+    fine_delay = lags_upsampled[fine_peak_idx]
 
     #Calculate Distance
     SPEED_OF_LIGHT = 299792458
@@ -63,7 +69,7 @@ def main():
 
 
     plt.figure()
-    plt.plot(lags, np.abs(z))
+    plt.plot(lags_upsampled, np.abs(z_mag_up))
     plt.show()
 
 
