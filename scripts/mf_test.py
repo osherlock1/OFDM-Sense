@@ -19,6 +19,14 @@ def main():
     raw_rx_data = np.fromfile("data_files/rand_ofdm_packet_rx.dat", dtype=np.complex64)
     raw_tx_data = np.fromfile("data_files/rand_ofdm_packet.dat", dtype=np.complex64)
 
+    #Unpack TX Pilot symbol
+    with open("data_files/rand_ofdm_packet_ref.json", "r") as f:
+        ref_data = json.load(f)
+
+    #Get Tx pilot symbol
+    tx_pilot = np.array(ref_data['pilot_ref_real']) + 1j * np.array(ref_data['pilot_ref_imag'])
+
+    
     #Scale raw_rx_data
     max_val = np.max(np.abs(raw_rx_data))
 
@@ -27,7 +35,7 @@ def main():
         raw_rx_data = raw_rx_data * scale_factor
 
     #Calculate Matched Filter Delay
-    z, lags = delay.matched_filter_calc(rx_iq = raw_rx_data, ref_iq=raw_tx_data, fs = ofdm_conf.FS)
+    z, lags = delay.matched_filter_calc(rx_iq = raw_rx_data, ref_iq=tx_pilot, fs = ofdm_conf.FS)
     z_mag = np.abs(z)
     #Find Peak of correlation
     peak_idx = np.argmax(z_mag)
