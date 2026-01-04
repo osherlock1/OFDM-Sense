@@ -41,7 +41,7 @@ def main():
 
     delay_idx = np.argmax(z)
     caled_delay = lags[delay_idx]
-    print()
+    print(caled_delay)
 
     plt.figure()
     plt.plot(lags, np.abs(z))
