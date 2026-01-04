@@ -52,6 +52,13 @@ def main():
     caled_delay = lags[delay_idx]
     print(caled_delay)
 
+    SPEED_OF_LIGHT = 299792458
+
+    raw_distance = np.abs(caled_delay) * SPEED_OF_LIGHT
+
+    print(f"Calculated Time Delay: {caled_delay * 1e6:.2f} microseconds")
+    print(f"Estimated Raw Distance: {raw_distance:.2f} meters")
+
     plt.figure()
     plt.plot(lags, np.abs(z))
     plt.show()
