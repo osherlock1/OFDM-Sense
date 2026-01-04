@@ -14,6 +14,9 @@ def main():
 
     ofdm_conf = OFDMConfig()
     
+    raw_rx_data = np.fromfile("data_files/rand_ofdm_packet_rx.dat", dtype=complex)
+    raw_tx_data = np.fromfile("data_files/rand_ofdm_packet.dat")
+
     #Unpack Data
     #Get RX Data
     rx_data_file_name = "unpacked_data.json"
@@ -34,11 +37,11 @@ def main():
     ref_iq = binary_ref_to_iq(binary_string=ref_binary_string, n_samples=n_samples)
 
 
-    z, lags = delay.matched_filter_calc(rx_iq = rx_iq, ref_iq=ref_iq, fs = ofdm_conf.FS)
+    z, lags = delay.matched_filter_calc(rx_iq = raw_rx_data, ref_iq=raw_tx_data, fs = ofdm_conf.FS)
 
     delay_idx = np.argmax(z)
     caled_delay = lags[delay_idx]
-    print(caled_delay)
+    print()
 
     plt.figure()
     plt.plot(lags, np.abs(z))
