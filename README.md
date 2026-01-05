@@ -8,4 +8,11 @@
 
 ## About
 
-OFDM-Sense is the project lead by Dr. Guoyi Xu for the 25/26 URI ELECOMP Capstone Year.  The goal of this project is to develop an Orthogonal Frequency-Division Multiplexing (OFDM) Trasciever to run on an SDR Platofrm to explore the join commminicaiton and sensing (JCAS) capabilities of OFDM.
+OFDM-Sense is the capstone project lead by Dr. Guoyi Xu for the 25/26 URI ELECOMP Capstone Year.  The goal of this project is to develop an Orthogonal Frequency-Division Multiplexing (OFDM) Trasciever to run on an SDR Platofrm to explore the join commminicaiton and sensing (JCAS) capabilities of OFDM.
+
+## Prerequisites
+Before running the code, ensure you have the following drivers and libraries installed:
+
+* **UHD (USRP Hardware Driver):** This project uses the UHD C++ API to interface with the USRP X310.
+    * [Official UHD Documentation](https://files.ettus.com/manual/)
+    * [UHD GitHub Repository](https://github.com/EttusResearch/uhd)
