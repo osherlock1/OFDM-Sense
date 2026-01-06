@@ -33,36 +33,47 @@ def main():
         scale_factor = 0.9 / max_val
         raw_rx_data = raw_rx_data * scale_factor
 
+    #Upsample RX
+    N_rx = len(raw_rx_data)
+    K_rx = 100 #Scaling factor 100 Mhz -> 10 Ghz
+    N_rx_padded = N_rx * K_rx
+
+    #Convert rx to freq
+    rx_freq = np.fft.fftshift(np.fft.fft(raw_rx_data))
+
+    total_zeros = N_rx_padded - N_rx
+    zeros_side = np.zeros(total_zeros // 2)
+
+    rx_freq_padded = np.concatenate([zeros_side, rx_freq, zeros_side])
+    rx_freq_ready = np.fft.ifftshift(rx_freq_padded)
+
+    rx_upsampled = np.fft.ifft(rx_freq_ready) * K_rx
+
+    #Upsample TX
+    N_tx = len((tx_pilot))
+    K_tx = 100
+    N_tx_padded = N_tx * K_tx
+    
+    #Convert tx to freq
+    tx_freq = np.fft.fftshift(np.fft.fft(tx_pilot))
+
+    total_zeros = N_tx_padded - N_tx
+    zeros_side = np.zeros(total_zeros // 2)
+
+    tx_freq_padded = np.concatenate([zeros_side, tx_freq, zeros_side])
+    tx_freq_ready = np.fft.ifftshift(tx_freq_padded)
+
+    tx_upsampled = np.fft.ifft(tx_freq_ready) * K_tx
+
+
+
     #Calculate Matched Filter Delay
-    z, lags = delay.matched_filter_calc(rx_iq = raw_rx_data, ref_iq=tx_pilot, fs = ofdm_conf.FS)
+    z, lags = delay.matched_filter_calc(rx_iq = rx_upsampled, ref_iq=tx_upsampled, fs = (ofdm_conf.FS * 100))
     z_mag = np.abs(z)
     #Find Peak of correlation
     peak_idx = np.argmax(z_mag)
 
-    #Interpolation for fine resoluation
-    K = 100
-    N = len(z)
-    N_padded = N * K
-
-    #Freq Domain
-    Z_freq = np.fft.fft(z)
-
-    pivot = (N + 1) // 2
-
-    #Zero pad
-    Z_padded = np.zeros(N_padded, dtype=np.complex64)
-    Z_padded[:pivot] = Z_freq[:pivot]
-    Z_padded[-(N-pivot):] = Z_freq[-(N-pivot):]
-
-    #Move pack to time domain
-    z_upsampled = np.fft.ifft(Z_padded) * K
-
-    #High res lags
-    lags_upsampled = np.linspace(lags[0], lags[-1], N_padded)
-
-    z_mag_up = np.abs(z_upsampled)
-    fine_peak_idx = np.argmax(z_mag_up)
-    fine_delay = lags_upsampled[fine_peak_idx]
+    fine_delay = lags[peak_idx]
 
     #Calculate Distance
     SPEED_OF_LIGHT = 299792458
@@ -83,7 +94,7 @@ def main():
 
 
     plt.figure()
-    plt.plot(lags_upsampled, np.abs(z_mag_up))
+    plt.plot(lags, np.abs(z_mag))
     plt.show()
 
 
