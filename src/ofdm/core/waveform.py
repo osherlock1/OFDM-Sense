@@ -28,7 +28,7 @@ def add_cp(time_signal:np.ndarray, cp_len: int = OFDMConfig.CP_LEN) -> np.ndarra
     #Concatenate
     return np.concatenate([prefix, time_signal])
 
-def remove_cp(time_signal_with_cp: np.ndarray, cp_len: int = OFDMConfig.CP_LEN) -> np.ndarray:
+def remove_cp(time_signal_with_cp: np.ndarray, cp_len:int) -> np.ndarray:
     """  
     Removes the CP from the start of the time signal
     """
