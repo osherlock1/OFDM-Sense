@@ -123,7 +123,7 @@ def main():
 
     # ------ Channel Estimation Calc -----------
     #Remove CP of ref pilot
-    rx_pilot_sym_no_cp = waveform.remove_cp(rx_pilot_sym)
+    rx_pilot_sym_no_cp = waveform.remove_cp(rx_pilot_sym, cp_len=ofdm_conf.CP_LEN)
     rx_pilot_freq = waveform.time_to_freq(rx_pilot_sym_no_cp)
 
     #Get TX pilot Ref
