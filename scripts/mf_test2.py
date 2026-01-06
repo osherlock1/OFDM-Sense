@@ -101,6 +101,18 @@ def main():
     plt.show()
 
 
+    range = 1000
+    zoom_start = peak_idx - 1000
+    zoom_end = peak_idx + 1000
+
+    plt.figure()
+    plt.plot(lags[zoom_start:zoom_end], np.abs(z_mag[zoom_start:zoom_end]))
+    plt.title("Match Filter Delay Correlation Magnitude (Zoomed)")
+    plt.xlabel("Time(s)")
+    plt.ylabel("Magnitude")
+    plt.show()
+
+
 def unpack_json(json_file_name:str)->dict:
     """
     Unpacks a json file and returns the json dictionary
