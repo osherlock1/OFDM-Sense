@@ -58,13 +58,13 @@ def iq_to_binary(iq_sample: complex, scale:float = DEFAULT_SCALE) -> str:
     
     return closest_bits
 
-def get_reference_constalation(scale:float = DEFAULT_SCALE) -> np.ndarray:
+def get_reference_constalation() -> np.ndarray:
     """  
     Returns the reference QAM constalation for easy plotting
     """
 
     points = list(QAM16_MAP.values())
-    return np.array(points) * scale
+    return np.array(points) 
 
 
     
