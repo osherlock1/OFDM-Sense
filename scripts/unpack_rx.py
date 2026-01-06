@@ -74,7 +74,7 @@ def main():
         tx_ref = tx_pilot_ref,
         rx_signal = rx_pilot_search_area,
         fs = ofdm_conf.FS,
-        n_bins = 4096
+        n_bins = 4096 * 2
     )
     #FIXME: Using Opposite Sign on CFO since it seems to be revered(need to look into)
     best_cfo = best_cfo * -1
@@ -133,11 +133,11 @@ def main():
 
     #Plot Channel Gains
     plt.figure()
-    plt.plot(np.fft.fftshift(np.abs(Lambda_est)[ofdm_conf.data_carriers]))
+    plt.plot(ofdm_conf.data_carriers ,np.fft.fftshift(np.abs(Lambda_est)[ofdm_conf.data_carriers]))
     plt.title("Lambda ABS")
 
     plt.figure()
-    plt.plot(np.angle(Lambda_est[ofdm_conf.data_carriers]))
+    plt.plot(ofdm_conf.data_carriers ,np.fft.fftshift(np.angle(Lambda_est[ofdm_conf.data_carriers])))
     plt.title("Lambda Angle")
     plt.show()
     

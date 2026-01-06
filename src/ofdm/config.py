@@ -4,9 +4,9 @@ import random
 
 @dataclass
 class OFDMConfig:
-    N: int = 128
-    CP_LEN: int = 16
-    GUARD_LEN: int = 6 #This should be even
+    N: int = 256
+    CP_LEN: int = 256 // 4
+    GUARD_LEN: int = 40 #This should be even
     FS: float = 100e6
     #Defined below
     data_carriers: list = None 
