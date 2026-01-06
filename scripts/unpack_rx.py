@@ -59,7 +59,7 @@ def main():
     coarse_pilot_start = start_idx + sync_len
 
     #Create a search window
-    search_margin = 10
+    search_margin = ofdm_conf.CP_LEN
     pilot_chunk_start = coarse_pilot_start - search_margin
     pilot_chunk_end = coarse_pilot_start + pilot_len + search_margin
 
