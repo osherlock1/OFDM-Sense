@@ -77,7 +77,7 @@ def main():
 
     #Calculate Distance
     SPEED_OF_LIGHT = 299792458
-    CONSTANT = -19595.82587042264
+    CONSTANT = -35424.5068165258
     raw_distance = (fine_delay * SPEED_OF_LIGHT) - CONSTANT
 
     #Calibrate
