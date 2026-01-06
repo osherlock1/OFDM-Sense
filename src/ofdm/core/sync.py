@@ -10,7 +10,15 @@ import matplotlib.pyplot as plt
 
 def calculate_schmidl_cox_metrics(rx_signal: np.ndarray, config:OFDMConfig)->Tuple[np.ndarray, np.ndarray]:
     """  
-    Calculate the M and P metrics packet dection and syncronization
+    Calculates the Schmidl-Cox Syncronization algorithm M and P metrics packet dection and syncronization
+
+    Args:s
+        rx_signal: Recieved raw time series data
+        config: OFDMConfig()
+
+    Returns:
+        M_metric: The timing metric
+        P_metric: The cross correlation metric
     """
 
     L = config.N // 2
@@ -45,8 +53,6 @@ def calculate_schmidl_cox_metrics(rx_signal: np.ndarray, config:OFDMConfig)->Tup
     energy_threshold = avg_energy * 0.1
 
     valid_indicies = R > energy_threshold
-
-
 
     M[valid_indicies] = (np.abs(P[valid_indicies]) ** 2) / (R[valid_indicies] ** 2)
     return M, P
