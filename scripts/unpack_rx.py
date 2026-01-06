@@ -193,8 +193,11 @@ def main():
     print(f"BER:{ber*100:.2f}%")
 
     # ---------- Plots ---------------
+    ref_constalation = qam.get_reference_constalation()
+
     plt.figure()
     plt.scatter(np.real(demodulated_data), np.imag(demodulated_data), alpha=0.5)
+    plt.scatter(np.real(ref_constalation, np.imag(ref_constalation)))
     plt.title="Constalation plot"
     plt.show()
 
