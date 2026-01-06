@@ -67,8 +67,15 @@ def main():
 
     #Calculate Distance
     SPEED_OF_LIGHT = 299792458
-    CONSTANT = 5753.53
-    raw_distance = (np.abs(fine_delay) * SPEED_OF_LIGHT) - CONSTANT
+    CONSTANT = -19595.82587042264
+    raw_distance = (fine_delay * SPEED_OF_LIGHT) - CONSTANT
+
+    #Calibrate
+    actual_distance = 1 #1 meter
+
+    constant = (fine_delay * SPEED_OF_LIGHT) - actual_distance
+    print(f"Calculated Constant: {constant}")
+
 
 
     print(f"Coarse Delay: {lags[peak_idx]*1e6:.4f}us")
