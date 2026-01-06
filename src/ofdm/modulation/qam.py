@@ -64,7 +64,7 @@ def get_reference_constalation(scale:float = DEFAULT_SCALE) -> np.ndarray:
     """
 
     points = list(QAM16_MAP.values())
-    return np.array(points) / scale
+    return np.array(points) * scale
 
 
     
