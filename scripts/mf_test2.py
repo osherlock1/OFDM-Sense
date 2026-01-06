@@ -101,7 +101,7 @@ def main():
     
 
 
-    range = 10000
+    range = 3000
     zoom_start = peak_idx - range
     zoom_end = peak_idx + range
 
