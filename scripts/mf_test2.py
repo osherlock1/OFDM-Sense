@@ -95,6 +95,9 @@ def main():
 
     plt.figure()
     plt.plot(lags, np.abs(z_mag))
+    plt.title("Match Filter Delay Correlation Magnitude")
+    plt.xlabel("Time(s)")
+    plt.ylabel("Magnitude")
     plt.show()
 
 
