@@ -197,7 +197,7 @@ def main():
 
     plt.figure()
     plt.scatter(np.real(demodulated_data), np.imag(demodulated_data), alpha=0.5)
-    plt.scatter(np.real(ref_constalation, np.imag(ref_constalation)))
+    plt.scatter(np.real(ref_constalation), np.imag(ref_constalation))
     plt.title="Constalation plot"
     plt.show()
 
