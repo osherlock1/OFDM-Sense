@@ -98,12 +98,12 @@ def main():
     plt.title("Match Filter Delay Correlation Magnitude")
     plt.xlabel("Time(s)")
     plt.ylabel("Magnitude")
-    plt.show()
+    
 
 
-    range = 1000
-    zoom_start = peak_idx - 1000
-    zoom_end = peak_idx + 1000
+    range = 10000
+    zoom_start = peak_idx - range
+    zoom_end = peak_idx + range
 
     plt.figure()
     plt.plot(lags[zoom_start:zoom_end], np.abs(z_mag[zoom_start:zoom_end]))
