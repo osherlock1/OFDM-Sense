@@ -62,7 +62,7 @@ def main():
 
     os.makedirs(os.path.dirname(CALIBRATION_PATH), exist_ok=True)
     with open(CALIBRATION_PATH, "w") as f:
-        json.dump(json_data)
+        json.dump(json_data, f, indent=2)
     print(f"[Success] Calibration finished.  Saved constant to {CALIBRATION_PATH}")
 
 
