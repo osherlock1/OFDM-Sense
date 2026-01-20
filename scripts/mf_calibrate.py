@@ -36,6 +36,7 @@ def main():
 
     if max_val > 0:
         scale_factor = 0.9 / max_val
+        raw_rx_data = raw_rx_data * scale_factor
 
     #Upsample Data
     rx_upsampled = upsample(raw_rx_data, scale_factor=100)
