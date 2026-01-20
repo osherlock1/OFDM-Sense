@@ -60,6 +60,7 @@ def main():
         "calibration_time":datetime.datetime.now().isoformat()
     }
 
+    os.makedirs(os.path.dirname(CALIBRATION_PATH), exist_ok=True)
     with open(CALIBRATION_PATH, "w") as f:
         json.dump(json_data)
     print(f"[Success] Calibration finished.  Saved constant to {CALIBRATION_PATH}")
