@@ -7,6 +7,7 @@ import json
 from ofdm.channel import delay
 from ofdm.modulation import qam
 from ofdm.config import OFDMConfig
+import scipy
 
 
 #Config
@@ -14,7 +15,8 @@ CALIBRATION_PATH = "metadata/calibration.json"
 RX_DATA_PATH = "data_files/rand_ofdm_packet.dat"
 TX_REF_PATH = "data_files/rand_ofdm_packet_ref.json"
 
-C = 299792458 #Speed of light
+C = scipy.constants.c #Speed of light
+
 
 def main():
 
