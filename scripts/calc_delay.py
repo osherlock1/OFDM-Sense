@@ -56,6 +56,7 @@ def main():
     fine_delay = lags[peak_idx]
 
     #Calculate Distance
+    print(f"Constant used is: {CONSTANT}")
     raw_distance = (fine_delay * C) - CONSTANT
 
     print(f"Coarse Delay: {lags[peak_idx]*1e6:.4f}us")
