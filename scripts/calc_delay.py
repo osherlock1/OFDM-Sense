@@ -7,17 +7,27 @@ import json
 from ofdm.channel import delay
 from ofdm.modulation import qam
 from ofdm.config import OFDMConfig
-# =========================
-# Main
-# =========================
+
+
+#Config
+CALIBRATION_PATH = "metadata/calibration.json"
+RX_DATA_PATH = "data_files/rand_ofdm_packet.dat"
+TX_REF_PATH = "data_files/rand_ofdm_packet_ref.json"
+
+C = 299792458 #Speed of light
+
 def main():
 
     #Define OFDM Configuration
     ofdm_conf = OFDMConfig()
+
+    #Get constant
+    with open(CALIBRATION_PATH, 'r') as f:
+        cali_data = json.load(f)
+    CONSTANT = cali_data['constant']
     
     #Unpack Raw RX and TX data
     raw_rx_data = np.fromfile("data_files/rand_ofdm_packet_rx.dat", dtype=np.complex64)
-    raw_tx_data = np.fromfile("data_files/rand_ofdm_packet.dat", dtype=np.complex64)
 
     #Unpack TX Pilot symbol
     with open("data_files/rand_ofdm_packet_ref.json", "r") as f:
@@ -33,60 +43,20 @@ def main():
         scale_factor = 0.9 / max_val
         raw_rx_data = raw_rx_data * scale_factor
 
-    #Upsample RX
-    N_rx = len(raw_rx_data)
-    K_rx = 100 #Scaling factor 100 Mhz -> 10 Ghz
-    N_rx_padded = N_rx * K_rx
-
-    #Convert rx to freq
-    rx_freq = np.fft.fftshift(np.fft.fft(raw_rx_data))
-
-    total_zeros = N_rx_padded - N_rx
-    zeros_side = np.zeros(total_zeros // 2)
-
-    rx_freq_padded = np.concatenate([zeros_side, rx_freq, zeros_side])
-    rx_freq_ready = np.fft.ifftshift(rx_freq_padded)
-
-    rx_upsampled = np.fft.ifft(rx_freq_ready) * K_rx
-
-    #Upsample TX
-    N_tx = len((tx_pilot))
-    K_tx = 100
-    N_tx_padded = N_tx * K_tx
-    
-    #Convert tx to freq
-    tx_freq = np.fft.fftshift(np.fft.fft(tx_pilot))
-
-    total_zeros = N_tx_padded - N_tx
-    zeros_side = np.zeros(total_zeros // 2)
-
-    tx_freq_padded = np.concatenate([zeros_side, tx_freq, zeros_side])
-    tx_freq_ready = np.fft.ifftshift(tx_freq_padded)
-
-    tx_upsampled = np.fft.ifft(tx_freq_ready) * K_tx
-
-
+    #Upsampel Data
+    rx_upsampled = upsample(raw_rx_data, scale_factor = 100)
+    tx_upsampled = upsample(tx_pilot, scale_factor=100)
 
     #Calculate Matched Filter Delay
     z, lags = delay.matched_filter_calc(rx_iq = rx_upsampled, ref_iq=tx_upsampled, fs = (ofdm_conf.FS * 100))
     z_mag = np.abs(z)
+
     #Find Peak of correlation
     peak_idx = np.argmax(z_mag)
-
     fine_delay = lags[peak_idx]
 
     #Calculate Distance
-    SPEED_OF_LIGHT = 299792458
-    CONSTANT = -35424.5068165258
-    raw_distance = (fine_delay * SPEED_OF_LIGHT) - CONSTANT
-
-    #Calibrate
-    actual_distance = 1 #1 meter
-
-    constant = (fine_delay * SPEED_OF_LIGHT) - actual_distance
-    print(f"Calculated Constant: {constant}")
-
-
+    raw_distance = (fine_delay * C) - CONSTANT
 
     print(f"Coarse Delay: {lags[peak_idx]*1e6:.4f}us")
     print(f"Fine Delay: {fine_delay*1e6:.4f}us")
@@ -99,8 +69,6 @@ def main():
     plt.xlabel("Time(s)")
     plt.ylabel("Magnitude")
     
-
-
     range = 3000
     zoom_start = peak_idx - range
     zoom_end = peak_idx + range
@@ -111,6 +79,33 @@ def main():
     plt.xlabel("Time(s)")
     plt.ylabel("Magnitude")
     plt.show()
+
+def upsample(raw_data:np.ndarray, scale_factor:int = 100)->np.ndarray:
+    """
+    Upsamples raw data based on the scale factor for matched filter delay esiamtion
+
+    Args:
+        raw_data: Raw RX or Tx pilot data to be upsampled
+        scale_factor: Multiplication factor for upsamples i.ee to upsample from 100Mhz to 10Ghz use scale_factor = 100
+    
+    Returns:
+        np.ndarray of upsampled data
+    """
+    N = len(raw_data)
+    K = scale_factor
+    N_padded = N * K
+
+    #Convert to freq
+    freq = np.fft.fftshift(np.fft.fft(raw_data))
+
+    total_zeros = N_padded - N #Calculate total number of zeros for upsampling
+    zeros_side = np.zeros(total_zeros // 2) #Get the number of requied zeros to append and prepend to original data
+
+    freq_padded = np.concatenate([zeros_side, freq, zeros_side])
+    freq_ready = np.fft.ifftshift(freq_padded)
+
+    upsampled = np.fft.ifft(freq_ready) * K
+    return upsampled
 
 
 def unpack_json(json_file_name:str)->dict:
@@ -140,5 +135,6 @@ def binary_ref_to_iq(binary_string:str, n_samples:int)->np.ndarray:
     #Convert to IQ
     iq_array = [qam.binary_to_iq(word) for word in binary_word_list]
     return np.array(iq_array) * np.sqrt(10)
+
 if __name__ == "__main__":
     main()
