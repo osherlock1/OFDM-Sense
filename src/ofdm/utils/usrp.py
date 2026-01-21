@@ -47,7 +47,7 @@ def run_tx(
         "--otw", "sc16",
         "--type", "float",
         "--spb", "0",
-        "--repeat", "False"
+        "--repeat", "false"
     ]
 
     print(f"[USRP] Executing TX: {' '.join(cmd)}")
