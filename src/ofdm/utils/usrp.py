@@ -87,14 +87,14 @@ def run_rx(
         "--freq", str(config.rx_rate),
         "--gain", str(config.rx_gain),
         "--file", rx_file,
-        "--nsamps", nsamps,
+        "--nsamps", str(nsamps),
         "--subdev", subdev,
         "--channels", "0",
         "--otw", "sc16",
         "--type", "float",
     ]
 
-    print(f"[USRP] Exectuing RX: {' '.join(cmd)}")
+    print(f"[USRP] Executing RX: {' '.join(cmd)}")
 
     try:
         subprocess.run(cmd, check=True)
