@@ -33,11 +33,6 @@ def run_tx(
     Send a TX burst through the USRP by reading data from a file
     """
 
-    #file_size_bytes = os.path.
-
-
-
-
     #Channel Selection
     subdev = "A:0" if channel == "A" else "B:0"
 
@@ -53,13 +48,13 @@ def run_tx(
         "--channels", "0",
         "--otw", "sc16",
         "--type", "float",
-        "--spb", "10000",
+        "--spb", "10000", #FIXME THIS IS A TEMP VALUE IT MIGHT NEED ADJUSTING OR AUTO ADJUSTING
     ]
 
     print(f"[USRP] Executing TX: {' '.join(cmd)}")
 
     try:
-        subprocess.run(cmd)
+        subprocess.run(cmd, check=True)
         print(f"[USRP] TX Complete!")
     except subprocess.CalledProcessError as e:
         print(f"[Error] TX failed with error code: {e.returncode}")
@@ -74,9 +69,41 @@ def run_rx(
         config:USRPConfig,
         rx_file:str,
         nsamps: int,
+        channel: str = "B"
 
 ):
-    pass
+    """  
+    Run RX from the C++ USRP driver
+    """
+
+    #Channel Selection
+    subdev = "A:0" if channel == "A" else "B:0"
+
+    #Build command list
+    cmd = [
+        config.rx_build_path,
+        "--args", config.rx_addr,
+        "--rate", str(config.rx_rate),
+        "--freq", str(config.rx_rate),
+        "--gain", str(config.rx_gain),
+        "--file", rx_file,
+        "--nsamps", nsamps,
+        "--subdev", subdev,
+        "--channels", "0",
+        "--otw", "sc16",
+        "--type", "float",
+    ]
+
+    print(f"[USRP] Exectuing RX: {' '.join(cmd)}")
+
+    try:
+        subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"[Error] USRP RX Driver failed returncode: {e.returncode}")
+        sys.exit(1)
+    except FileNotFoundError:
+        print(f"[Error] RX failed could not find driver: {config.rx_build_path}")
+        sys.exit(1)
 
 
 def run_transfer(
