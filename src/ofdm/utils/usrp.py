@@ -33,7 +33,7 @@ def run_tx(
     Send a TX burst through the USRP by reading data from a file
     """
 
-    file_size_bytes = os.path.
+    #file_size_bytes = os.path.
 
 
 
