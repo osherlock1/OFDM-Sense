@@ -13,10 +13,11 @@ import scipy
 
 #Config
 CALIBRATION_PATH = "metadata/calibration.json"
-RX_DATA_PATH = "data_files/rand_ofdm_packet.dat"
+RX_DATA_PATH = "data_files/rand_ofdm_packet_rx.dat"
 TX_REF_PATH = "data_files/rand_ofdm_packet_ref.json"
 
-C = scipy.constants.c #Speed of light
+#C = scipy.constants.c #Speed of light
+C = 299792458
 REFERENCE_DISTANCE = 1 #1 Meter reference
 
 def main():
