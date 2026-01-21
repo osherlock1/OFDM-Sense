@@ -11,10 +11,18 @@ from ofdm.utils import usrp
 def main():
     ofdm_conf = OFDMConfig()
     usrp_conf = usrp.USRPConfig()
+    
+
+    ref_file_path = "data_files/rand_ofdm_packet_ref.json"
+    with open(ref_file_path, "r") as f:
+        ref_data = json.load(f)
+    
+    n_samps = ref_data['n_samples']
+
 
     tx_file_path = "data_files/rand_ofdm_packet.dat"
-
-    usrp.run_tx(config = usrp_conf, tx_file= tx_file_path, channel= "A")
+    rx_file_path = "data_files/rand_ofdm_packet_rx.dat"
+    usrp.run_transfer_sep(config = usrp_conf, tx_file= tx_file_path, rx_file=rx_file_path, channel= "A", nsamps=n_samps)
     print("Done")
 
 

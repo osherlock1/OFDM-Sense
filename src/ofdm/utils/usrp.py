@@ -2,6 +2,8 @@ import subprocess
 import sys
 from dataclasses import dataclass
 import os
+import time
+import signal
 
 @dataclass
 class USRPConfig:
@@ -84,7 +86,7 @@ def run_rx(
         config.rx_build_path,
         "--args", config.rx_addr,
         "--rate", str(config.rx_rate),
-        "--freq", str(config.rx_rate),
+        "--freq", str(config.rx_freq),
         "--gain", str(config.rx_gain),
         "--file", rx_file,
         "--nsamps", str(nsamps),
@@ -167,3 +169,58 @@ def run_transfer(
     except FileNotFoundError:
         print(f"[Error] Could not find executable at {config.build_path}")
         sys.exit(1)
+
+
+
+def run_transfer_sep(        
+        config: USRPConfig,
+        tx_file: str,
+        rx_file: str,
+        nsamps: int,
+        channel: str = "B",
+):
+    """  
+    Run transfer using seperate RX and TX subprocesses
+    """   
+
+    subdev = "A:0" if channel == "A" else "B:0"
+
+    #run RX
+    #Build command list
+    rx_cmd = [
+        config.rx_build_path,
+        "--args", config.rx_addr,
+        "--rate", str(config.rx_rate),
+        "--freq", str(config.rx_freq),
+        "--gain", str(config.rx_gain),
+        "--file", rx_file,
+        "--nsamps", str(nsamps),
+        "--subdev", subdev,
+        "--channels", "0",
+        "--otw", "sc16",
+        "--type", "float",
+    ]
+
+    print(f"[USRP] Executing RX: {' '.join(rx_cmd)}")
+
+    with open(f"rx_log.txt", 'w') as outfile:
+        rx_process = subprocess.Popen(rx_cmd, stdout=outfile, stderr=outfile)
+    print(["[USRP] Waiting 3 seconds for RX to lock..."])
+    time.sleep(3)
+
+    #Run tx
+    print("[USRP] executing TX burst...")
+    run_tx(config=config, tx_file=tx_file, channel=channel)
+
+    #Wait
+    time.sleep(1)
+
+    #Stop RX procress
+    print("[USRP] Stopping RX Process...")
+    rx_process.send_signal(signal.SIGINT)
+    try:
+        rx_process.wait(timeout=2)
+    except subprocess.TimeoutExpired:
+        rx_process.kill()
+
+    print("[USRP] Transfer Complete!")
