@@ -26,7 +26,6 @@ class USRPConfig:
 def run_tx(
         config: USRPConfig,
         tx_file: str,
-        nsamps: int,
         channel: str = "B",
 ):
     """  
