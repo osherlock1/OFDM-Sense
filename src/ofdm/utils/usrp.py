@@ -52,7 +52,7 @@ def run_tx(
         "--repeat", "false"
     ]
 
-    print(f"[USRP] Executing TX: {"".join(cmd)}")
+    print(f"[USRP] Executing TX: {' '.join(cmd)}")
 
     try:
         subprocess.run(cmd)
@@ -70,7 +70,7 @@ def run_rx(
         config:USRPConfig,
         rx_file:str,
         nsamps: int,
-        
+
 ):
     pass
 
