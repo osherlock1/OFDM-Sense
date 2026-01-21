@@ -6,6 +6,8 @@ from dataclasses import dataclass
 class USRPConfig:
     """Configuration of URSP Hardware"""
     build_path: str = "./build/TXRX_FROM_FILE"
+    tx_build_path: str ="./build/TX_FROM_FILE"
+    tx_build_path: str ="./build/RX_TO_FILE"
     tx_addr: str = "addr=192.168.30.2"
     rx_addr: str = "addr=192.168.30.2"
     tx_rate: float = 100e6
@@ -20,6 +22,57 @@ class USRPConfig:
     otw:str = "sc16"
     type:str = "float"
 
+
+def run_tx(
+        config: USRPConfig,
+        tx_file: str,
+        nsamps: int,
+        channel: str = "B",
+):
+    """  
+    Send a TX burst through the USRP by reading data from a file
+    """
+    #Channel Selection
+    subdev = "A:0" if channel == "A" else "B:0"
+
+    #Build command list
+    cmd = [
+        config.tx_build_path,
+        "--args", config.tx_addr,
+        "--rate", str(config.tx_rate),
+        "--freq", str(config.tx_freq),
+        "--gain", str(config.tx_gain),
+        "--file", tx_file,
+        "--subdev", subdev,
+        "--channels", "0",
+        "--otw", "sc16",
+        "--type", "float",
+        "--settling", "0",
+        "--spb", "0",
+        "--repeat", "false"
+    ]
+
+    print(f"[USRP] Executing TX: {"".join(cmd)}")
+
+    try:
+        subprocess.run(cmd)
+        print(f"[USRP] TX Complete!")
+    except subprocess.CalledProcessError as e:
+        print(f"[Error] TX failed with error code: {e.returncode}")
+        sys.exit(1)
+    except FileNotFoundError:
+        print(f"[Error] File Not Found: {config.tx_build_path}")
+        sys.exit(1)
+
+
+
+def run_rx(
+        config:USRPConfig,
+        rx_file:str,
+        nsamps: int,
+        
+):
+    pass
 
 
 def run_transfer(
@@ -77,7 +130,7 @@ def run_transfer(
     try:
         subprocess.run(cmd, check=True)
         print("[USRP] Transfer Complete!\n")
-    except subprocess.CalledProcessError as e: #Check what this is 
+    except subprocess.CalledProcessError as e:  
         print(f"[Error] USRP driver failed with exit code {e.returncode}")
         sys.exit(1)
     except FileNotFoundError:
