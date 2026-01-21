@@ -7,7 +7,7 @@ class USRPConfig:
     """Configuration of URSP Hardware"""
     build_path: str = "./build/TXRX_FROM_FILE"
     tx_build_path: str ="./build/TX_FROM_FILE"
-    tx_build_path: str ="./build/RX_TO_FILE"
+    rx_build_path: str ="./build/RX_TO_FILE"
     tx_addr: str = "addr=192.168.30.2"
     rx_addr: str = "addr=192.168.30.2"
     tx_rate: float = 100e6
