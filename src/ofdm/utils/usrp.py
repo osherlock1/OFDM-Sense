@@ -46,7 +46,6 @@ def run_tx(
         "--channels", "0",
         "--otw", "sc16",
         "--type", "float",
-        "--settling", "0",
         "--spb", "0",
         "--repeat", "false"
     ]
