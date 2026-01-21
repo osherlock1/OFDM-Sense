@@ -1,6 +1,7 @@
 import subprocess
 import sys
 from dataclasses import dataclass
+import os
 
 @dataclass
 class USRPConfig:
@@ -31,6 +32,12 @@ def run_tx(
     """  
     Send a TX burst through the USRP by reading data from a file
     """
+
+    file_size_bytes = os.path.
+
+
+
+
     #Channel Selection
     subdev = "A:0" if channel == "A" else "B:0"
 
@@ -46,7 +53,7 @@ def run_tx(
         "--channels", "0",
         "--otw", "sc16",
         "--type", "float",
-        "--spb", "0",
+        "--spb", "10000",
     ]
 
     print(f"[USRP] Executing TX: {' '.join(cmd)}")
