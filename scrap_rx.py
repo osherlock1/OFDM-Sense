@@ -10,21 +10,13 @@ from ofdm.channel import CHEST, cfo
 from ofdm.utils import usrp
 def main():
     ofdm_conf = OFDMConfig()
-    usrp_conf = usrp.USRPConfig()
-
-    ref_file_path = "data_files/rand_ofdm_packet_ref.json"
-
-    with open(ref_file_path, "r") as f:
-        ref_data = json.load(f)
-
-    n_samps = ref_data['n_samples']
+    usrp_conf = usrp.USRPConfig(rx_addr="addr=192.168.30.3")
 
 
-    tx_file_path = "data_files/rand_ofdm_packet.dat"
 
-    rx_file_path = "data_files/rx_test.dat"
+    rx_file_path = "data_files/test_sin_rx.dat"
 
-    usrp.run_rx(config = usrp_conf, rx_file= rx_file_path, channel= "A", nsamps=n_samps)
+    usrp.run_rx(config = usrp_conf, rx_file= rx_file_path, channel= "A", nsamps=0)
     print("Done")
 
 
