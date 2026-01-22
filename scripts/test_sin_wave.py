@@ -13,6 +13,8 @@ def main():
     parser.add_argument('--channel', '-c', type=str, default = "A", help="Select Communication Channel(A = Baseband, B = Frontend)")
     parser.add_argument("--freq", type=float, default = 10e6, help = "Frequency of tone")
     parser.add_argument("--n_samps", type=int, default=2000, help = "Number of Samples sent")
+    parser.add_argument("--tx_addr", type=str, default = "192.168.30.2", help = "IP address of TX USRP")
+    parser.add_argument("--rx_addr", type=str, default = "192.168.30.2", help = "IP of RX USRP")
     args = parser.parse_args()
 
     
@@ -20,12 +22,15 @@ def main():
     FREQ = args.freq
     N_SAMLPES = args.n_samps
     CHANNEL = args.channel
+    rx_addr = "addr=" + args.rx_addr
+    tx_addr = "addr" + args.tx_addr
+
 
     #Generate Test Tone
     generate_tone(fs=FS, freq=FREQ, n_samples= N_SAMLPES)
 
     #Define USRP Config
-    usrp_conf = usrp.USRPConfig()
+    usrp_conf = usrp.USRPConfig(rx_addr=rx_addr, tx_addr=tx_addr)
     
     #Send Data over USRP
     test_file_tx_path = "data_files/test_sin.dat"
