@@ -30,6 +30,8 @@ def main():
     #Send Data over USRP
     test_file_tx_path = "data_files/test_sin.dat"
     rx_file_path = "data_files/test_sin_rx.dat"
+
+
     usrp.run_transfer(channel=CHANNEL, config = usrp_conf, tx_file=test_file_tx_path, rx_file=rx_file_path, nsamps=N_SAMLPES)
 
     #Unpack Rx Data
