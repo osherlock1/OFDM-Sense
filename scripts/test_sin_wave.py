@@ -15,6 +15,9 @@ def main():
     parser.add_argument("--n_samps", type=int, default=2000, help = "Number of Samples sent")
     parser.add_argument("--tx_addr", type=str, default = "192.168.30.2", help = "IP address of TX USRP")
     parser.add_argument("--rx_addr", type=str, default = "192.168.30.2", help = "IP of RX USRP")
+    parser.add_argument('--tx_channel_idx', type=str, default = '0')
+    parser.add_argument('--rx_channel_idx', type=str, default='0')
+
     args = parser.parse_args()
 
     
@@ -29,15 +32,18 @@ def main():
     #Generate Test Tone
     generate_tone(fs=FS, freq=FREQ, n_samples= N_SAMLPES)
 
+    combined_addr = f"addr0={args.tx_addr},addr1={args.rx_addr}"
+
+
     #Define USRP Config
-    usrp_conf = usrp.USRPConfig(rx_addr=rx_addr, tx_addr=tx_addr)
+    usrp_conf = usrp.USRPConfig(rx_addr=combined_addr, tx_addr=combined_addr)
     
     #Send Data over USRP
     test_file_tx_path = "data_files/test_sin.dat"
     rx_file_path = "data_files/test_sin_rx.dat"
 
 
-    usrp.run_transfer(channel=CHANNEL, config = usrp_conf, tx_file=test_file_tx_path, rx_file=rx_file_path, nsamps=N_SAMLPES)
+    usrp.run_transfer(channel=CHANNEL, config = usrp_conf, tx_file=test_file_tx_path, rx_file=rx_file_path, nsamps=N_SAMLPES, rx_channel_idx=args.rx_channel_idx, tx_channel_idx=args.tx_channel_idx)
 
     #Unpack Rx Data
     print("[Test] Unpacking Data...")
