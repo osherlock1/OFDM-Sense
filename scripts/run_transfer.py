@@ -20,6 +20,8 @@ def main():
     parser.add_argument('--rate', type=float, default = 100e6, help="Samlpe Rate(Hz)")
     parser.add_argument('--freq', type=float, default=60e6, help="Carrier frequency (Hz)")
     parser.add_argument('--gain', type=float, default=0, help = "TX/RX Gain (dB)")
+    parser.add_argument('--tx_channel_idx', type=str, default = '0')
+    parser.add_argument('--rx_channel_idx', type=str, default='0')
 
     # C++ Binary Path
     parser.add_argument('--bin', type=str, default ="./build/TXRX_FROM_FILE", help = "Path to C++ USRP Driver executable")
@@ -34,11 +36,14 @@ def main():
         print(f"[Error] C++ Executable not foudn:{args.bin}")
         print("Make sure to run 'cmake .. && make")
     
+    combined_addr = f"addr0={args.tx_addr},addr1={args.rx_addr}"
+
+
     #Configure Hardware
     config = usrp.USRPConfig(
         build_path = args.bin,
-        tx_addr=f"addr={args.tx_addr}",
-        rx_addr=f"addr={args.rx_addr}",
+        tx_addr=combined_addr,
+        rx_addr=combined_addr,
         tx_rate=args.rate,
         rx_rate=args.rate,
         tx_freq=args.freq,
@@ -63,6 +68,8 @@ def main():
         config=config,
         tx_file=f"data_files/{args.tx_file}",
         rx_file=f"data_files/{args.rx_file}",
+        tx_channel_idx=args.tx_channel_idx,
+        rx_channel_idx=args.rx_channel_idx,
         nsamps=n_rx_samlpes,
         channel=args.channel
     )

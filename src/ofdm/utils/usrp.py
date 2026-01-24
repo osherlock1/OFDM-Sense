@@ -30,6 +30,8 @@ def run_tx(
         config: USRPConfig,
         tx_file: str,
         channel: str = "B",
+
+        
 ):
     """  
     Send a TX burst through the USRP by reading data from a file
@@ -114,6 +116,10 @@ def run_transfer(
         rx_file: str,
         nsamps: int,
         channel: str = "B",
+
+        tx_channel_idx: str = "0",
+        rx_channel_idx: str = "1",
+
         simulate: bool = False
 ):
     """
@@ -142,6 +148,12 @@ def run_transfer(
         "--file", rx_file,
         "--tx-file", tx_file,
         "--nsamps", str(nsamps),
+
+        "--tx-channels", tx_channel_idx,
+        "--rx-channels", rx_channel_idx,
+
+
+        "--ref", "internal",
 
         #Channel Configuration
         "--rx-subdev", subdev,
