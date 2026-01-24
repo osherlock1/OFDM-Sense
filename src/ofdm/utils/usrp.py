@@ -158,8 +158,7 @@ def run_transfer(
         #Channel Configuration
         "--rx-subdev", subdev,
         "--tx-subdev", subdev,
-        "--rx-channels", "0",
-        "--tx-channels", "0",
+
 
         #Fixed constants (OTW format, types)
         "--otw", "sc16",
