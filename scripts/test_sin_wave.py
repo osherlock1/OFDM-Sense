@@ -17,7 +17,7 @@ def main():
     parser.add_argument("--rx_addr", type=str, default = "192.168.30.2", help = "IP of RX USRP")
     parser.add_argument('--tx_channel_idx', type=str, default = '0')
     parser.add_argument('--rx_channel_idx', type=str, default='0')
-    parser.add_argument('--rate', type=str, default = 100e6)
+
 
     args = parser.parse_args()
 
@@ -37,7 +37,7 @@ def main():
 
 
     #Define USRP Config
-    usrp_conf = usrp.USRPConfig(rx_addr=combined_addr, tx_addr=combined_addr, tx_rate=args.rate, rx_rate=args.rate)
+    usrp_conf = usrp.USRPConfig(rx_addr=combined_addr, tx_addr=combined_addr)
     
     #Send Data over USRP
     test_file_tx_path = "data_files/test_sin.dat"
