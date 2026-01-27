@@ -37,7 +37,7 @@ def main():
 
 
     #Define USRP Config
-    usrp_conf = usrp.USRPConfig(rx_addr=combined_addr, tx_addr=combined_addr)
+    usrp_conf = usrp.USRPConfig(rx_addr=rx_addr, tx_addr=tx_addr)
     
     #Send Data over USRP
     test_file_tx_path = "data_files/test_sin.dat"
