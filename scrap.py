@@ -21,10 +21,16 @@ def main():
 
     args = parser.parse_args()
 
+
+    with open('data_files/test_sin_ref.json', 'r') as f:
+        ref_data = json.load(f)
+    
+
+
     
     FS = 100e6
     FREQ = args.freq
-    N_SAMLPES = args.n_samps
+    N_SAMLPES = ref_data["n_samples"]
     CHANNEL = args.channel
     rx_addr = "addr=" + args.rx_addr
     tx_addr = "addr" + args.tx_addr
