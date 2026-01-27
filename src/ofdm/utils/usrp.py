@@ -115,7 +115,7 @@ def run_transfer(
         tx_file: str,
         rx_file: str,
         nsamps: int,
-        channel: str = "B",
+        channel: str = "B:0",
 
         tx_channel_idx: str = "0",
         rx_channel_idx: str = "1",
@@ -130,8 +130,8 @@ def run_transfer(
         return
     
     #Channel Selection
-    subdev = "A:0" if channel == "A" else "B:0"
-
+    #subdev = "A:0" if channel == "A" else "B:0"
+    subdev = channel
     #Build command list
     cmd = [
         config.build_path,
