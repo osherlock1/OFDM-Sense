@@ -31,6 +31,7 @@ def main():
     FS = 100e6
     FREQ = args.freq
     N_SAMLPES = ref_data["n_samples"]
+    print(f"N SAMPLES = {N_SAMLPES}")
     CHANNEL = args.channel
     rx_addr = "addr=" + args.rx_addr
     tx_addr = "addr" + args.tx_addr
