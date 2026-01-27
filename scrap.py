@@ -42,7 +42,7 @@ def main():
     #Send Data over USRP
     test_file_tx_path = "data_files/test_sin.dat"
     rx_file_path00 = "data_files/test_sin_rx.00.dat"
-    rx_file_path01 = "data_files/text_sin_rx.01.dat"
+    rx_file_path01 = "data_files/test_sin_rx.01.dat"
 
 
     #usrp.run_transfer(channel=CHANNEL, config = usrp_conf, tx_file=test_file_tx_path, rx_file=rx_file_path, nsamps=N_SAMLPES, rx_channel_idx=args.rx_channel_idx, tx_channel_idx=args.tx_channel_idx)
