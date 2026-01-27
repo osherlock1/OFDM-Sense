@@ -287,6 +287,15 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     std::cout << "\nCreating USRP device with: " << dev_args << "...\n";
     uhd::usrp::multi_usrp::sptr usrp = uhd::usrp::multi_usrp::make(dev_args);
 
+    //FIXME: REMOVE IF NOT WORKING
+    std::cout << "Setting Master Clock Rate to 200 MHz..." << std::endl;
+    usrp->set_master_clock_rate(200e6);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //END FOR REMOVE
+
+
+
+
     // Subdevs (default to A:0 if unspecified) #FIXME: THIS IS THE OLD SUBDEV CODE
     // if (vm.count("tx-subdev")) usrp->set_tx_subdev_spec(uhd::usrp::subdev_spec_t(tx_subdev));
     // else                        usrp->set_tx_subdev_spec(uhd::usrp::subdev_spec_t("A:0"));
