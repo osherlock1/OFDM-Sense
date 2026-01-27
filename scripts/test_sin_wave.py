@@ -13,8 +13,8 @@ def main():
     parser.add_argument('--channel', '-c', type=str, default = "A", help="Select Communication Channel(A = Baseband, B = Frontend)")
     parser.add_argument("--freq", type=float, default = 10e6, help = "Frequency of tone")
     parser.add_argument("--n_samps", type=int, default=2000, help = "Number of Samples sent")
-    parser.add_argument("--tx_addr", type=str, default = "192.168.30.2", help = "IP address of TX USRP")
-    parser.add_argument("--rx_addr", type=str, default = "192.168.30.2", help = "IP of RX USRP")
+    parser.add_argument("--tx_addr", type=str, default = "192.168.30.2", help = "IP address of TX USRP (need to do in form of addr=(ip))")
+    parser.add_argument("--rx_addr", type=str, default = "192.168.30.2", help = "IP of RX USRP (need to do in form of addr=(ip))")
     parser.add_argument('--tx_channel_idx', type=str, default = '0')
     parser.add_argument('--rx_channel_idx', type=str, default='0')
 
@@ -26,8 +26,8 @@ def main():
     FREQ = args.freq
     N_SAMLPES = args.n_samps
     CHANNEL = args.channel
-    rx_addr = "addr=" + args.rx_addr
-    tx_addr = "addr" + args.tx_addr
+    rx_addr = args.rx_addr
+    tx_addr = args.tx_addr
 
 
     #Generate Test Tone
