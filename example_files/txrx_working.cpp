@@ -287,12 +287,29 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     std::cout << "\nCreating USRP device with: " << dev_args << "...\n";
     uhd::usrp::multi_usrp::sptr usrp = uhd::usrp::multi_usrp::make(dev_args);
 
-    // Subdevs (default to A:0 if unspecified)
-    if (vm.count("tx-subdev")) usrp->set_tx_subdev_spec(uhd::usrp::subdev_spec_t(tx_subdev));
-    else                        usrp->set_tx_subdev_spec(uhd::usrp::subdev_spec_t("A:0"));
+    // Subdevs (default to A:0 if unspecified) #FIXME: THIS IS THE OLD SUBDEV CODE
+    // if (vm.count("tx-subdev")) usrp->set_tx_subdev_spec(uhd::usrp::subdev_spec_t(tx_subdev));
+    // else                        usrp->set_tx_subdev_spec(uhd::usrp::subdev_spec_t("A:0"));
 
-    if (vm.count("rx-subdev")) usrp->set_rx_subdev_spec(uhd::usrp::subdev_spec_t(rx_subdev));
-    else                        usrp->set_rx_subdev_spec(uhd::usrp::subdev_spec_t("A:0"));
+    // if (vm.count("rx-subdev")) usrp->set_rx_subdev_spec(uhd::usrp::subdev_spec_t(rx_subdev));
+    // else                        usrp->set_rx_subdev_spec(uhd::usrp::subdev_spec_t("A:0"));
+
+    // Subdevs (Apply to ALL motherboards for the multi-USRP)
+    for (size_t m = 0; m <usrp->get_num_mboards(); m++) {
+        //TX Subdev
+        if (vm.count("tx-subdev"))
+            usrp->set_tx_subdev_spec(uhd::usrp::subdev_spec_t(tx_subdev), m);
+        else
+            usrp->set_tx_subdev_spec(uhd::usrp::subdev_spec_t("A:0"), m);
+
+        // RX Subdev
+        if (vm.count("rx-subdev"))
+            usrp->set_rx_subdev_spec(uhd::usrp::subdev_spec_t(rx_subdev), m);
+        else
+            usrp->set_rx_subdev_spec(uhd::usrp::subdev_spec_t("A:0"), m);
+    }
+
+
 
     // Channels
     std::vector<std::string> tx_channel_strings;
