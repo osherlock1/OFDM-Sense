@@ -43,6 +43,8 @@ def main():
     test_file_tx_path = "data_files/test_sin.dat"
     rx_file_path00 = "data_files/test_sin_rx.00.dat"
     rx_file_path01 = "data_files/test_sin_rx.01.dat"
+    rx_file_path02 = "data_files/test_sin_rx.02.dat"
+    rx_file_path03 = "data_files/test_sin_rx.03.dat"
 
 
     #usrp.run_transfer(channel=CHANNEL, config = usrp_conf, tx_file=test_file_tx_path, rx_file=rx_file_path, nsamps=N_SAMLPES, rx_channel_idx=args.rx_channel_idx, tx_channel_idx=args.tx_channel_idx)
@@ -51,7 +53,8 @@ def main():
     print("[Test] Unpacking Data...")
     signal00 = np.fromfile(rx_file_path00, dtype=np.complex64)
     signal01 = np.fromfile(rx_file_path01, dtype=np.complex64)
-
+    signal02 = np.fromfile(rx_file_path02, dtype=np.complex64)
+    signal03 = np.fromfile(rx_file_path03, dtype=np.complex64)
     #Unpack Ref Data
     with open("data_files/test_sin_ref.json", 'r') as f:
         data = json.load(f)
@@ -74,6 +77,16 @@ def main():
     print(f"[Test] Calculated RX01 Freq: {rx_freq}Hz")
     print(f"[Test] Calculated CFO is {np.abs(rx_freq - FREQ)}")
 
+    rx_freq_idx = np.argmax(np.abs(np.fft.fftshift(np.fft.fft(signal02))))
+    rx_freq = freqs[rx_freq_idx]
+    print(f"[Test] Calculated RX01 Freq: {rx_freq}Hz")
+    print(f"[Test] Calculated CFO is {np.abs(rx_freq - FREQ)}")
+
+    rx_freq_idx = np.argmax(np.abs(np.fft.fftshift(np.fft.fft(signal03))))
+    rx_freq = freqs[rx_freq_idx]
+    print(f"[Test] Calculated RX01 Freq: {rx_freq}Hz")
+    print(f"[Test] Calculated CFO is {np.abs(rx_freq - FREQ)}")
+
     #Plot Rx data
     plotter.plot_time_series(signal = signal00, fs = FS, title="Test Sine Wave 00 Real")
     plotter.plot_symbol_freq(symbol = np.fft.fftshift(np.abs(np.fft.fft(signal00))), title =f"Rx00 FFT Plot Freq = {FREQ}")
@@ -81,6 +94,14 @@ def main():
     #Plot Rx data
     plotter.plot_time_series(signal = signal01, fs = FS, title="Test Sine Wave 01 Real")
     plotter.plot_symbol_freq(symbol = np.fft.fftshift(np.abs(np.fft.fft(signal01))), title =f"Rx01 FFT Plot Freq = {FREQ}")
+
+    #Plot Rx data
+    plotter.plot_time_series(signal = signal02, fs = FS, title="Test Sine Wave 02 Real")
+    plotter.plot_symbol_freq(symbol = np.fft.fftshift(np.abs(np.fft.fft(signal02))), title =f"Rx01 FFT Plot Freq = {FREQ}")
+
+    #Plot Rx data
+    plotter.plot_time_series(signal = signal03, fs = FS, title="Test Sine Wave 03 Real")
+    plotter.plot_symbol_freq(symbol = np.fft.fftshift(np.abs(np.fft.fft(signal03))), title =f"Rx01 FFT Plot Freq = {FREQ}")
 
     #Plot Ref data
     plotter.plot_time_series(signal=ref_signal, fs = FS, title = "Ref Sine Wave Real")
