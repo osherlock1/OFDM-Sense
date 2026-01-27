@@ -79,12 +79,12 @@ def main():
 
     rx_freq_idx = np.argmax(np.abs(np.fft.fftshift(np.fft.fft(signal02))))
     rx_freq = freqs[rx_freq_idx]
-    print(f"[Test] Calculated RX01 Freq: {rx_freq}Hz")
+    print(f"[Test] Calculated RX02 Freq: {rx_freq}Hz")
     print(f"[Test] Calculated CFO is {np.abs(rx_freq - FREQ)}")
 
     rx_freq_idx = np.argmax(np.abs(np.fft.fftshift(np.fft.fft(signal03))))
     rx_freq = freqs[rx_freq_idx]
-    print(f"[Test] Calculated RX01 Freq: {rx_freq}Hz")
+    print(f"[Test] Calculated RX03 Freq: {rx_freq}Hz")
     print(f"[Test] Calculated CFO is {np.abs(rx_freq - FREQ)}")
 
     #Plot Rx data
