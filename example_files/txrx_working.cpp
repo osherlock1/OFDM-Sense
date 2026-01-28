@@ -213,6 +213,74 @@ static void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
     for (size_t i = 0; i < outfiles.size(); i++) outfiles[i]->close();
 }
 
+
+
+
+// CUSTOM SYNC HELPER (GPSDO / EXTERNAL PPS)
+static void synchronize_to_gpsdo(uhd::usrp::multi_usrp::sptr usrp, const std::string& ref_source)
+{
+    if (ref_source != "external" && ref_source != "gpsdo") {
+        std::cout << "Reference source is internal/other. Skipping hardware sync check." << std::endl;
+        // Reset time to 0 just to be safe
+        usrp->set_time_now(uhd::time_spec_t(0.0));
+        return;
+    }
+
+    std::cout << "\n--- Syncing to " << ref_source << " (10 MHz + PPS) ---" << std::endl;
+
+    // Set Sources
+    usrp->set_clock_source(ref_source);
+    usrp->set_time_source(ref_source);
+
+    // Check all boards
+    bool all_locked = false;
+    for (int i = 0; i < 20; i++) {
+        all_locked = true;
+        for (size_t m = 0; m < usrp->get_num_mboards(); m++) {
+            bool locked = usrp->get_mboard_sensor("ref_locked", m).to_bool();
+            if (!locked) {
+                all_locked = false;
+                // FIX 1: Complete the boost format line
+                std::cout << boost::format("\r Waiting for lock on MBoard %d...") % m << std::flush;
+                break;
+            }
+        }
+        if (all_locked) break;
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+    std::cout << std::endl;
+
+    if (!all_locked) {
+        // FIX 2: Add semicolon
+        throw std::runtime_error("ERROR: Failed to lock to external 10MHz reference!");
+    }
+    std::cout << "All MBoards Locked to 10 MHz Reference." << std::endl;
+
+    // PPS Latch
+    std::cout << "Latching time to next PPS edge..." << std::endl;
+    usrp->set_time_next_pps(uhd::time_spec_t(0.0));
+
+    // Wait for PPS
+    std::this_thread::sleep_for(std::chrono::milliseconds(1100));
+
+    // Verify time alignment
+    double t0 = usrp->get_time_now(0).get_real_secs();
+    std::cout << boost::format("MBoard 0 Time: %f") % t0 << std::endl;
+
+    // FIX 3: Fix typo size__t -> size_t
+    for (size_t m = 1; m < usrp->get_num_mboards(); m++) {
+        double tn = usrp->get_time_now(m).get_real_secs();
+        if (std::abs(tn - t0) > 0.01) {
+            // FIX 4: Complete the boost format line
+            std::cerr << boost::format("WARNING: MBoard %d time misalignment detected! (Diff: %f)\n") % m % (tn - t0);
+        }
+    }
+    std::cout << "-----------------------------------------------\n" << std::endl;
+}
+
+
+
+
 /***********************************************************************
  * Main
  **********************************************************************/
@@ -338,11 +406,11 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         rx_channel_nums.push_back(ch);
     }
 
-    // Clock source (optional)
-    if (vm.count("ref")) {
-        usrp->set_clock_source(ref);
-    }
-
+    // Clock source (optional) FIXME: PPS HELP UNCOMMENT
+    // if (vm.count("ref")) {
+    //     usrp->set_clock_source(ref);
+    // }
+    //FIXME END
     std::cout << "Using Device: " << usrp->get_pp_string() << std::endl;
 
     // Rates
@@ -433,8 +501,17 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
 
     // Reset time and schedule aligned TX/RX
     std::cout << boost::format("Setting device timestamp to 0...") << std::endl;
-    usrp->set_time_now(uhd::time_spec_t(0.0));
+    //usrp->set_time_now(uhd::time_spec_t(0.0)); #FIXME2 PPS UNCOMMENT
+
+    
+    // FIXME CUSTOM PPS STUFF FROM MAIN
+    std::string ref_arg = vm.count("ref") ? ref : "internal";
+
+    synchronize_to_gpsdo(usrp, ref_arg);
+
     const auto t0 = usrp->get_time_now() + uhd::time_spec_t(0.5);
+
+    std::cout << boost::format("Scheduloing Start Time at: %f seconds") % t0.get_real_secs() << std::endl;
 
     // TX metadata seed (used only by waveform worker)
     uhd::tx_metadata_t md;
@@ -442,6 +519,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     md.end_of_burst   = false;
     md.has_time_spec  = true;
     md.time_spec      = t0; // give time to fill TX buffers
+
 
     // Launch TX worker (file or waveform)
     std::thread tx_thread;
