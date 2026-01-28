@@ -24,7 +24,7 @@ class USRPConfig:
     rx_gain:float = 0
     otw:str = "sc16"
     type:str = "float"
-    ref:str = "external"
+    ref:str = "gpsdo"
 
 
 def run_tx(
