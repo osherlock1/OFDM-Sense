@@ -24,7 +24,7 @@ class USRPConfig:
     rx_gain:float = 0
     otw:str = "sc16"
     type:str = "float"
-    ref:str = "gpsdo"
+    ref:str = "external"
 
 
 def run_tx(
@@ -120,7 +120,7 @@ def run_transfer(
 
         tx_channel_idx: str = "0",
         rx_channel_idx: str = "1",
-
+        ref: str = "external",
         simulate: bool = False
 ):
     """
@@ -154,7 +154,7 @@ def run_transfer(
         "--rx-channels", rx_channel_idx,
 
 
-        "--ref", config.ref,
+        "--ref", ref,
 
         #Channel Configuration
         "--rx-subdev", subdev,
