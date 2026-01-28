@@ -17,7 +17,7 @@ def main():
     parser.add_argument("--rx_addr", type=str, default = "192.168.30.2", help = "IP of RX USRP (need to do in form of addr=(ip))")
     parser.add_argument('--tx_channel_idx', type=str, default = '0')
     parser.add_argument('--rx_channel_idx', type=str, default='0')
-    parser.add_argument('--ref', tpye=str, default= "internal", help = "Specify the reference clock")
+    parser.add_argument('--ref', type=str, default= "internal", help = "Specify the reference clock")
 
     args = parser.parse_args()
 
