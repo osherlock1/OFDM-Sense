@@ -17,7 +17,7 @@ def main():
     parser.add_argument("--rx_addr", type=str, default = "192.168.30.2", help = "IP of RX USRP (need to do in form of addr=(ip))")
     parser.add_argument('--tx_channel_idx', type=str, default = '0')
     parser.add_argument('--rx_channel_idx', type=str, default='0')
-
+    parser.add_argument('--ref', tpye=str, default= "internal", help = "Specify the reference clock")
 
     args = parser.parse_args()
 
@@ -28,6 +28,7 @@ def main():
     CHANNEL = args.channel
     rx_addr = args.rx_addr
     tx_addr = args.tx_addr
+    ref = args.ref
 
 
     #Generate Test Tone
@@ -44,7 +45,7 @@ def main():
     rx_file_path = "data_files/test_sin_rx.dat"
 
 
-    usrp.run_transfer(channel=CHANNEL, config = usrp_conf, tx_file=test_file_tx_path, rx_file=rx_file_path, nsamps=N_SAMLPES, rx_channel_idx=args.rx_channel_idx, tx_channel_idx=args.tx_channel_idx)
+    usrp.run_transfer(ref=ref, channel=CHANNEL, config = usrp_conf, tx_file=test_file_tx_path, rx_file=rx_file_path, nsamps=N_SAMLPES, rx_channel_idx=args.rx_channel_idx, tx_channel_idx=args.tx_channel_idx)
 
     #Unpack Rx Data
     print("[Test] Unpacking Data...")
