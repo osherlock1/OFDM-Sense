@@ -16,6 +16,7 @@
 #include <functional>
 #include <iostream>
 #include <thread>
+#include <vector>
 
 namespace po = boost::program_options;
 
@@ -32,20 +33,8 @@ static std::string generate_out_filename(const std::string& base_fn, size_t n_na
 /***********************************************************************
  * Worker Functions
  **********************************************************************/
-static void transmit_worker_wave(std::vector<std::complex<float>> buff, wave_table_class wave_table, uhd::tx_streamer::sptr tx_streamer, uhd::tx_metadata_t metadata, size_t step, size_t index, int num_channels) {
-    std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
-    while (not stop_signal_called) {
-        for (size_t n = 0; n < buff.size(); n++) buff[n] = wave_table(index += step);
-        tx_streamer->send(buffs, buff.size(), metadata);
-        metadata.start_of_burst = false;
-        metadata.has_time_spec  = false;
-    }
-    metadata.end_of_burst = true;
-    tx_streamer->send("", 0, metadata);
-}
-
 template <typename samp_type>
-static void transmit_worker_file(uhd::tx_streamer::sptr tx_stream, const std::string& file, size_t samps_per_buff, uhd::time_spec_t t0, bool repeat, int num_channels) {
+static void transmit_worker_file(uhd::tx_streamer::sptr tx_stream, const std::string& file, size_t samps_per_buff, uhd::time_spec_t t0, bool repeat) {
     do {
         std::ifstream infile(file.c_str(), std::ifstream::binary);
         if (!infile.is_open()) throw std::runtime_error("Cannot open --tx-file: " + file);
@@ -104,15 +93,18 @@ static void recv_to_file(uhd::usrp::multi_usrp::sptr usrp, const std::string& cp
 }
 
 /***********************************************************************
- * Synchronization & Main
+ * Synchronization Helper
  **********************************************************************/
 static void synchronize_to_pps(uhd::usrp::multi_usrp::sptr usrp, const std::string& ref_source) {
-    if (ref_source == "internal") { usrp->set_time_now(uhd::time_spec_t(0.0)); return; }
-    std::cout << "\n--- Syncing Multi-USRP to " << ref_source << " ---" << std::endl;
+    if (ref_source == "internal") {
+        usrp->set_time_now(uhd::time_spec_t(0.0));
+        return;
+    }
+    std::cout << "\n--- Syncing Multi-USRP to " << ref_source << " (10MHz + PPS) ---" << std::endl;
     usrp->set_clock_source(ref_source);
     usrp->set_time_source(ref_source);
-    
-    // Wait for Ref Lock
+
+    // Wait for Ref Lock on all motherboards
     for (int i = 0; i < 30; i++) {
         bool all_locked = true;
         for (size_t m = 0; m < usrp->get_num_mboards(); m++) all_locked &= usrp->get_mboard_sensor("ref_locked", m).to_bool();
@@ -120,43 +112,72 @@ static void synchronize_to_pps(uhd::usrp::multi_usrp::sptr usrp, const std::stri
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
-    // CRITICAL: Aligned time reset across separate IP addresses
-    // Wait for a PPS edge to pass, then set time for the NEXT edge
-    const double last_pps = usrp->get_time_last_pps().get_real_secs();
-    while (usrp->get_time_now().get_real_secs() < last_pps + 0.3) { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
+    // Aligned Time Reset: Wait for a PPS edge to pass to avoid race conditions
+    uhd::time_spec_t last_pps = usrp->get_time_last_pps();
+    while (last_pps == usrp->get_time_last_pps()) { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
     
+    // Immediately after the pulse, set the time for the NEXT pulse
     usrp->set_time_next_pps(uhd::time_spec_t(0.0));
-    std::this_thread::sleep_for(std::chrono::milliseconds(1100)); // Wait for latch
+    std::this_thread::sleep_for(std::chrono::milliseconds(1100));
 
-    // Verify
+    // Hardware Verification
     for (size_t m = 0; m < usrp->get_num_mboards(); m++) {
         double diff = std::abs(usrp->get_time_last_pps(m).get_real_secs());
         if (diff > 0.5) throw std::runtime_error("MBoard " + std::to_string(m) + " failed PPS latch!");
     }
-    std::cout << "Multi-USRP PPS Sync Successful.\n";
+    std::cout << "All MBoards Successfully Locked and Time-Synced.\n";
 }
 
+/***********************************************************************
+ * Main
+ **********************************************************************/
 int UHD_SAFE_MAIN(int argc, char* argv[]) {
-    // Variable Declarations (Simplified for brevity, matching your logic)
     std::string tx_args, rx_args, file, type, tx_channels, rx_channels, ref, tx_file, tx_type, tx_subdev, rx_subdev, otw;
     double tx_rate, rx_rate, tx_freq, rx_freq, tx_gain, rx_gain, settling;
     size_t total_num_samps, spb, tx_spb;
     bool tx_repeat;
 
     po::options_description desc("Allowed options");
-    desc.add_options()("help", "help")("tx-args", po::value<std::string>(&tx_args))("rx-args", po::value<std::string>(&rx_args))("tx-rate", po::value<double>(&tx_rate))("rx-rate", po::value<double>(&rx_rate))("tx-freq", po::value<double>(&tx_freq))("rx-freq", po::value<double>(&rx_freq))("tx-channels", po::value<std::string>(&tx_channels)->default_value("0"))("rx-channels", po::value<std::string>(&rx_channels)->default_value("0"))("ref", po::value<std::string>(&ref)->default_value("external"))("nsamps", po::value<size_t>(&total_num_samps))("file", po::value<std::string>(&file))("type", po::value<std::string>(&type)->default_value("float"))("tx-file", po::value<std::string>(&tx_file))("tx-type", po::value<std::string>(&tx_type)->default_value("float"))("settling", po::value<double>(&settling)->default_value(0.5))("tx-gain", po::value<double>(&tx_gain))("rx-gain", po::value<double>(&rx_gain))("otw", po::value<std::string>(&otw)->default_value("sc16"))("tx-subdev", po::value<std::string>(&tx_subdev)->default_value("A:0"))("rx-subdev", po::value<std::string>(&rx_subdev)->default_value("A:0"))("tx-repeat", po::bool_switch(&tx_repeat));
+    desc.add_options()
+        ("help", "help message")
+        ("tx-args", po::value<std::string>(&tx_args)->default_value(""))
+        ("rx-args", po::value<std::string>(&rx_args)->default_value(""))
+        ("file", po::value<std::string>(&file)->default_value("usrp_samples.dat"))
+        ("type", po::value<std::string>(&type)->default_value("float"))
+        ("nsamps", po::value<size_t>(&total_num_samps)->default_value(0))
+        ("settling", po::value<double>(&settling)->default_value(0.5))
+        ("spb", po::value<size_t>(&spb)->default_value(10000))
+        ("tx-rate", po::value<double>(&tx_rate))
+        ("rx-rate", po::value<double>(&rx_rate))
+        ("tx-freq", po::value<double>(&tx_freq))
+        ("rx-freq", po::value<double>(&rx_freq))
+        ("tx-gain", po::value<double>(&tx_gain)->default_value(0))
+        ("rx-gain", po::value<double>(&rx_gain)->default_value(0))
+        ("tx-channels", po::value<std::string>(&tx_channels)->default_value("0"))
+        ("rx-channels", po::value<std::string>(&rx_channels)->default_value("0"))
+        ("ref", po::value<std::string>(&ref)->default_value("external"))
+        ("otw", po::value<std::string>(&otw)->default_value("sc16"))
+        ("tx-file", po::value<std::string>(&tx_file)->default_value(""))
+        ("tx-type", po::value<std::string>(&tx_type)->default_value("float"))
+        ("tx-spb", po::value<size_t>(&tx_spb)->default_value(0)) // FIXED: Matches python script flag
+        ("tx-repeat", po::bool_switch(&tx_repeat)->default_value(false))
+        ("tx-subdev", po::value<std::string>(&tx_subdev)->default_value("A:0"))
+        ("rx-subdev", po::value<std::string>(&rx_subdev)->default_value("A:0"));
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    auto usrp = uhd::usrp::multi_usrp::make(rx_args.empty() ? tx_args : rx_args);
+    if (vm.count("help")) { std::cout << desc << std::endl; return 0; }
+
+    const std::string dev_args = rx_args.empty() ? tx_args : rx_args;
+    auto usrp = uhd::usrp::multi_usrp::make(dev_args);
     
-    // FIX 1: Explicit Master Clock and Tick Rate propagation
+    // RFNoC Fix: Set Master Clock before any other property configuration
     usrp->set_master_clock_rate(200e6);
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
-    // Parse channels
+    // Parse Channel Lists
     std::vector<size_t> tx_chans, rx_chans;
     std::vector<std::string> tx_s, rx_s;
     boost::split(tx_s, tx_channels, boost::is_any_of(","));
@@ -164,33 +185,45 @@ int UHD_SAFE_MAIN(int argc, char* argv[]) {
     for(auto& s : tx_s) tx_chans.push_back(std::stoul(s));
     for(auto& s : rx_s) rx_chans.push_back(std::stoul(s));
 
-    // FIX 2: Set rates before sync to avoid RFNoC "Skipping" warnings
-    for (size_t ch : tx_chans) usrp->set_tx_rate(tx_rate, ch);
-    for (size_t ch : rx_chans) usrp->set_rx_rate(rx_rate, ch);
+    // Configuration
+    for (size_t ch : tx_chans) {
+        usrp->set_tx_rate(tx_rate, ch);
+        usrp->set_tx_subdev_spec(tx_subdev, ch);
+    }
+    for (size_t ch : rx_chans) {
+        usrp->set_rx_rate(rx_rate, ch);
+        usrp->set_rx_subdev_spec(rx_subdev, ch);
+    }
 
+    // Synchronization
     synchronize_to_pps(usrp, ref);
 
-    // Timed Tuning
+    // Timed Tuning for Phase Alignment
     uhd::time_spec_t cmd_time = usrp->get_time_now() + uhd::time_spec_t(0.1);
     usrp->set_command_time(cmd_time);
-    for (size_t ch : tx_chans) { usrp->set_tx_freq(tx_freq, ch); usrp->set_tx_gain(tx_gain, ch); usrp->set_tx_subdev_spec(tx_subdev, ch); }
-    for (size_t ch : rx_chans) { usrp->set_rx_freq(rx_freq, ch); usrp->set_rx_gain(rx_gain, ch); usrp->set_rx_subdev_spec(rx_subdev, ch); }
+    for (size_t ch : tx_chans) { usrp->set_tx_freq(tx_freq, ch); usrp->set_tx_gain(tx_gain, ch); }
+    for (size_t ch : rx_chans) { usrp->set_rx_freq(rx_freq, ch); usrp->set_rx_gain(rx_gain, ch); }
     usrp->clear_command_time();
     std::this_thread::sleep_for(std::chrono::milliseconds(400));
 
-    // Stream Start Time
+    // Start Time (Scheduled 2 seconds in future to ensure host buffers are ready)
     const auto t0 = usrp->get_time_now() + uhd::time_spec_t(2.0);
-    
-    std::thread tx_t([&]() {
-        uhd::stream_args_t tx_sa(tx_type == "float" ? "fc32" : "sc16", otw);
-        tx_sa.channels = tx_chans;
-        auto tx_stream = usrp->get_tx_stream(tx_sa);
-        transmit_worker_file<std::complex<float>>(tx_stream, tx_file, tx_stream->get_max_num_samps()*10, t0, tx_repeat, tx_chans.size());
-    });
+    std::signal(SIGINT, &sig_int_handler);
 
-    recv_to_file<std::complex<float>>(usrp, "fc32", otw, file, 10000, total_num_samps, t0, settling, rx_chans);
+    std::thread tx_thread;
+    if (!tx_file.empty()) {
+        tx_thread = std::thread([&]() {
+            uhd::stream_args_t tx_sa(tx_type == "float" ? "fc32" : "sc16", otw);
+            tx_sa.channels = tx_chans;
+            auto tx_stream = usrp->get_tx_stream(tx_sa);
+            transmit_worker_file<std::complex<float>>(tx_stream, tx_file, (tx_spb ? tx_spb : 10000), t0, tx_repeat);
+        });
+    }
+
+    recv_to_file<std::complex<float>>(usrp, "fc32", otw, file, spb, total_num_samps, t0, settling, rx_chans);
 
     stop_signal_called = true;
-    tx_t.join();
+    if (tx_thread.joinable()) tx_thread.join();
+
     return EXIT_SUCCESS;
 }
