@@ -400,8 +400,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         if (vm.count("tx-int-n")) tx_tune_request.args = uhd::device_addr_t("mode_n=integer");
         usrp->set_tx_freq(tx_tune_request, ch);
         
-        // FIX #1: Force rate per channel
-        usrp->set_tx_rate(tx_rate, ch);
+
 
         if (vm.count("tx-gain")) usrp->set_tx_gain(tx_gain, ch);
         if (vm.count("tx-bw"))   usrp->set_tx_bandwidth(tx_bw, ch);
@@ -414,8 +413,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         if (vm.count("rx-int-n")) rx_tune_request.args = uhd::device_addr_t("mode_n=integer");
         usrp->set_rx_freq(rx_tune_request, ch);
         
-        // FIX #1: Force rate per channel
-        usrp->set_rx_rate(rx_rate, ch);
+
 
         if (vm.count("rx-gain")) usrp->set_rx_gain(rx_gain, ch);
         if (vm.count("rx-bw"))   usrp->set_rx_bandwidth(rx_bw, ch);
