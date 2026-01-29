@@ -1,4 +1,3 @@
-
 #include "wavetable.hpp"
 #include <uhd/exception.hpp>
 #include <uhd/types/tune_request.hpp>
@@ -29,8 +28,6 @@ void sig_int_handler(int) { stop_signal_called = true; }
 /***********************************************************************
  * Utilities
  **********************************************************************/
-// Change to filename, e.g. from usrp_samples.dat to usrp_samples.00.dat
-// but only if multiple names are to be generated.
 static std::string generate_out_filename(
     const std::string& base_fn, size_t n_names, size_t this_name)
 {
@@ -132,7 +129,7 @@ static void transmit_worker_file(uhd::tx_streamer::sptr tx_stream,
 }
 
 /***********************************************************************
- * recv_to_file function (unchanged from example; RX aligns to TX t0)
+ * recv_to_file function
  **********************************************************************/
 template <typename samp_type>
 static void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
@@ -216,12 +213,13 @@ static void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
 
 
 
+// ---------------------------------------------------------------------
 // CUSTOM SYNC HELPER (GPSDO / EXTERNAL PPS)
+// ---------------------------------------------------------------------
 static void synchronize_to_gpsdo(uhd::usrp::multi_usrp::sptr usrp, const std::string& ref_source)
 {
     if (ref_source != "external" && ref_source != "gpsdo") {
         std::cout << "Reference source is internal/other. Skipping hardware sync check." << std::endl;
-        // Reset time to 0 just to be safe
         usrp->set_time_now(uhd::time_spec_t(0.0));
         return;
     }
@@ -240,7 +238,6 @@ static void synchronize_to_gpsdo(uhd::usrp::multi_usrp::sptr usrp, const std::st
             bool locked = usrp->get_mboard_sensor("ref_locked", m).to_bool();
             if (!locked) {
                 all_locked = false;
-                // FIX 1: Complete the boost format line
                 std::cout << boost::format("\r Waiting for lock on MBoard %d...") % m << std::flush;
                 break;
             }
@@ -251,7 +248,6 @@ static void synchronize_to_gpsdo(uhd::usrp::multi_usrp::sptr usrp, const std::st
     std::cout << std::endl;
 
     if (!all_locked) {
-        // FIX 2: Add semicolon
         throw std::runtime_error("ERROR: Failed to lock to external 10MHz reference!");
     }
     std::cout << "All MBoards Locked to 10 MHz Reference." << std::endl;
@@ -263,16 +259,32 @@ static void synchronize_to_gpsdo(uhd::usrp::multi_usrp::sptr usrp, const std::st
     // Wait for PPS
     std::this_thread::sleep_for(std::chrono::milliseconds(1100));
 
-    // Verify time alignment
+    // Verify time alignment (Software Check)
     double t0 = usrp->get_time_now(0).get_real_secs();
-    std::cout << boost::format("MBoard 0 Time: %f") % t0 << std::endl;
+    std::cout << boost::format("MBoard 0 Time: %f s") % t0 << std::endl;
 
-    // FIX 3: Fix typo size__t -> size_t
     for (size_t m = 1; m < usrp->get_num_mboards(); m++) {
         double tn = usrp->get_time_now(m).get_real_secs();
         if (std::abs(tn - t0) > 0.01) {
-            // FIX 4: Complete the boost format line
             std::cerr << boost::format("WARNING: MBoard %d time misalignment detected! (Diff: %f)\n") % m % (tn - t0);
+        }
+    }
+    
+    // ----------------------------------------------------------------
+    // HARDWARE PPS CHECK (Definitive Cable Test)
+    // ----------------------------------------------------------------
+    std::cout << "--- Verifying Physical PPS Signal ---" << std::endl;
+    for (size_t m = 0; m < usrp->get_num_mboards(); m++) {
+        uhd::time_spec_t last_pps = usrp->get_time_last_pps(m);
+        uhd::time_spec_t now = usrp->get_time_now(m);
+        double time_since_pulse = (now - last_pps).get_real_secs();
+
+        std::cout << "MBoard " << m << " saw last PPS " << time_since_pulse << " seconds ago.";
+
+        if (time_since_pulse > 1.5) {
+             std::cout << " [FAILURE] - NO PPS SIGNAL DETECTED!" << std::endl;
+        } else {
+             std::cout << " [SUCCESS] - PPS Alive." << std::endl;
         }
     }
     std::cout << "-----------------------------------------------\n" << std::endl;
@@ -286,18 +298,18 @@ static void synchronize_to_gpsdo(uhd::usrp::multi_usrp::sptr usrp, const std::st
  **********************************************************************/
 int UHD_SAFE_MAIN(int argc, char* argv[])
 {
-    // TX-side
+    // TX-side variables
     std::string tx_args, wave_type, tx_ant, tx_subdev, ref, otw, tx_channels;
     double tx_rate, tx_freq, tx_gain, wave_freq, tx_bw;
     float ampl;
 
-    // RX-side
+    // RX-side variables
     std::string rx_args, file, type, rx_ant, rx_subdev, rx_channels;
     size_t total_num_samps, spb;
     double rx_rate, rx_freq, rx_gain, rx_bw;
     double settling;
 
-    // NEW: TX-from-file options
+    // TX-from-file variables
     std::string tx_file, tx_type;
     size_t tx_spb = 0;
     bool tx_repeat = false;
@@ -334,7 +346,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         ("rx-channels", po::value<std::string>(&rx_channels)->default_value("0"), "which RX channel(s) to use (\"0\", \"1\", \"0,1\", etc)")
         ("tx-int-n", "tune USRP TX with integer-N tuning")
         ("rx-int-n", "tune USRP RX with integer-N tuning")
-        // NEW
         ("tx-file", po::value<std::string>(&tx_file)->default_value(""), "file with TX IQ samples (enables TX-from-file mode)")
         ("tx-type", po::value<std::string>(&tx_type)->default_value("short"), "TX file sample type: double, float, or short")
         ("tx-spb", po::value<size_t>(&tx_spb)->default_value(0), "TX samples-per-buffer for file mode, 0 => auto")
@@ -350,45 +361,26 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         return ~0;
     }
 
-    // Create device (use rx_args if provided, else tx_args)
+    // Create device
     const std::string dev_args = rx_args.empty() ? tx_args : rx_args;
     std::cout << "\nCreating USRP device with: " << dev_args << "...\n";
     uhd::usrp::multi_usrp::sptr usrp = uhd::usrp::multi_usrp::make(dev_args);
 
-    //FIXME: REMOVE IF NOT WORKING
+    // Optional Master Clock set
     std::cout << "Setting Master Clock Rate to 200 MHz..." << std::endl;
     usrp->set_master_clock_rate(200e6);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    //END FOR REMOVE
 
-
-
-
-    // Subdevs (default to A:0 if unspecified) #FIXME: THIS IS THE OLD SUBDEV CODE
-    // if (vm.count("tx-subdev")) usrp->set_tx_subdev_spec(uhd::usrp::subdev_spec_t(tx_subdev));
-    // else                        usrp->set_tx_subdev_spec(uhd::usrp::subdev_spec_t("A:0"));
-
-    // if (vm.count("rx-subdev")) usrp->set_rx_subdev_spec(uhd::usrp::subdev_spec_t(rx_subdev));
-    // else                        usrp->set_rx_subdev_spec(uhd::usrp::subdev_spec_t("A:0"));
-
-    // Subdevs (Apply to ALL motherboards for the multi-USRP)
+    // Subdevs
     for (size_t m = 0; m <usrp->get_num_mboards(); m++) {
-        //TX Subdev
-        if (vm.count("tx-subdev"))
-            usrp->set_tx_subdev_spec(uhd::usrp::subdev_spec_t(tx_subdev), m);
-        else
-            usrp->set_tx_subdev_spec(uhd::usrp::subdev_spec_t("A:0"), m);
+        if (vm.count("tx-subdev")) usrp->set_tx_subdev_spec(uhd::usrp::subdev_spec_t(tx_subdev), m);
+        else                        usrp->set_tx_subdev_spec(uhd::usrp::subdev_spec_t("A:0"), m);
 
-        // RX Subdev
-        if (vm.count("rx-subdev"))
-            usrp->set_rx_subdev_spec(uhd::usrp::subdev_spec_t(rx_subdev), m);
-        else
-            usrp->set_rx_subdev_spec(uhd::usrp::subdev_spec_t("A:0"), m);
+        if (vm.count("rx-subdev")) usrp->set_rx_subdev_spec(uhd::usrp::subdev_spec_t(rx_subdev), m);
+        else                        usrp->set_rx_subdev_spec(uhd::usrp::subdev_spec_t("A:0"), m);
     }
 
-
-
-    // Channels
+    // Parse Channels
     std::vector<std::string> tx_channel_strings;
     std::vector<size_t> tx_channel_nums;
     boost::split(tx_channel_strings, tx_channels, boost::is_any_of("\"',"));
@@ -406,49 +398,63 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         rx_channel_nums.push_back(ch);
     }
 
-    // Clock source (optional) FIXME: PPS HELP UNCOMMENT
-    // if (vm.count("ref")) {
-    //     usrp->set_clock_source(ref);
-    // }
-    //FIXME END
     std::cout << "Using Device: " << usrp->get_pp_string() << std::endl;
 
     // Rates
     if (not vm.count("tx-rate")) { std::cerr << "Specify --tx-rate\n"; return ~0; }
     std::cout << boost::format("Setting TX Rate: %f Msps...") % (tx_rate / 1e6) << std::endl;
-    usrp->set_tx_rate(tx_rate);  std::cout << boost::format("Actual TX Rate: %f Msps...\n") % (usrp->get_tx_rate()/1e6) << std::endl;
-
+    usrp->set_tx_rate(tx_rate);
+    
     if (not vm.count("rx-rate")) { std::cerr << "Specify --rx-rate\n"; return ~0; }
     std::cout << boost::format("Setting RX Rate: %f Msps...") % (rx_rate / 1e6) << std::endl;
-    usrp->set_rx_rate(rx_rate);  std::cout << boost::format("Actual RX Rate: %f Msps...\n") % (usrp->get_rx_rate()/1e6) << std::endl;
+    usrp->set_rx_rate(rx_rate);
 
-    // TX tuning/gain/BW
+    // -------------------------------------------------------------------
+    // STEP 1: SYNCHRONIZATION
+    // -------------------------------------------------------------------
+    std::string ref_arg = vm.count("ref") ? ref : "internal";
+    synchronize_to_gpsdo(usrp, ref_arg);
+
+    // -------------------------------------------------------------------
+    // STEP 2: TIMED TUNING (Phase Alignment)
+    // -------------------------------------------------------------------
+    std::cout << "--- Performing Timed Tuning for Phase Alignment ---" << std::endl;
+    
+    // Schedule 0.2s in future
+    uhd::time_spec_t cmd_time = usrp->get_time_now() + uhd::time_spec_t(0.2);
+    usrp->set_command_time(cmd_time);
+
+    // TX Tuning
     if (not vm.count("tx-freq")) { std::cerr << "Specify --tx-freq\n"; return ~0; }
     for (size_t ch : tx_channel_nums) {
-        std::cout << boost::format("Setting TX Freq: %f MHz...") % (tx_freq / 1e6) << std::endl;
         uhd::tune_request_t tx_tune_request(tx_freq);
         if (vm.count("tx-int-n")) tx_tune_request.args = uhd::device_addr_t("mode_n=integer");
         usrp->set_tx_freq(tx_tune_request, ch);
-        std::cout << boost::format("Actual TX Freq: %f MHz...\n") % (usrp->get_tx_freq(ch)/1e6) << std::endl;
-        if (vm.count("tx-gain")) { usrp->set_tx_gain(tx_gain, ch); std::cout << "TX Gain: " << usrp->get_tx_gain(ch) << " dB\n"; }
-        if (vm.count("tx-bw"))   { usrp->set_tx_bandwidth(tx_bw, ch); std::cout << "TX BW: " << usrp->get_tx_bandwidth(ch) << " Hz\n"; }
-        if (vm.count("tx-ant"))  { usrp->set_tx_antenna(tx_ant, ch); }
+        
+        if (vm.count("tx-gain")) usrp->set_tx_gain(tx_gain, ch);
+        if (vm.count("tx-bw"))   usrp->set_tx_bandwidth(tx_bw, ch);
+        if (vm.count("tx-ant"))  usrp->set_tx_antenna(tx_ant, ch);
     }
 
-    // RX tuning/gain/BW
+    // RX Tuning
     if (not vm.count("rx-freq")) { std::cerr << "Specify --rx-freq\n"; return ~0; }
     for (size_t ch : rx_channel_nums) {
-        std::cout << boost::format("Setting RX Freq: %f MHz...") % (rx_freq / 1e6) << std::endl;
         uhd::tune_request_t rx_tune_request(rx_freq);
         if (vm.count("rx-int-n")) rx_tune_request.args = uhd::device_addr_t("mode_n=integer");
         usrp->set_rx_freq(rx_tune_request, ch);
-        std::cout << boost::format("Actual RX Freq: %f MHz...\n") % (usrp->get_rx_freq(ch)/1e6) << std::endl;
-        if (vm.count("rx-gain")) { usrp->set_rx_gain(rx_gain, ch); std::cout << "RX Gain: " << usrp->get_rx_gain(ch) << " dB\n"; }
-        if (vm.count("rx-bw"))   { usrp->set_rx_bandwidth(rx_bw, ch); std::cout << "RX BW: " << usrp->get_rx_bandwidth(ch) << " Hz\n"; }
-        if (vm.count("rx-ant"))  { usrp->set_rx_antenna(rx_ant, ch); }
+        
+        if (vm.count("rx-gain")) usrp->set_rx_gain(rx_gain, ch);
+        if (vm.count("rx-bw"))   usrp->set_rx_bandwidth(rx_bw, ch);
+        if (vm.count("rx-ant"))  usrp->set_rx_antenna(rx_ant, ch);
     }
 
-    // Waveform sanity if not using tx-file
+    usrp->clear_command_time();
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    std::cout << "Tuning Complete." << std::endl;
+
+    // -------------------------------------------------------------------
+
+    // Waveform check
     if (tx_file.empty()) {
         if (wave_freq == 0 && wave_type == "CONST") wave_freq = usrp->get_tx_rate() / 2;
         if (std::abs(wave_freq) > usrp->get_tx_rate() / 2)
@@ -457,13 +463,12 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
             throw std::runtime_error("wave freq too small for table");
     }
 
-    // Precompute waveform (only used if tx_file empty)
     const wave_table_class wave_table(wave_type, ampl);
     const size_t step = tx_file.empty() ? std::lround(wave_freq / usrp->get_tx_rate() * wave_table_len) : 0;
     size_t index      = 0;
 
-    // Create TX streamer with CPU format depending on mode
-    std::string tx_cpu_fmt = "fc32"; // default (generated float32)
+    // Streamer setup
+    std::string tx_cpu_fmt = "fc32"; 
     if (!tx_file.empty()) {
         if (tx_type == "double")      tx_cpu_fmt = "fc64";
         else if (tx_type == "float")  tx_cpu_fmt = "fc32";
@@ -474,23 +479,20 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     tx_sa.channels = tx_channel_nums;
     uhd::tx_streamer::sptr tx_stream = usrp->get_tx_stream(tx_sa);
 
-    // Allocate TX buffer sizes
-    if (tx_spb == 0) tx_spb = spb;                      // prefer explicit tx-spb if given
-    if (tx_spb == 0) tx_spb = tx_stream->get_max_num_samps() * 10; // auto
-    std::vector<std::complex<float>> buff(tx_spb); // only used in waveform mode
+    if (tx_spb == 0) tx_spb = spb;
+    if (tx_spb == 0) tx_spb = tx_stream->get_max_num_samps() * 10; 
+    std::vector<std::complex<float>> buff(tx_spb); 
     const int num_tx_channels = static_cast<int>(tx_channel_nums.size());
 
-    // Optional LO lock checks (if available)
+    // LO checks
     auto tx_sensor_names = usrp->get_tx_sensor_names(0);
     if (std::find(tx_sensor_names.begin(), tx_sensor_names.end(), "lo_locked") != tx_sensor_names.end()) {
         auto lo_locked = usrp->get_tx_sensor("lo_locked", 0);
-        std::cout << boost::format("Checking TX: %s ...") % lo_locked.to_pp_string() << std::endl;
         UHD_ASSERT_THROW(lo_locked.to_bool());
     }
     auto rx_sensor_names = usrp->get_rx_sensor_names(0);
     if (std::find(rx_sensor_names.begin(), rx_sensor_names.end(), "lo_locked") != rx_sensor_names.end()) {
         auto lo_locked = usrp->get_rx_sensor("lo_locked", 0);
-        std::cout << boost::format("Checking RX: %s ...") % lo_locked.to_pp_string() << std::endl;
         UHD_ASSERT_THROW(lo_locked.to_bool());
     }
 
@@ -499,29 +501,19 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         std::cout << "Press Ctrl + C to stop streaming..." << std::endl;
     }
 
-    // Reset time and schedule aligned TX/RX
-    std::cout << boost::format("Setting device timestamp to 0...") << std::endl;
-    //usrp->set_time_now(uhd::time_spec_t(0.0)); #FIXME2 PPS UNCOMMENT
-
-    
-    // FIXME CUSTOM PPS STUFF FROM MAIN
-    std::string ref_arg = vm.count("ref") ? ref : "internal";
-
-    synchronize_to_gpsdo(usrp, ref_arg);
-
+    // -------------------------------------------------------------------
+    // STEP 3: SCHEDULE STREAM START
+    // -------------------------------------------------------------------
     const auto t0 = usrp->get_time_now() + uhd::time_spec_t(0.5);
+    std::cout << boost::format("Scheduling Start Time at: %f seconds") % t0.get_real_secs() << std::endl;
 
-    std::cout << boost::format("Scheduloing Start Time at: %f seconds") % t0.get_real_secs() << std::endl;
-
-    // TX metadata seed (used only by waveform worker)
     uhd::tx_metadata_t md;
     md.start_of_burst = true;
     md.end_of_burst   = false;
     md.has_time_spec  = true;
-    md.time_spec      = t0; // give time to fill TX buffers
+    md.time_spec      = t0;
 
-
-    // Launch TX worker (file or waveform)
+    // Launch threads
     std::thread tx_thread;
     if (!tx_file.empty()) {
         if (tx_type == "double")
@@ -535,7 +527,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         tx_thread = std::thread(transmit_worker_wave, buff, wave_table, tx_stream, md, step, index, num_tx_channels);
     }
 
-    // RX to file (aligned start time)
     if (type == "double") {
         recv_to_file<std::complex<double>>(usrp, "fc64", otw, file, (spb?spb:tx_spb),
             static_cast<int>(total_num_samps), t0, settling, rx_channel_nums);
@@ -551,7 +542,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         throw std::runtime_error("Unknown RX --type " + type);
     }
 
-    // Clean up TX worker
     stop_signal_called = true;
     tx_thread.join();
 
