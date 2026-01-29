@@ -504,7 +504,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // -------------------------------------------------------------------
     // STEP 3: SCHEDULE STREAM START
     // -------------------------------------------------------------------
-    const auto t0 = usrp->get_time_now() + uhd::time_spec_t(0.5);
+    const auto t0 = usrp->get_time_now() + uhd::time_spec_t(2.0);
     std::cout << boost::format("Scheduling Start Time at: %f seconds") % t0.get_real_secs() << std::endl;
 
     uhd::tx_metadata_t md;
