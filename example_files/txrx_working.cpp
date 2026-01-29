@@ -163,7 +163,7 @@ static void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
     }
 
     bool overflow_message = true;
-    double timeout        = settling_time + 0.5;
+    double timeout        = settling_time + 6.0;
 
     uhd::stream_cmd_t stream_cmd((num_requested_samples == 0)
                                      ? uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS
