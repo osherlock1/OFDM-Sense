@@ -105,7 +105,11 @@ static void transmit_worker_file(uhd::tx_streamer::sptr tx_stream,
                 break;
             }
 
-            const size_t sent = tx_stream->send(buffs, num_tx_samps, md, 5.0);
+            // --- FIX #3: INCREASE TIMEOUT TO 6.0s ---
+            // This is critical because we scheduled t0 = Now + 5.0s
+            // If we don't wait >5.0s, send() will timeout while waiting for the start time.
+            const size_t sent = tx_stream->send(buffs, num_tx_samps, md, 6.0);
+            
             if (sent != num_tx_samps) {
                 std::cerr << "TX stream timeout: requested " << num_tx_samps
                           << ", actually sent " << sent << " samples.\n";
@@ -120,7 +124,6 @@ static void transmit_worker_file(uhd::tx_streamer::sptr tx_stream,
         }
 
         infile.close();
-        // For repeats, subsequent passes start immediately (no rescheduling)
         t0 = uhd::time_spec_t(0.0);
         if (repeat && !stop_signal_called) {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -162,7 +165,7 @@ static void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
     }
 
     bool overflow_message = true;
-    double timeout        = settling_time + 0.5; // generous first timeout
+    double timeout        = settling_time + 0.5;
 
     uhd::stream_cmd_t stream_cmd((num_requested_samples == 0)
                                      ? uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS
@@ -175,7 +178,7 @@ static void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
     while (not stop_signal_called
            && (num_requested_samples > num_total_samps || num_requested_samples == 0)) {
         size_t num_rx_samps = rx_stream->recv(buff_ptrs, samps_per_buff, md, timeout);
-        timeout             = 0.1; // small timeout for subsequent recv
+        timeout             = 0.1;
 
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
             std::cout << "Timeout while streaming" << std::endl;
@@ -185,11 +188,7 @@ static void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
             if (overflow_message) {
                 overflow_message = false;
                 std::cerr << boost::format(
-                                 "Got an overflow indication. Please consider the following:\n"
-                                 "  Your write medium must sustain a rate of %fMB/s.\n"
-                                 "  Dropped samples will not be written to the file.\n"
-                                 "  Please modify this example for your purposes.\n"
-                                 "  This message will not appear again.\n")
+                                 "Got an overflow indication.\n")
                                      % (usrp->get_rx_rate() * sizeof(samp_type) / 1e6);
             }
             continue;
@@ -210,9 +209,6 @@ static void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
     for (size_t i = 0; i < outfiles.size(); i++) outfiles[i]->close();
 }
 
-
-
-
 // ---------------------------------------------------------------------
 // CUSTOM SYNC HELPER (GPSDO / EXTERNAL PPS)
 // ---------------------------------------------------------------------
@@ -226,7 +222,6 @@ static void synchronize_to_gpsdo(uhd::usrp::multi_usrp::sptr usrp, const std::st
 
     std::cout << "\n--- Syncing to " << ref_source << " (10 MHz + PPS) ---" << std::endl;
 
-    // Set Sources
     usrp->set_clock_source(ref_source);
     usrp->set_time_source(ref_source);
 
@@ -259,20 +254,7 @@ static void synchronize_to_gpsdo(uhd::usrp::multi_usrp::sptr usrp, const std::st
     // Wait for PPS
     std::this_thread::sleep_for(std::chrono::milliseconds(1100));
 
-    // Verify time alignment (Software Check)
-    double t0 = usrp->get_time_now(0).get_real_secs();
-    std::cout << boost::format("MBoard 0 Time: %f s") % t0 << std::endl;
-
-    for (size_t m = 1; m < usrp->get_num_mboards(); m++) {
-        double tn = usrp->get_time_now(m).get_real_secs();
-        if (std::abs(tn - t0) > 0.01) {
-            std::cerr << boost::format("WARNING: MBoard %d time misalignment detected! (Diff: %f)\n") % m % (tn - t0);
-        }
-    }
-    
-    // ----------------------------------------------------------------
-    // HARDWARE PPS CHECK (Definitive Cable Test)
-    // ----------------------------------------------------------------
+    // Hardware PPS Check
     std::cout << "--- Verifying Physical PPS Signal ---" << std::endl;
     for (size_t m = 0; m < usrp->get_num_mboards(); m++) {
         uhd::time_spec_t last_pps = usrp->get_time_last_pps(m);
@@ -290,31 +272,24 @@ static void synchronize_to_gpsdo(uhd::usrp::multi_usrp::sptr usrp, const std::st
     std::cout << "-----------------------------------------------\n" << std::endl;
 }
 
-
-
-
 /***********************************************************************
  * Main
  **********************************************************************/
 int UHD_SAFE_MAIN(int argc, char* argv[])
 {
-    // TX-side variables
     std::string tx_args, wave_type, tx_ant, tx_subdev, ref, otw, tx_channels;
     double tx_rate, tx_freq, tx_gain, wave_freq, tx_bw;
     float ampl;
 
-    // RX-side variables
     std::string rx_args, file, type, rx_ant, rx_subdev, rx_channels;
     size_t total_num_samps, spb;
     double rx_rate, rx_freq, rx_gain, rx_bw;
     double settling;
 
-    // TX-from-file variables
     std::string tx_file, tx_type;
     size_t tx_spb = 0;
     bool tx_repeat = false;
 
-    // Options
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help", "help message")
@@ -361,17 +336,14 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         return ~0;
     }
 
-    // Create device
     const std::string dev_args = rx_args.empty() ? tx_args : rx_args;
     std::cout << "\nCreating USRP device with: " << dev_args << "...\n";
     uhd::usrp::multi_usrp::sptr usrp = uhd::usrp::multi_usrp::make(dev_args);
 
-    // Optional Master Clock set
     std::cout << "Setting Master Clock Rate to 200 MHz..." << std::endl;
     usrp->set_master_clock_rate(200e6);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    // Subdevs
     for (size_t m = 0; m <usrp->get_num_mboards(); m++) {
         if (vm.count("tx-subdev")) usrp->set_tx_subdev_spec(uhd::usrp::subdev_spec_t(tx_subdev), m);
         else                        usrp->set_tx_subdev_spec(uhd::usrp::subdev_spec_t("A:0"), m);
@@ -380,7 +352,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         else                        usrp->set_rx_subdev_spec(uhd::usrp::subdev_spec_t("A:0"), m);
     }
 
-    // Parse Channels
     std::vector<std::string> tx_channel_strings;
     std::vector<size_t> tx_channel_nums;
     boost::split(tx_channel_strings, tx_channels, boost::is_any_of("\"',"));
@@ -416,33 +387,36 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     synchronize_to_gpsdo(usrp, ref_arg);
 
     // -------------------------------------------------------------------
-    // STEP 2: TIMED TUNING (Phase Alignment)
+    // STEP 2: TIMED TUNING
     // -------------------------------------------------------------------
     std::cout << "--- Performing Timed Tuning for Phase Alignment ---" << std::endl;
     
-    // Schedule 0.2s in future
     uhd::time_spec_t cmd_time = usrp->get_time_now() + uhd::time_spec_t(0.2);
     usrp->set_command_time(cmd_time);
 
-    // TX Tuning
     if (not vm.count("tx-freq")) { std::cerr << "Specify --tx-freq\n"; return ~0; }
     for (size_t ch : tx_channel_nums) {
         uhd::tune_request_t tx_tune_request(tx_freq);
         if (vm.count("tx-int-n")) tx_tune_request.args = uhd::device_addr_t("mode_n=integer");
         usrp->set_tx_freq(tx_tune_request, ch);
         
+        // FIX #1: Force rate per channel
+        usrp->set_tx_rate(tx_rate, ch);
+
         if (vm.count("tx-gain")) usrp->set_tx_gain(tx_gain, ch);
         if (vm.count("tx-bw"))   usrp->set_tx_bandwidth(tx_bw, ch);
         if (vm.count("tx-ant"))  usrp->set_tx_antenna(tx_ant, ch);
     }
 
-    // RX Tuning
     if (not vm.count("rx-freq")) { std::cerr << "Specify --rx-freq\n"; return ~0; }
     for (size_t ch : rx_channel_nums) {
         uhd::tune_request_t rx_tune_request(rx_freq);
         if (vm.count("rx-int-n")) rx_tune_request.args = uhd::device_addr_t("mode_n=integer");
         usrp->set_rx_freq(rx_tune_request, ch);
         
+        // FIX #1: Force rate per channel
+        usrp->set_rx_rate(rx_rate, ch);
+
         if (vm.count("rx-gain")) usrp->set_rx_gain(rx_gain, ch);
         if (vm.count("rx-bw"))   usrp->set_rx_bandwidth(rx_bw, ch);
         if (vm.count("rx-ant"))  usrp->set_rx_antenna(rx_ant, ch);
@@ -454,7 +428,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
 
     // -------------------------------------------------------------------
 
-    // Waveform check
     if (tx_file.empty()) {
         if (wave_freq == 0 && wave_type == "CONST") wave_freq = usrp->get_tx_rate() / 2;
         if (std::abs(wave_freq) > usrp->get_tx_rate() / 2)
@@ -467,7 +440,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     const size_t step = tx_file.empty() ? std::lround(wave_freq / usrp->get_tx_rate() * wave_table_len) : 0;
     size_t index      = 0;
 
-    // Streamer setup
     std::string tx_cpu_fmt = "fc32"; 
     if (!tx_file.empty()) {
         if (tx_type == "double")      tx_cpu_fmt = "fc64";
@@ -484,7 +456,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     std::vector<std::complex<float>> buff(tx_spb); 
     const int num_tx_channels = static_cast<int>(tx_channel_nums.size());
 
-    // LO checks
     auto tx_sensor_names = usrp->get_tx_sensor_names(0);
     if (std::find(tx_sensor_names.begin(), tx_sensor_names.end(), "lo_locked") != tx_sensor_names.end()) {
         auto lo_locked = usrp->get_tx_sensor("lo_locked", 0);
@@ -504,7 +475,8 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // -------------------------------------------------------------------
     // STEP 3: SCHEDULE STREAM START
     // -------------------------------------------------------------------
-    const auto t0 = usrp->get_time_now() + uhd::time_spec_t(2.0);
+    // FIX #2: Massive 5.0 second head start for buffering
+    const auto t0 = usrp->get_time_now() + uhd::time_spec_t(5.0);
     std::cout << boost::format("Scheduling Start Time at: %f seconds") % t0.get_real_secs() << std::endl;
 
     uhd::tx_metadata_t md;
@@ -513,7 +485,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     md.has_time_spec  = true;
     md.time_spec      = t0;
 
-    // Launch threads
     std::thread tx_thread;
     if (!tx_file.empty()) {
         if (tx_type == "double")
