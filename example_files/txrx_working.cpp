@@ -105,7 +105,7 @@ static void transmit_worker_file(uhd::tx_streamer::sptr tx_stream,
                 break;
             }
 
-            // CRITICAL FIX: Increased timeout to 6.0s to allow for the 5.0s start delay
+            // High timeout (6.0s) to handle the 5.0s pre-buffer delay
             const size_t sent = tx_stream->send(buffs, num_tx_samps, md, 6.0);
             
             if (sent != num_tx_samps) {
@@ -163,6 +163,8 @@ static void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
     }
 
     bool overflow_message = true;
+    
+    // RX TIMEOUT FIX: Must be > start_delay (5.0s) + settling
     double timeout        = settling_time + 6.0;
 
     uhd::stream_cmd_t stream_cmd((num_requested_samples == 0)
@@ -221,12 +223,9 @@ static void synchronize_to_gpsdo(uhd::usrp::multi_usrp::sptr usrp, const std::st
 
     std::cout << "\n--- Syncing Multi-USRP to " << ref_source << " (10MHz + PPS) ---" << std::endl;
 
-    // Set Sources
     usrp->set_clock_source(ref_source);
     usrp->set_time_source(ref_source);
 
-    // DEBUG: Verbose Lock Check Loop
-    // This helps us see if one board is failing or if the sensor name is wrong
     std::cout << "Checking for Lock..." << std::endl;
     bool all_locked = false;
     for (int i = 0; i < 20; i++) {
@@ -234,7 +233,6 @@ static void synchronize_to_gpsdo(uhd::usrp::multi_usrp::sptr usrp, const std::st
         for (size_t m = 0; m < usrp->get_num_mboards(); m++) {
             bool ref_locked = usrp->get_mboard_sensor("ref_locked", m).to_bool();
             
-            // Print status so we don't hang silently
             std::cout << "  [Attempt " << i << "] MBoard " << m 
                       << " Ref Locked: " << (ref_locked ? "YES" : "NO") << std::endl;
 
@@ -252,14 +250,10 @@ static void synchronize_to_gpsdo(uhd::usrp::multi_usrp::sptr usrp, const std::st
         throw std::runtime_error("ERROR: Failed to lock to external 10MHz reference!");
     }
 
-    // PPS Latch
     std::cout << "Latching time to next PPS edge..." << std::endl;
     usrp->set_time_next_pps(uhd::time_spec_t(0.0));
-
-    // Wait for PPS
     std::this_thread::sleep_for(std::chrono::milliseconds(1100));
 
-    // Verify time alignment (Software Check)
     double t0 = usrp->get_time_now(0).get_real_secs();
     std::cout << boost::format("MBoard 0 Time: %f s") % t0 << std::endl;
 
@@ -270,9 +264,7 @@ static void synchronize_to_gpsdo(uhd::usrp::multi_usrp::sptr usrp, const std::st
         }
     }
     
-    // ----------------------------------------------------------------
-    // HARDWARE PPS CHECK (Definitive Cable Test)
-    // ----------------------------------------------------------------
+    // Hardware Verification
     std::cout << "--- Verifying Physical PPS Signal ---" << std::endl;
     for (size_t m = 0; m < usrp->get_num_mboards(); m++) {
         uhd::time_spec_t last_pps = usrp->get_time_last_pps(m);
@@ -390,14 +382,8 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
 
     std::cout << "Using Device: " << usrp->get_pp_string() << std::endl;
 
-    // Set Global Rates (Also set specifically in loop later)
     if (not vm.count("tx-rate")) { std::cerr << "Specify --tx-rate\n"; return ~0; }
-    std::cout << boost::format("Setting TX Rate: %f Msps...") % (tx_rate / 1e6) << std::endl;
-    usrp->set_tx_rate(tx_rate);
-    
     if (not vm.count("rx-rate")) { std::cerr << "Specify --rx-rate\n"; return ~0; }
-    std::cout << boost::format("Setting RX Rate: %f Msps...") % (rx_rate / 1e6) << std::endl;
-    usrp->set_rx_rate(rx_rate);
 
 
     // -------------------------------------------------------------------
@@ -406,11 +392,27 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     std::string ref_arg = vm.count("ref") ? ref : "internal";
     synchronize_to_gpsdo(usrp, ref_arg);
 
+
     // -------------------------------------------------------------------
-    // STEP 2: TIMED TUNING (Phase Alignment + Force Rate)
+    // STEP 2: SET RATES & PERFORM TIMED TUNING
     // -------------------------------------------------------------------
+    
+    // PART A: Force Rates Immediate (MUST happen before timed commands)
+    // This fixes the "Tick Rate 0" error.
+    std::cout << "--- Setting Rates Immediately ---" << std::endl;
+    for (size_t ch : tx_channel_nums) {
+        usrp->set_tx_rate(tx_rate, ch);
+    }
+    for (size_t ch : rx_channel_nums) {
+        usrp->set_rx_rate(rx_rate, ch);
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Allow PLLs to settle
+
+
+    // PART B: Timed Tuning (Phase Alignment)
     std::cout << "--- Performing Timed Tuning for Phase Alignment ---" << std::endl;
     
+    // Schedule tuning 0.2s in future
     uhd::time_spec_t cmd_time = usrp->get_time_now() + uhd::time_spec_t(0.2);
     usrp->set_command_time(cmd_time);
 
@@ -421,9 +423,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         if (vm.count("tx-int-n")) tx_tune_request.args = uhd::device_addr_t("mode_n=integer");
         usrp->set_tx_freq(tx_tune_request, ch);
         
-        // Force Rate per Channel to fix "Tick Rate" warning
-        usrp->set_tx_rate(tx_rate, ch);
-
         if (vm.count("tx-gain")) usrp->set_tx_gain(tx_gain, ch);
         if (vm.count("tx-bw"))   usrp->set_tx_bandwidth(tx_bw, ch);
         if (vm.count("tx-ant"))  usrp->set_tx_antenna(tx_ant, ch);
@@ -435,9 +434,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         uhd::tune_request_t rx_tune_request(rx_freq);
         if (vm.count("rx-int-n")) rx_tune_request.args = uhd::device_addr_t("mode_n=integer");
         usrp->set_rx_freq(rx_tune_request, ch);
-
-        // Force Rate per Channel to fix "Tick Rate" warning
-        usrp->set_rx_rate(rx_rate, ch);
         
         if (vm.count("rx-gain")) usrp->set_rx_gain(rx_gain, ch);
         if (vm.count("rx-bw"))   usrp->set_rx_bandwidth(rx_bw, ch);
