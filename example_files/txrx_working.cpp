@@ -105,7 +105,7 @@ static void transmit_worker_file(uhd::tx_streamer::sptr tx_stream,
                 break;
             }
 
-            const size_t sent = tx_stream->send(buffs, num_tx_samps, md);
+            const size_t sent = tx_stream->send(buffs, num_tx_samps, md, 5.0);
             if (sent != num_tx_samps) {
                 std::cerr << "TX stream timeout: requested " << num_tx_samps
                           << ", actually sent " << sent << " samples.\n";
@@ -504,7 +504,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // -------------------------------------------------------------------
     // STEP 3: SCHEDULE STREAM START
     // -------------------------------------------------------------------
-    const auto t0 = usrp->get_time_now() + uhd::time_spec_t(5.0);
+    const auto t0 = usrp->get_time_now() + uhd::time_spec_t(2.0);
     std::cout << boost::format("Scheduling Start Time at: %f seconds") % t0.get_real_secs() << std::endl;
 
     uhd::tx_metadata_t md;
