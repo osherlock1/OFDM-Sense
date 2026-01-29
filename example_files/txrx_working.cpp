@@ -105,9 +105,8 @@ static void transmit_worker_file(uhd::tx_streamer::sptr tx_stream,
                 break;
             }
 
-            // --- FIX #3: INCREASE TIMEOUT TO 6.0s ---
-            // This is critical because we scheduled t0 = Now + 5.0s
-            // If we don't wait >5.0s, send() will timeout while waiting for the start time.
+            // 
+            // Timeout set to 6.0 seconds (Must be larger than the t0 delay of 5.0s)
             const size_t sent = tx_stream->send(buffs, num_tx_samps, md, 6.0);
             
             if (sent != num_tx_samps) {
@@ -371,14 +370,22 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
 
     std::cout << "Using Device: " << usrp->get_pp_string() << std::endl;
 
-    // Rates
+    // -------------------------------------------------------------------
+    // STEP 0: FORCE RATES (Untimed)
+    // -------------------------------------------------------------------
+    std::cout << "--- Configuring Rates ---" << std::endl;
     if (not vm.count("tx-rate")) { std::cerr << "Specify --tx-rate\n"; return ~0; }
-    std::cout << boost::format("Setting TX Rate: %f Msps...") % (tx_rate / 1e6) << std::endl;
-    usrp->set_tx_rate(tx_rate);
+    for (size_t ch : tx_channel_nums) {
+        std::cout << boost::format("Forcing TX Rate %f on Channel %d...") % (tx_rate/1e6) % ch << std::endl;
+        usrp->set_tx_rate(tx_rate, ch);
+    }
     
     if (not vm.count("rx-rate")) { std::cerr << "Specify --rx-rate\n"; return ~0; }
-    std::cout << boost::format("Setting RX Rate: %f Msps...") % (rx_rate / 1e6) << std::endl;
-    usrp->set_rx_rate(rx_rate);
+    for (size_t ch : rx_channel_nums) {
+        std::cout << boost::format("Forcing RX Rate %f on Channel %d...") % (rx_rate/1e6) % ch << std::endl;
+        usrp->set_rx_rate(rx_rate, ch);
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     // -------------------------------------------------------------------
     // STEP 1: SYNCHRONIZATION
@@ -400,8 +407,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         if (vm.count("tx-int-n")) tx_tune_request.args = uhd::device_addr_t("mode_n=integer");
         usrp->set_tx_freq(tx_tune_request, ch);
         
-
-
         if (vm.count("tx-gain")) usrp->set_tx_gain(tx_gain, ch);
         if (vm.count("tx-bw"))   usrp->set_tx_bandwidth(tx_bw, ch);
         if (vm.count("tx-ant"))  usrp->set_tx_antenna(tx_ant, ch);
@@ -413,8 +418,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         if (vm.count("rx-int-n")) rx_tune_request.args = uhd::device_addr_t("mode_n=integer");
         usrp->set_rx_freq(rx_tune_request, ch);
         
-
-
         if (vm.count("rx-gain")) usrp->set_rx_gain(rx_gain, ch);
         if (vm.count("rx-bw"))   usrp->set_rx_bandwidth(rx_bw, ch);
         if (vm.count("rx-ant"))  usrp->set_rx_antenna(rx_ant, ch);
