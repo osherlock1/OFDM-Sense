@@ -32,7 +32,10 @@ def main():
 
 
     #Generate Test Tone
-    generate_tone(fs=FS, freq=FREQ, n_samples= N_SAMLPES, n_buffer = 5000)
+    BUFFER = 5000
+    generate_tone(fs=FS, freq=FREQ, n_samples= N_SAMLPES, n_buffer = BUFFER)
+
+    nsamps_final = BUFFER * 2 + N_SAMLPES
 
     combined_addr = f"addr0={args.tx_addr},addr1={args.rx_addr}"
 
@@ -45,7 +48,7 @@ def main():
     rx_file_path = "data_files/test_sin_rx.dat"
 
 
-    usrp.run_transfer(ref=ref, channel=CHANNEL, config = usrp_conf, tx_file=test_file_tx_path, rx_file=rx_file_path, nsamps=N_SAMLPES, rx_channel_idx=args.rx_channel_idx, tx_channel_idx=args.tx_channel_idx)
+    usrp.run_transfer(ref=ref, channel=CHANNEL, config = usrp_conf, tx_file=test_file_tx_path, rx_file=rx_file_path, nsamps=nsamps_final, rx_channel_idx=args.rx_channel_idx, tx_channel_idx=args.tx_channel_idx)
 
     #Unpack Rx Data
     print("[Test] Unpacking Data...")
