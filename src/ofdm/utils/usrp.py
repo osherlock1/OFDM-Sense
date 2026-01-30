@@ -13,10 +13,10 @@ class USRPConfig:
     rx_build_path: str ="./build/RX_TO_FILE"
     tx_addr: str = "addr=192.168.30.2"
     rx_addr: str = "addr=192.168.30.2"
-    tx_rate: float = 100e6
-    rx_rate: float = 100e6
-    tx_freq: float = 60e6
-    rx_freq: float = 60e6
+    tx_rate: float = 100e6 #TX sampling rate
+    rx_rate: float = 100e6 #RX sampling rate
+    tx_freq: float = 60e6 # Digital up conversion center frequency tx
+    rx_freq: float = 60e6 # Digital up conversion center frequency rx
     wave_type:str = "SINE"
     wave_freq: float = "100e3"
     ampl: float = 0.3
