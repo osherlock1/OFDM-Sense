@@ -95,7 +95,7 @@ def generate_tone(fs:float, freq:float, n_samples:float, n_buffer: int = 1000):
     referense_data = {
         "fs":fs,
         "freq":freq,
-        "n_samples":n_samples,
+        "n_samples":len(final_tx),
         "signal_real":np.real(signal).tolist(),
         "signal_imag":np.imag(signal).tolist()
     }
