@@ -87,7 +87,7 @@ def generate_tone(fs:float, freq:float, n_samples:float, n_buffer: int = 1000):
 
     buffer = np.zeros(n_buffer, dtype=complex)
 
-    final_tx = np.concatenate([buffer + signal + buffer])
+    final_tx = np.concatenate(buffer, signal, buffer)
 
     #Save binary data for usrp
     bin_path = f"data_files/test_sin.dat"
