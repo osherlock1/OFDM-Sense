@@ -100,8 +100,8 @@ def generate_tone(fs:float, freq:float, n_samples:float, n_buffer: int = 1000):
         "fs":fs,
         "freq":freq,
         "n_samples":len(final_tx),
-        "signal_real":np.real(signal).tolist(),
-        "signal_imag":np.imag(signal).tolist()
+        "signal_real":np.real(final_tx).tolist(),
+        "signal_imag":np.imag(final_tx).tolist()
     }
 
     json_path =f"data_files/test_sin_ref.json"
