@@ -32,7 +32,7 @@ def main():
 
 
     #Generate Test Tone
-    generate_tone(fs=FS, freq=FREQ, n_samples= N_SAMLPES)
+    generate_tone(fs=FS, freq=FREQ, n_samples= N_SAMLPES, n_buffer = 5000)
 
     combined_addr = f"addr0={args.tx_addr},addr1={args.rx_addr}"
 
@@ -77,12 +77,14 @@ def main():
     plotter.plot_symbol_freq(symbol = np.fft.fftshift(np.abs(np.fft.fft(ref_signal))), title="Ref FFT Plot")
     plt.show()
 
-def generate_tone(fs:float, freq:float, n_samples:float):
+def generate_tone(fs:float, freq:float, n_samples:float, n_buffer: int = 1000):
 
     t = np.arange(n_samples) / fs
     signal = np.exp(1j * 2 * np.pi * freq * t)
 
-    final_tx = signal
+    buffer = np.zeros(n_buffer, dtype=complex)
+
+    final_tx = np.concatenate([buffer + signal + buffer])
 
     #Save binary data for usrp
     bin_path = f"data_files/test_sin.dat"
