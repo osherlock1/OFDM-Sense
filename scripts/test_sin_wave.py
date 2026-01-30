@@ -62,8 +62,9 @@ def main():
     ref_signal = ref_signal_real + 1j * ref_signal_imag
 
     #Calculate CFO
+    
     T = 1 / FS
-    freqs = np.fft.fftshift(np.fft.fftfreq(N_SAMLPES, T))
+    freqs = np.fft.fftshift(np.fft.fftfreq(nsamps_final, T))
 
     rx_freq_idx = np.argmax(np.abs(np.fft.fftshift(np.fft.fft(signal))))
     rx_freq = freqs[rx_freq_idx]
