@@ -36,14 +36,14 @@ def main():
         print(f"[Error] C++ Executable not foudn:{args.bin}")
         print("Make sure to run 'cmake .. && make")
     
-    combined_addr = f"addr0={args.tx_addr},addr1={args.rx_addr}"
+    #combined_addr = f"addr0={args.tx_addr},addr1={args.rx_addr}"
 
 
     #Configure Hardware
     config = usrp.USRPConfig(
         build_path = args.bin,
-        tx_addr=combined_addr,
-        rx_addr=combined_addr,
+        tx_addr=args.tx_addr,
+        rx_addr=args.rx_addr,
         tx_rate=args.rate,
         rx_rate=args.rate,
         tx_freq=args.freq,
