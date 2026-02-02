@@ -14,5 +14,10 @@ build/
 *.json
 
 pyscr/__pycache__/
-
 pyscr/scrap.py
+
+__pycache__/
+
+*.pyc
+
+rx_log.txt
