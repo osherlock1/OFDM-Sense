@@ -1,0 +1,18 @@
+contourpy
+cycler
+e
+fonttools
+importlib_resources
+kiwisolver
+matplotlib
+numpy
+-e git+ssh://git@github.com/osherlock1/OFDM-Sense.git@a8e9de903e90ba81722f83b0dabffef6aa7702d7#egg=ofdm
+packaging
+pillow
+pyparsing
+python-dateutil
+PyYAML
+scipy
+setuptools
+six
+zipp
