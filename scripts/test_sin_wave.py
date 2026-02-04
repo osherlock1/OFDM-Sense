@@ -38,7 +38,7 @@ def main():
     nsamps_final = BUFFER * 2 + N_SAMLPES
 
     combined_addr = f"addr0={args.tx_addr},addr1={args.rx_addr}"
-
+    #test
 
     DEFAULT_CONFIG_PTH = "./configs/usrp_settings.yaml"
     default_config = usrp.load_config(path=DEFAULT_CONFIG_PTH)
