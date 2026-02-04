@@ -9,15 +9,15 @@ venv/
 .vscode/
 .idea/
 
+#Build Artifacts
 build/
 
-*.json
 
-pyscr/__pycache__/
-pyscr/scrap.py
-
-*__pycache__/
-
+#Byte-compiled / optimized / DLL
+__pycache__/
 *.pyc
 
+#Specific
 rx_log.txt
+pyscr/scrap.py
+*.json
