@@ -10,49 +10,64 @@ from ofdm.viz import plotter
 
 def main():
     parser = argparse.ArgumentParser(description="Generate Single Tone Sine wave for Testing Hardware")
-    parser.add_argument('--channel', '-c', type=str, default = "A", help="Select Communication Channel(A = Baseband, B = Frontend)")
+    parser.add_argument('--channel', '-c', type=str, help="Define the subdev specifications (A:0 B:0 for both, A:0 for left daughter boards, B:0 for right daughter boards)")
     parser.add_argument("--freq", type=float, default = 10e6, help = "Frequency of tone")
-    parser.add_argument("--n_samps", type=int, default=2000, help = "Number of Samples sent")
-    parser.add_argument("--tx_addr", type=str, default = "192.168.30.2", help = "IP address of TX USRP (need to do in form of addr=(ip))")
-    parser.add_argument("--rx_addr", type=str, default = "192.168.30.2", help = "IP of RX USRP (need to do in form of addr=(ip))")
-    parser.add_argument('--tx_channel_idx', type=str, default = '0')
-    parser.add_argument('--rx_channel_idx', type=str, default='0')
-    parser.add_argument('--ref', type=str, default= "internal", help = "Specify the reference clock")
-
+    parser.add_argument("--n_samps", type=int, default=2000, help = "Specify number of samples in the generated tone")
+    parser.add_argument("--tx_addr", type=str, help = "IP address of TX USRP (need to do in form of addr=(ip))")
+    parser.add_argument("--rx_addr", type=str, help = "IP of RX USRP (need to do in form of addr=(ip))")
+    parser.add_argument('--tx_channel_idx', type=str, help = "Select chanenl for the TX (based on subdev specification), if no subdev was specified default = A:0 B:0")
+    parser.add_argument('--rx_channel_idx', type=str, help = "Select chanenl for the TX (based on subdev specification), if no subdev was specified default = A:0 B:0")
+    parser.add_argument('--ref', type=str, help = "Specify the reference clock")
     args = parser.parse_args()
 
     
     FS = 100e6
     FREQ = args.freq
     N_SAMLPES = args.n_samps
-    CHANNEL = args.channel
-    rx_addr = args.rx_addr
-    tx_addr = args.tx_addr
-    ref = args.ref
 
 
     #Generate Test Tone
     BUFFER = 5000
     generate_tone(fs=FS, freq=FREQ, n_samples= N_SAMLPES, n_buffer = BUFFER)
-
+    
+    #Calculate number of samples to transfer
     nsamps_final = BUFFER * 2 + N_SAMLPES
 
-    combined_addr = f"addr0={args.tx_addr},addr1={args.rx_addr}"
-    #test
-
+    #Intantiate the USRP Config
     DEFAULT_CONFIG_PTH = "./configs/usrp_settings.yaml"
-    default_config = usrp.load_config(path=DEFAULT_CONFIG_PTH)
+    usrp_conf = usrp.load_config(path=DEFAULT_CONFIG_PTH)
 
+    #Overwrite configs with CLI args
+    if args.channel is not None:
+        usrp_conf.subdev = args.channel
+        print(f"[USRP CONFIG] Updated subdev to:{args.channel}")
 
-    #Define USRP Config
-    usrp_conf = usrp.USRPConfig(rx_addr=rx_addr, tx_addr=tx_addr)
+    if args.rx_addr is not None:
+        usrp_conf.rx_addr = args.rx_addr
+        print(f"[USRP CONFIG] Updated rx_addr to:{args.rx_addr}")
+
+    if args.tx_addr is not None:
+        usrp_conf.tx_addr = args.tx_addr
+        print(f"[USRP CONFIG] Updated tx_addr to:{args.tx_addr}")
     
+    if args.ref is not None:
+        usrp_conf.ref = args.ref
+        print(f"[USRP CONFIG] Updated ref to:{args.ref}")
+
+    if args.tx_channel_idx is not None:
+        usrp_conf.tx_channel_idx = args.tx_channel_idx
+        print(f"[USRP CONFIG] Updated tx_channel_idx to:{args.tx_channel_idx}")
+    
+    if args.rx_channel_idx is not None:
+        usrp_conf.rx_channel_idx = args.rx_channel_idx
+        print(f"[USRP CONFIG] Updated rx_channel_idx {args.rx_channel_idx}")
+
     #Send Data over USRP
     test_file_tx_path = "data_files/test_sin.dat"
     rx_file_path = "data_files/test_sin_rx.dat"
 
 
-    usrp.run_transfer(ref=ref, channel=CHANNEL, config = usrp_conf, tx_file=test_file_tx_path, rx_file=rx_file_path, nsamps=nsamps_final, rx_channel_idx=args.rx_channel_idx, tx_channel_idx=args.tx_channel_idx)
+    usrp.run_transfer(config = usrp_conf, tx_file=test_file_tx_path, rx_file=rx_file_path, nsamps=nsamps_final)
 
     #Unpack Rx Data
     print("[Test] Unpacking Data...")
@@ -66,7 +81,6 @@ def main():
     ref_signal = ref_signal_real + 1j * ref_signal_imag
 
     #Calculate CFO
-    
     T = 1 / FS
     freqs = np.fft.fftshift(np.fft.fftfreq(nsamps_final, T))
 
