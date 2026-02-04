@@ -18,6 +18,11 @@ class USRPConfig:
     rx_rate: float = 100e6 #RX sampling rate
     tx_freq: float = 60e6 # Digital up conversion center frequency tx
     rx_freq: float = 60e6 # Digital up conversion center frequency rx
+
+    subdev: str = "A:0"
+    tx_channel_idx: str = "0"
+    rx_channel_idx: str = "0"
+
     wave_type:str = "SINE"
     wave_freq: float = "100e3"
     ampl: float = 0.3
@@ -44,23 +49,11 @@ def run_transfer(
         tx_file: str,
         rx_file: str,
         nsamps: int,
-        channel: str = "B:0",
-
-        tx_channel_idx: str = "0",
-        rx_channel_idx: str = "1",
-        ref: str = "external",
-        simulate: bool = False
 ):
     """
     Execute the C++ USRP driver via subprocess.
     """
-    if simulate:
-        print(f"[SIMULATION] Skipping hardware transfer. Using {tx_file} as input.")
-        return
     
-    #Channel Selection
-    #subdev = "A:0" if channel == "A" else "B:0"
-    subdev = channel
     #Build command list
     cmd = [
         config.build_path,
@@ -78,15 +71,15 @@ def run_transfer(
         "--tx-file", tx_file,
         "--nsamps", str(nsamps),
 
-        "--tx-channels", tx_channel_idx,
-        "--rx-channels", rx_channel_idx,
+        "--tx-channels", config.tx_channel_idx,
+        "--rx-channels", config.rx_channel_idx,
 
 
-        "--ref", ref,
+        "--ref", config.ref,
 
         #Channel Configuration
-        "--rx-subdev", subdev,
-        "--tx-subdev", subdev,
+        "--rx-subdev", config.subdev,
+        "--tx-subdev", config.subdev,
 
 
         #Fixed constants (OTW format, types)
