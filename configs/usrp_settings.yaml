@@ -1,0 +1,24 @@
+# Configuration for USRP Hardware
+build_path: "./build/TXRX_FROM_FILE"
+tx_addr: "addr=192.168.30.2"
+rx_addr: "addr=192.168.30.2"
+
+# Sampling Rates (Hz)
+tx_rate: 100e6
+rx_rate: 100e6
+
+# Digital Up-Conversion (Hz)
+tx_freq: 60e6
+rx_freq: 60e6
+
+# Signal Parameters (IF USRP IS GENERATING SIGNAL)
+wave_type: "SINE"
+wave_freq: 100e3
+ampl: 0.3
+
+# Hardware Gains & Buffering
+tx_gain: 0
+rx_gain: 0
+otw: "sc16" # Over-the-wire format
+type: "float" #CPU data type
+ref: "external" #Reference clock source
