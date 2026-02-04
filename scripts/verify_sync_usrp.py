@@ -14,7 +14,7 @@ from ofdm.core import sync
 def main():
     parser = argparse.ArgumentParser(description="Test Sync Function")
     parser.add_argument("--seed", type=int, default=42, help="Random Seed")
-    parser.add_argument("--channel", "-c", type=str, required=True, help="Select Communication Channel (A = Baseband, B = Frontend)")
+    parser.add_argument("--channel", "-c", type=str, help="Select Communication Channel (A = Baseband, B = Frontend)")
     args = parser.parse_args()
     #Initialize OFDM Config
     ofdm_conf = OFDMConfig()
@@ -39,13 +39,13 @@ def main():
     #Might not be necissary right now
 
     #Initiate USRP Config
-    usrp_conf = usrp.USRPConfig()
+    DEFAULT_CONFIG_PATH = "./configs/usrp_settings.yaml"
+    usrp_conf = usrp.load_config(DEFAULT_CONFIG_PATH)
     sync_test_path_rx = "data_files/sync_verification_rx.dat"
 
     #Send Over USRP
     usrp.run_transfer(
         config=usrp_conf, 
-        channel=args.channel, 
         tx_file=sync_test_path_tx,
         rx_file=sync_test_path_rx,
         nsamps=len(final_tx)

@@ -10,27 +10,64 @@ from ofdm.viz import plotter
 
 def main():
     parser = argparse.ArgumentParser(description="Generate Single Tone Sine wave for Testing Hardware")
-    parser.add_argument('--channel', '-c', type=str, default = "A", help="Select Communication Channel(A = Baseband, B = Frontend)")
+    parser.add_argument('--channel', '-c', type=str, help="Define the subdev specifications (A:0 B:0 for both, A:0 for left daughter boards, B:0 for right daughter boards)")
     parser.add_argument("--freq", type=float, default = 10e6, help = "Frequency of tone")
-    parser.add_argument("--n_samps", type=int, default=2000, help = "Number of Samples sent")
+    parser.add_argument("--n_samps", type=int, default=2000, help = "Specify number of samples in the generated tone")
+    parser.add_argument("--tx_addr", type=str, help = "IP address of TX USRP (need to do in form of addr=(ip))")
+    parser.add_argument("--rx_addr", type=str, help = "IP of RX USRP (need to do in form of addr=(ip))")
+    parser.add_argument('--tx_channel_idx', type=str, help = "Select chanenl for the TX (based on subdev specification), if no subdev was specified default = A:0 B:0")
+    parser.add_argument('--rx_channel_idx', type=str, help = "Select chanenl for the TX (based on subdev specification), if no subdev was specified default = A:0 B:0")
+    parser.add_argument('--ref', type=str, help = "Specify the reference clock")
     args = parser.parse_args()
 
     
     FS = 100e6
     FREQ = args.freq
     N_SAMLPES = args.n_samps
-    CHANNEL = args.channel
+
 
     #Generate Test Tone
-    generate_tone(fs=FS, freq=FREQ, n_samples= N_SAMLPES)
-
-    #Define USRP Config
-    usrp_conf = usrp.USRPConfig()
+    BUFFER = 5000
+    generate_tone(fs=FS, freq=FREQ, n_samples= N_SAMLPES, n_buffer = BUFFER)
     
+    #Calculate number of samples to transfer
+    nsamps_final = BUFFER * 2 + N_SAMLPES
+
+    #Intantiate the USRP Config
+    DEFAULT_CONFIG_PTH = "./configs/usrp_settings.yaml"
+    usrp_conf = usrp.load_config(path=DEFAULT_CONFIG_PTH)
+
+    #Overwrite configs with CLI args
+    if args.channel is not None:
+        usrp_conf.subdev = args.channel
+        print(f"[USRP CONFIG] Updated subdev to:{args.channel}")
+
+    if args.rx_addr is not None:
+        usrp_conf.rx_addr = args.rx_addr
+        print(f"[USRP CONFIG] Updated rx_addr to:{args.rx_addr}")
+
+    if args.tx_addr is not None:
+        usrp_conf.tx_addr = args.tx_addr
+        print(f"[USRP CONFIG] Updated tx_addr to:{args.tx_addr}")
+    
+    if args.ref is not None:
+        usrp_conf.ref = args.ref
+        print(f"[USRP CONFIG] Updated ref to:{args.ref}")
+
+    if args.tx_channel_idx is not None:
+        usrp_conf.tx_channel_idx = args.tx_channel_idx
+        print(f"[USRP CONFIG] Updated tx_channel_idx to:{args.tx_channel_idx}")
+    
+    if args.rx_channel_idx is not None:
+        usrp_conf.rx_channel_idx = args.rx_channel_idx
+        print(f"[USRP CONFIG] Updated rx_channel_idx {args.rx_channel_idx}")
+
     #Send Data over USRP
     test_file_tx_path = "data_files/test_sin.dat"
     rx_file_path = "data_files/test_sin_rx.dat"
-    usrp.run_transfer(channel=CHANNEL, config = usrp_conf, tx_file=test_file_tx_path, rx_file=rx_file_path, nsamps=N_SAMLPES)
+
+
+    usrp.run_transfer(config = usrp_conf, tx_file=test_file_tx_path, rx_file=rx_file_path, nsamps=nsamps_final)
 
     #Unpack Rx Data
     print("[Test] Unpacking Data...")
@@ -45,7 +82,7 @@ def main():
 
     #Calculate CFO
     T = 1 / FS
-    freqs = np.fft.fftshift(np.fft.fftfreq(N_SAMLPES, T))
+    freqs = np.fft.fftshift(np.fft.fftfreq(nsamps_final, T))
 
     rx_freq_idx = np.argmax(np.abs(np.fft.fftshift(np.fft.fft(signal))))
     rx_freq = freqs[rx_freq_idx]
@@ -62,12 +99,14 @@ def main():
     plotter.plot_symbol_freq(symbol = np.fft.fftshift(np.abs(np.fft.fft(ref_signal))), title="Ref FFT Plot")
     plt.show()
 
-def generate_tone(fs:float, freq:float, n_samples:float):
+def generate_tone(fs:float, freq:float, n_samples:float, n_buffer: int = 1000):
 
     t = np.arange(n_samples) / fs
     signal = np.exp(1j * 2 * np.pi * freq * t)
 
-    final_tx = signal
+    buffer = np.zeros(n_buffer, dtype=complex)
+
+    final_tx = np.concatenate([buffer, signal, buffer])
 
     #Save binary data for usrp
     bin_path = f"data_files/test_sin.dat"
@@ -78,9 +117,9 @@ def generate_tone(fs:float, freq:float, n_samples:float):
     referense_data = {
         "fs":fs,
         "freq":freq,
-        "n_samples":n_samples,
-        "signal_real":np.real(signal).tolist(),
-        "signal_imag":np.imag(signal).tolist()
+        "n_samples":len(final_tx),
+        "signal_real":np.real(final_tx).tolist(),
+        "signal_imag":np.imag(final_tx).tolist()
     }
 
     json_path =f"data_files/test_sin_ref.json"

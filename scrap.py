@@ -1,146 +1,145 @@
-import argparse
 import numpy as np
 import json
+import os
+import pathlib
+import argparse
 import matplotlib.pyplot as plt
 #Internal
-from ofdm.config import OFDMConfig
-from ofdm.core import sync, waveform, preamble, payload
+from ofdm.utils import usrp
 from ofdm.viz import plotter
-from ofdm.channel import CHEST, cfo
 
 def main():
-    parser = argparse.ArgumentParser(description="Unpack and Plot Recieved OFDM Packet")
-    parser.add_argument('--file', type=str, default="rand_ofdm_packet_rx.dat", help="File name of packet to unpack")
-    parser.add_argument('--ref', type=str, default="rand_ofdm_packet_ref.json", help="Reference packet json file name")
-    parser.add_argument('--sim', type=bool, default=False, help="Choose to simulation (True = Use TX File)")
+    parser = argparse.ArgumentParser(description="Generate Single Tone Sine wave for Testing Hardware")
+    parser.add_argument('--channel', '-c', type=str, default = "A", help="Select Communication Channel(A = Baseband, B = Frontend)")
+    parser.add_argument("--freq", type=float, default = 10e6, help = "Frequency of tone")
+    parser.add_argument("--n_samps", type=int, default=2000, help = "Number of Samples sent")
+    parser.add_argument("--tx_addr", type=str, default = "192.168.30.2", help = "IP address of TX USRP")
+    parser.add_argument("--rx_addr", type=str, default = "192.168.30.2", help = "IP of RX USRP")
+    parser.add_argument('--tx_channel_idx', type=str, default = '0')
+    parser.add_argument('--rx_channel_idx', type=str, default='0')
+
+
     args = parser.parse_args()
 
-    ofdm_conf = OFDMConfig()
 
-    # 1. Load Data
-    print(f"Loading RX data from data_files/{args.file}...")
-    if args.sim == False:
-        rx_raw = np.fromfile(f"data_files/{args.file}", dtype=np.complex64)
-    else: 
-        rx_raw = np.fromfile(f"data_files/rand_ofdm_packet.dat", dtype=np.complex64)
-
-    with open(f"data_files/{args.ref}") as f:
+    with open('data_files/test_sin_ref.json', 'r') as f:
         ref_data = json.load(f)
     
-    sync_ref_real = np.array(ref_data['sync_ref_real']).astype(complex)
-    sync_ref_imag = np.array(ref_data["sync_ref_imag"]).astype(complex)
-    sync_ref_time = sync_ref_real + 1j * sync_ref_imag
-    n_payload_syms = ref_data["n_data_symb"]
 
-    # (Optional) Add artificial CFO for testing
-    # CFO = 2000 
-    # t = np.arange(len(rx_raw)) / ofdm_conf.FS
-    # rx_raw = rx_raw * np.exp(1j * 2 * np.pi * CFO * t)
 
-    # ---------------------------------------------
-    # 2. Synchronization (Coarse)
-    # ---------------------------------------------
-    M, P = sync.calculate_schmidl_cox_metrics(rx_signal=rx_raw, config=ofdm_conf)
     
-    start_idx = sync.find_start_idx(
-        M_metric=M, config=ofdm_conf, rx_signal=rx_raw, known_sync_time=sync_ref_time
-    )
+    FS = 100e6
+    FREQ = args.freq
+    N_SAMLPES = ref_data["n_samples"]
+    print(f"N SAMPLES = {N_SAMLPES}")
+    CHANNEL = args.channel
+    rx_addr = "addr=" + args.rx_addr
+    tx_addr = "addr" + args.tx_addr
 
-    # ---------------------------------------------
-    # 3. Fine CFO Estimation
-    # ---------------------------------------------
-    # Corrected lengths
-    sync_len = ofdm_conf.CP_LEN + ofdm_conf.N
-    pilot_len = ofdm_conf.N + ofdm_conf.CP_LEN  # <--- FIXED BUG HERE
 
-    coarse_pilot_start = start_idx + sync_len
+    #Generate Test Tone
+    generate_tone(fs=FS, freq=FREQ, n_samples= N_SAMLPES)
 
-    # Create Search Window
-    search_margin = 10
-    pilot_chunk_start = coarse_pilot_start - search_margin
-    pilot_chunk_end = coarse_pilot_start + pilot_len + search_margin
+    combined_addr = f"addr0={args.tx_addr},addr1={args.rx_addr}"
+
+
+    #Define USRP Config
+    usrp_conf = usrp.USRPConfig(rx_addr=rx_addr, tx_addr=tx_addr)
     
-    # Safety slice check
-    if pilot_chunk_end > len(rx_raw):
-        print("Error: File too short")
-        return
+    #Send Data over USRP
+    test_file_tx_path = "data_files/test_sin.dat"
+    rx_file_path00 = "data_files/test_sin_rx.00.dat"
+    rx_file_path01 = "data_files/test_sin_rx.01.dat"
+    rx_file_path02 = "data_files/test_sin_rx.02.dat"
+    rx_file_path03 = "data_files/test_sin_rx.03.dat"
 
-    rx_pilot_search_area = rx_raw[pilot_chunk_start:pilot_chunk_end]
 
-    # Prepare Reference
-    tx_pilot_ref = np.array(ref_data['pilot_ref_real']) + 1j * np.array(ref_data['pilot_ref_imag'])
-    tx_pilot_no_cp = waveform.remove_cp(tx_pilot_ref, cp_len=ofdm_conf.CP_LEN)
+    #usrp.run_transfer(channel=CHANNEL, config = usrp_conf, tx_file=test_file_tx_path, rx_file=rx_file_path, nsamps=N_SAMLPES, rx_channel_idx=args.rx_channel_idx, tx_channel_idx=args.tx_channel_idx)
 
-    # Estimate
-    best_cfo, best_delay_rel, heatmap = cfo.estimate_cfo(
-        tx_ref=tx_pilot_no_cp,
-        rx_signal=rx_pilot_search_area,
-        fs=ofdm_conf.FS,
-        n_bins=4096
-    )
-    print(f"Estimated CFO: {best_cfo:.2f} Hz")
+    #Unpack Rx Data
+    print("[Test] Unpacking Data...")
+    signal00 = np.fromfile(rx_file_path00, dtype=np.complex64)
+    signal01 = np.fromfile(rx_file_path01, dtype=np.complex64)
+    signal02 = np.fromfile(rx_file_path02, dtype=np.complex64)
+    signal03 = np.fromfile(rx_file_path03, dtype=np.complex64)
+    #Unpack Ref Data
+    with open("data_files/test_sin_ref.json", 'r') as f:
+        data = json.load(f)
+        ref_signal_real = np.array(data["signal_real"])
+        ref_signal_imag = np.array(data["signal_imag"])
+    ref_signal = ref_signal_real + 1j * ref_signal_imag
 
-    # ---------------------------------------------
-    # 4. Global Correction
-    # ---------------------------------------------
-    actual_pilot_start = pilot_chunk_start + best_delay_rel
-    refined_packet_start = actual_pilot_start - sync_len
+    #Calculate CFO
+    T = 1 / FS
+    freqs = np.fft.fftshift(np.fft.fftfreq(N_SAMLPES, T))
 
-    # Apply CFO to ENTIRE signal
-    time_vec = np.arange(len(rx_raw)) / ofdm_conf.FS
-    correction_vector = np.exp(-1j * 2 * np.pi * best_cfo * time_vec)
-    rx_corrected = rx_raw * correction_vector
-
-    # ---------------------------------------------
-    # 5. Extraction & Splitting
-    # ---------------------------------------------
-    sym_len = ofdm_conf.N + ofdm_conf.CP_LEN
-    total_symbols = 1 + 1 + n_payload_syms
-    total_samples = sym_len * total_symbols # Fixed typo 'total_samlpes'
-
-    if refined_packet_start + total_samples > len(rx_corrected):
-        print(f"[Error] Packet end exceeds file size")
-        return
-
-    # Slice Corrected Data
-    packet_time = rx_corrected[refined_packet_start : refined_packet_start + total_samples]
-    all_symbols = np.split(packet_time, total_symbols)
-
-    rx_pilot_sym = all_symbols[1]
-    rx_payload_syms = all_symbols[2:]
-
-    print(f"[Success] Packet Extracted. Payload Symbols: {len(rx_payload_syms)}")
-
-    # ---------------------------------------------
-    # 6. Channel Estimation
-    # ---------------------------------------------
-    rx_pilot_sym_no_cp = waveform.remove_cp(rx_pilot_sym, cp_len=ofdm_conf.CP_LEN)
-    rx_pilot_freq = waveform.time_to_freq(rx_pilot_sym_no_cp)
+    rx_freq_idx = np.argmax(np.abs(np.fft.fftshift(np.fft.fft(signal00))))
+    rx_freq = freqs[rx_freq_idx]
+    print(f"[Test] Calculated RX00 Freq: {rx_freq}Hz")
+    print(f"[Test] Calculated CFO is {np.abs(rx_freq - FREQ)}")
     
-    tx_pilot_freq = waveform.time_to_freq(tx_pilot_no_cp)
 
-    Lambda_est = CHEST.channel_estimation_calc(rx_pilot_freq, tx_pilot_freq, config=ofdm_conf)
+    rx_freq_idx = np.argmax(np.abs(np.fft.fftshift(np.fft.fft(signal01))))
+    rx_freq = freqs[rx_freq_idx]
+    print(f"[Test] Calculated RX01 Freq: {rx_freq}Hz")
+    print(f"[Test] Calculated CFO is {np.abs(rx_freq - FREQ)}")
 
-    # ---------------------------------------------
-    # 7. Payload Demodulation & Plotting
-    # ---------------------------------------------
-    demodulated_data = []
-    
-    for sym_time in rx_payload_syms:
-        # FFT
-        sym_no_cp = waveform.remove_cp(sym_time, cp_len=ofdm_conf.CP_LEN)
-        sym_freq = waveform.time_to_freq(sym_no_cp)
-        
-        # Equalize
-        sym_chest = CHEST.apply_gains(sym_freq, Lambda_est=Lambda_est)
-        
-        # Extract Data
-        data_only = payload.extract_data(sym_chest, config=ofdm_conf)
-        demodulated_data.extend(data_only)
+    rx_freq_idx = np.argmax(np.abs(np.fft.fftshift(np.fft.fft(signal02))))
+    rx_freq = freqs[rx_freq_idx]
+    print(f"[Test] Calculated RX02 Freq: {rx_freq}Hz")
+    print(f"[Test] Calculated CFO is {np.abs(rx_freq - FREQ)}")
 
-    # Plot Results
-    plotter.plot_constellation(np.array(demodulated_data), title="Final Equalized Constellation")
+    rx_freq_idx = np.argmax(np.abs(np.fft.fftshift(np.fft.fft(signal03))))
+    rx_freq = freqs[rx_freq_idx]
+    print(f"[Test] Calculated RX03 Freq: {rx_freq}Hz")
+    print(f"[Test] Calculated CFO is {np.abs(rx_freq - FREQ)}")
+
+    #Plot Rx data
+    plotter.plot_time_series(signal = signal00, fs = FS, title="Test Sine Wave 00 Real")
+    plotter.plot_symbol_freq(symbol = np.fft.fftshift(np.abs(np.fft.fft(signal00))), title =f"Rx00 FFT Plot Freq = {FREQ}")
+
+    #Plot Rx data
+    plotter.plot_time_series(signal = signal01, fs = FS, title="Test Sine Wave 01 Real")
+    plotter.plot_symbol_freq(symbol = np.fft.fftshift(np.abs(np.fft.fft(signal01))), title =f"Rx01 FFT Plot Freq = {FREQ}")
+
+    #Plot Rx data
+    plotter.plot_time_series(signal = signal02, fs = FS, title="Test Sine Wave 02 Real")
+    plotter.plot_symbol_freq(symbol = np.fft.fftshift(np.abs(np.fft.fft(signal02))), title =f"Rx01 FFT Plot Freq = {FREQ}")
+
+    #Plot Rx data
+    plotter.plot_time_series(signal = signal03, fs = FS, title="Test Sine Wave 03 Real")
+    plotter.plot_symbol_freq(symbol = np.fft.fftshift(np.abs(np.fft.fft(signal03))), title =f"Rx01 FFT Plot Freq = {FREQ}")
+
+    #Plot Ref data
+    plotter.plot_time_series(signal=ref_signal, fs = FS, title = "Ref Sine Wave Real")
+    plotter.plot_symbol_freq(symbol = np.fft.fftshift(np.abs(np.fft.fft(ref_signal))), title="Ref FFT Plot")
     plt.show()
+
+def generate_tone(fs:float, freq:float, n_samples:float):
+
+    t = np.arange(n_samples) / fs
+    signal = np.exp(1j * 2 * np.pi * freq * t)
+
+    final_tx = signal
+
+    #Save binary data for usrp
+    bin_path = f"data_files/test_sin.dat"
+    final_tx.astype(np.complex64).tofile(bin_path)
+    print(f"[Success] Saved Binary Tone data to {bin_path}")
+
+    #Save Refense Data
+    referense_data = {
+        "fs":fs,
+        "freq":freq,
+        "n_samples":n_samples,
+        "signal_real":np.real(signal).tolist(),
+        "signal_imag":np.imag(signal).tolist()
+    }
+
+    json_path =f"data_files/test_sin_ref.json"
+    with open(json_path, "w") as f:
+        json.dump(referense_data, f, indent=2)
+    print(f"[Success] Saved Referense Sin Data to {json_path}")
 
 if __name__ == "__main__":
     main()
