@@ -8,8 +8,6 @@ import yaml
 #Get USRP Configs from YAML Config file
 
 
-
-
 @dataclass
 class USRPConfig:
     """Configuration of URSP Hardware"""

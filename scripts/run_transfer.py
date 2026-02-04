@@ -36,7 +36,7 @@ def main():
         print(f"[Error] C++ Executable not foudn:{args.bin}")
         print("Make sure to run 'cmake .. && make")
     
-    #combined_addr = f"addr0={args.tx_addr},addr1={args.rx_addr}"
+
 
 
     #Configure Hardware
