@@ -16,7 +16,7 @@ build/
 pyscr/__pycache__/
 pyscr/scrap.py
 
-__pycache__/
+*__pycache__/
 
 *.pyc
 
