@@ -40,6 +40,10 @@ def main():
     combined_addr = f"addr0={args.tx_addr},addr1={args.rx_addr}"
 
 
+    DEFAULT_CONFIG_PTH = "./configs/usrp_settings.yaml"
+    default_config = usrp.load_config(path=DEFAULT_CONFIG_PTH)
+
+
     #Define USRP Config
     usrp_conf = usrp.USRPConfig(rx_addr=rx_addr, tx_addr=tx_addr)
     
