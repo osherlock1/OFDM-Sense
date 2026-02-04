@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import os
 import time
 import signal
-
+import yaml
 #Get USRP Configs from YAML Config file
 
 
@@ -29,6 +29,17 @@ class USRPConfig:
     type:str = "float"
     ref:str = "external"
 
+def load_config(path: str) -> USRPConfig:
+    with open(path, 'r') as f:
+        config_dict = yaml.safe_load(f)
+
+    config = USRPConfig(**config_dict)
+
+    print("--- USRP Configuration Loaded ---")
+    print(config)
+    print("---------------------------------")
+
+    return config
 
 def run_transfer(
         config: USRPConfig,
