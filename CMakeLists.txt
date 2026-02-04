@@ -63,7 +63,7 @@ link_directories(${Boost_LIBRARY_DIRS})
 
 ### Make the executable #######################################################
 #CHANGE ME: PROJECT_NAME    cpp file
-add_executable(TXRX_FROM_FILE example_files/txrx_working.cpp)
+add_executable(TXRX_FROM_FILE usrp_control_files/txrx_working.cpp)
 
 set(CMAKE_BUILD_TYPE "Release")
 message(STATUS "******************************************************************************")
