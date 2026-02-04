@@ -3,6 +3,11 @@ build_path: "./build/TXRX_FROM_FILE"
 tx_addr: "addr=192.168.30.2"
 rx_addr: "addr=192.168.30.2"
 
+#Channel Selection
+subdev: "A:0 B:0" # Declares the subdevices
+tx_channel_idx: "1"
+rx_channel_idx: "1"
+
 # Sampling Rates (Hz)
 tx_rate: 100e6
 rx_rate: 100e6
