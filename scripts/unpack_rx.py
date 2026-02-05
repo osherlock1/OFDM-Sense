@@ -9,28 +9,20 @@ from ofdm.viz import plotter
 from ofdm.channel import CHEST, cfo
 from ofdm.utils import eval
 from ofdm.modulation import qam
+from ofdm.utils import usrp
 
 
-
-def main():
-    parser = argparse.ArgumentParser(description="Unpack and Plot Recieved OFDM Packet")
-    parser.add_argument('--file', type=str, default="rand_ofdm_packet_rx.dat", help="File name of packet to unpack")
-    parser.add_argument('--ref', type=str, default ="rand_ofdm_packet_ref.json", help ="Reference packet json file name")
-    parser.add_argument('--sim', type=bool, default = False, help="Choose to simulation (True = Use TX File)")
-    args = parser.parse_args()
-
-    #Load Configuration
-    ofdm_conf = OFDMConfig()
-
+def unpack_rx_file(ofdm_conf:OFDMConfig, rx_path:str, ref_path:str, sim:bool = False)->np.ndarray:
+    
     #Load Data
-    print(f"Loading RX data from data_files/{args.file}...")
-    if args.sim == False:
-        rx_raw = np.fromfile(f"data_files/{args.file}", dtype=np.complex64)
+    print(f"Loading RX data from {rx_path}...")
+    if sim == False:
+        rx_raw = np.fromfile(rx_path, dtype=np.complex64)
     else: 
-        rx_raw = np.fromfile(f"data_files/rand_ofdm_packet.dat", dtype=np.complex64)
+        rx_raw = np.fromfile(rx_path, dtype=np.complex64)
 
-    print(f"Loading Referense Data from data_files/{args.ref}...")
-    with open(f"data_files/{args.ref}") as f:
+    print(f"Loading Referense Data from {ref_path}...")
+    with open(ref_path) as f:
         ref_data = json.load(f)
     
     #Unpack Referense Sync Symbol
@@ -110,7 +102,7 @@ def main():
     rx_pilot_sym = all_symbols[1]
     rx_payload_syms = all_symbols[2:]
 
-    print(f"[Success] Packet Extraacted.")
+    print(f"[Success] Packet Extracted.")
     print(f"  -> {len(rx_payload_syms)} Payload Symbols extracted")
 
     #-------- Pilot CFO Calc --------------
@@ -172,7 +164,38 @@ def main():
     #Final Data
     demodulated_data = np.array(demodulated_data)
     demodulated_data = demodulated_data*np.sqrt(10)
+    return demodulated_data, ref_data
+
+def main():
+    parser = argparse.ArgumentParser(description="Unpack and Plot Recieved OFDM Packet")
+    parser.add_argument('--file', type=str, default="./data_files/rand_ofdm_packet_rx.dat", help="File name of packet to unpack")
+    parser.add_argument('--ref', type=str, default ="./data_files/rand_ofdm_packet_ref.json", help ="Reference packet json file name")
+    parser.add_argument('--sim', type=bool, default = False, help="Choose to simulation (True = Use TX File)")
+    args = parser.parse_args()
+
+    #Load Configurations
+    USRP_CONFIG_PATH = "./configs/usrp_settings.yaml"
+    usrp_conf = usrp.load_config(USRP_CONFIG_PATH)
+    ofdm_conf = OFDMConfig()
     
+    #Calculate number of rx channels
+    rx_channel_idx = usrp_conf.rx_channel_idx
+    print(f"rx channel idx from config is :{rx_channel_idx}")
+    rx_channel_n = 0
+    for char in rx_channel_idx:
+        if char != ",":
+            rx_channel_n += 1
+    print(f"Calculated rx channel # {rx_channel_n}")
+
+    
+    #Unpack all RX files
+    demodulated_dict = {}
+
+    for i in range(rx_channel_n):
+        if rx_channel_idx != 1:
+            rx_path = f"./data_files/rand_ofdm_packet_rx.0{i}.dat"        
+        demodulated_data, ref_data = unpack_rx_file(ofdm_conf=ofdm_conf, rx_path=rx_path, ref_path=args.ref)
+        demodulated_dict[f"Channel_{i}"] = demodulated_data
 
     #--------- Evaluation ---------
     #Get Referense Data
