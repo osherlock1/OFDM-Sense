@@ -15,11 +15,12 @@ CALIBRATION_PATH = "metadata/calibration.json"
 RX_DATA_PATH = "data_files/rand_ofdm_packet.dat"
 TX_REF_PATH = "data_files/rand_ofdm_packet_ref.json"
 
+
+
 C = scipy.constants.c #Speed of light
 
 
 def main():
-
     #Define OFDM Configuration
     ofdm_conf = OFDMConfig()
 
@@ -28,8 +29,11 @@ def main():
         cali_data = json.load(f)
     CONSTANT = cali_data['constant']
     
-    #Unpack Raw RX and TX data
-    raw_rx_data = np.fromfile("data_files/rand_ofdm_packet_rx.dat", dtype=np.complex64)
+    #Unpack Sivers RX and TX data
+    raw_rx_data = np.fromfile("data_files/rand_ofdm_packet_rx.01.dat", dtype=np.complex64)
+
+    #Unpack wired RX data 
+    wired_rx_data = np.fromfile("data_files/rand_ofdm_packet.00.dat", dtype=np.complex64)
 
     #Unpack TX Pilot symbol
     with open("data_files/rand_ofdm_packet_ref.json", "r") as f:
@@ -39,49 +43,57 @@ def main():
     tx_pilot = np.array(ref_data['pilot_ref_real']) + 1j * np.array(ref_data['pilot_ref_imag'])
 
     #Scale raw_rx_data
-    max_val = np.max(np.abs(raw_rx_data))
-
-    if max_val > 0:
-        scale_factor = 0.9 / max_val
-        raw_rx_data = raw_rx_data * scale_factor
+    scaled_wireless_rx = scale_rx_signal(raw_rx_data=raw_rx_data)
+    scaled_wired_rx = scale_rx_signal(raw_rx_data=wired_rx_data)
 
     #Upsampel Data
-    rx_upsampled = upsample(raw_rx_data, scale_factor = 100)
+    rx_wireless_upsampled = upsample(scaled_wireless_rx, scale_factor = 100)
+    rx_wired_upsampled = upsample(scaled_wired_rx, scale_factor=100)
     tx_upsampled = upsample(tx_pilot, scale_factor=100)
 
-    #Calculate Matched Filter Delay
-    z, lags = delay.matched_filter_calc(rx_iq = rx_upsampled, ref_iq=tx_upsampled, fs = (ofdm_conf.FS * 100))
-    z_mag = np.abs(z)
+    #Calculate Matched Filter Delay for wireless
+    z_wireless, lags_wireless = delay.matched_filter_calc(rx_iq = rx_wireless_upsampled, ref_iq=tx_upsampled, fs = (ofdm_conf.FS * 100))
+    z_mag_wireless = np.abs(z_wireless)
 
     #Find Peak of correlation
-    peak_idx = np.argmax(z_mag)
-    fine_delay = lags[peak_idx]
+    peak_idx_wireless = np.argmax(z_mag_wireless)
+    fine_delay_wireless = lags_wireless[peak_idx_wireless]
+
+    #Calculate Matched Filter Delay for wired
+    z_wired, lags_wired = delay.matched_filter_calc(rx_iq=rx_wired_upsampled, ref_iq=tx_upsampled,fs = (ofdm_conf.FS * 100))
+    z_mag_wired = np.abs(z_wired)
+
+    #Fine peak of correlatiokn
+    peak_idx_wired = np.argmax(z_mag_wired)
+    fine_delay_wired = lags_wired[peak_idx_wired]
+
+    print(f"Wired Delay: {fine_delay_wired}, Wireless Delay: {fine_delay_wireless}")
 
     #Calculate Distance
-    print(f"Constant used is: {CONSTANT}")
-    raw_distance = (fine_delay * C) - CONSTANT
+    # print(f"Constant used is: {CONSTANT}")
+    # raw_distance = (fine_delay * C) - CONSTANT
 
-    print(f"Coarse Delay: {lags[peak_idx]*1e6:.4f}us")
-    print(f"Fine Delay: {fine_delay*1e6:.4f}us")
-    print(f"Distance: {raw_distance:.2f}meters")
+    # print(f"Coarse Delay: {lags[peak_idx]*1e6:.4f}us")
+    # print(f"Fine Delay: {fine_delay*1e6:.4f}us")
+    # print(f"Distance: {raw_distance:.2f}meters")
 
 
-    plt.figure()
-    plt.plot(lags, np.abs(z_mag))
-    plt.title("Match Filter Delay Correlation Magnitude")
-    plt.xlabel("Time(s)")
-    plt.ylabel("Magnitude")
+    # plt.figure()
+    # plt.plot(lags, np.abs(z_mag))
+    # plt.title("Match Filter Delay Correlation Magnitude")
+    # plt.xlabel("Time(s)")
+    # plt.ylabel("Magnitude")
     
-    range = 3000
-    zoom_start = peak_idx - range
-    zoom_end = peak_idx + range
+    # range = 3000
+    # zoom_start = peak_idx - range
+    # zoom_end = peak_idx + range
 
-    plt.figure()
-    plt.plot(lags[zoom_start:zoom_end], np.abs(z_mag[zoom_start:zoom_end]))
-    plt.title("Match Filter Delay Correlation Magnitude (Zoomed)")
-    plt.xlabel("Time(s)")
-    plt.ylabel("Magnitude")
-    plt.show()
+    # plt.figure()
+    # plt.plot(lags[zoom_start:zoom_end], np.abs(z_mag[zoom_start:zoom_end]))
+    # plt.title("Match Filter Delay Correlation Magnitude (Zoomed)")
+    # plt.xlabel("Time(s)")
+    # plt.ylabel("Magnitude")
+    # plt.show()
 
 def upsample(raw_data:np.ndarray, scale_factor:int = 100)->np.ndarray:
     """
@@ -138,6 +150,15 @@ def binary_ref_to_iq(binary_string:str, n_samples:int)->np.ndarray:
     #Convert to IQ
     iq_array = [qam.binary_to_iq(word) for word in binary_word_list]
     return np.array(iq_array) * np.sqrt(10)
+
+def scale_rx_signal(raw_rx_data:np.ndarray)->np.ndarray:
+    max_val = np.max(np.abs(raw_rx_data))
+
+    if max_val > 0:
+        scale_factor = 0.9 / max_val
+        scaled_rx_data = raw_rx_data * scale_factor
+    return scaled_rx_data
+
 
 if __name__ == "__main__":
     main()
