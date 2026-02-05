@@ -203,30 +203,35 @@ def main():
     n_ref_samples = ref_data['n_samples']
     ref_iq = binary_ref_to_iq(binary_string=ref_binary, n_samples=n_ref_samples)
 
-    #Calculate EVM
-    evm = eval.calc_EVM(iq_rx=demodulated_data, iq_ref=ref_iq)
-    print(f"EVM:{evm}dB")
 
-    #Calculate SER
-    ser = eval.calc_SER(iq_rx=demodulated_data, iq_ref=ref_iq)
-    print(f"SER:{ser * 100:.2f}%")
+    #Eval and plot all unpacked data
+    for channel_name, demodulated_data in demodulated_dict.items():
+        print(f"Performance metrics for {channel_name}")
 
-    #Calculate BER
-    ber = eval.calc_BER(iq_rx = demodulated_data, iq_ref=ref_iq)
-    print(f"BER:{ber*100:.2f}%")
+        #Calculate EVM
+        evm = eval.calc_EVM(iq_rx=demodulated_data, iq_ref=ref_iq)
+        print(f"EVM:{evm}dB")
 
-    # ---------- Plots ---------------
-    ref_constalation = qam.get_reference_constalation()
+        #Calculate SER
+        ser = eval.calc_SER(iq_rx=demodulated_data, iq_ref=ref_iq)
+        print(f"SER:{ser * 100:.2f}%")
 
-    plt.figure()
-    plt.scatter(np.real(demodulated_data), np.imag(demodulated_data), alpha=0.5)
-    plt.scatter(np.real(ref_constalation), np.imag(ref_constalation))
-    plt.title="Constalation plot"
-    plt.show()
+        #Calculate BER
+        ber = eval.calc_BER(iq_rx = demodulated_data, iq_ref=ref_iq)
+        print(f"BER:{ber*100:.2f}%")
 
-    #----------- Save Unpacked Data ---------- 
-    unpacked_file_name = "unpacked_data.json"
-    save_unpacked_data(demodulated_data, file_name=unpacked_file_name)
+        # ---------- Plots ---------------
+        ref_constalation = qam.get_reference_constalation()
+
+        plt.figure()
+        plt.scatter(np.real(demodulated_data), np.imag(demodulated_data), alpha=0.5)
+        plt.scatter(np.real(ref_constalation), np.imag(ref_constalation))
+        plt.title=f"{channel_name} Constalation plot"
+        plt.show()
+
+        #----------- Save Unpacked Data ---------- 
+        unpacked_file_name = f"unpacked_data_{channel_name}.json"
+        save_unpacked_data(demodulated_data, file_name=unpacked_file_name)
 
 
 def binary_ref_to_iq(binary_string:str, n_samples:int)->np.ndarray:
