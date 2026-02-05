@@ -1,15 +1,13 @@
 contourpy==1.1.1
 cycler==0.12.1
-e==1.4.5
 fonttools==4.57.0
 importlib_resources==6.4.5
 kiwisolver==1.4.7
 matplotlib==3.7.5
 numpy==1.24.4
--e git+ssh://git@github.com/osherlock1/OFDM-Sense.git@3ef9a052defb5470ad99d806438be6dabaa91745#egg=ofdm
+ofdm @ git+https://github.com/osherlock1/OFDM-Sense.git@3ef9a052defb5470ad99d806438be6dabaa91745
 packaging==25.0
 pillow==10.4.0
-pkg_resources==0.0.0
 pyparsing==3.1.4
 python-dateutil==2.9.0.post0
 PyYAML==6.0.3
