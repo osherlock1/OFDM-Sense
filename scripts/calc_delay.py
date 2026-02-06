@@ -71,13 +71,14 @@ def main():
     #print(f"Wired Delay: {fine_delay_wired}, Wireless Delay: {fine_delay_wireless}")
 
     #print(f"Wired Delay - Wireless Delay = {fine_delay_wired - fine_delay_wireless}")
-    print(f"Delay: {((fine_delay_wireless - fine_delay_wired) * 1e9):.5f}ns")
+    caled_delay = ((fine_delay_wireless - fine_delay_wired) * 1e9)
+    print(f"Delay: {caled_delay:.5f}ns")
 
     #Calculate Distance
     #print(f"Constant used is: {CONSTANT}")
     raw_distance = ((fine_delay_wireless - fine_delay_wired) * C) - CONSTANT
     print(f"Distance: {raw_distance:.5f}")
-
+    print(f"{caled_delay:5f},{raw_distance:.5f}")
     #raw_distance = ((fine_delay_wired - fine_delay_wireless) * C) - CONSTANT
     #print(f"Wired - Wireless Distance = {raw_distance}")
 

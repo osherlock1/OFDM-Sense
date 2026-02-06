@@ -19,7 +19,7 @@ TX_REF_PATH = "data_files/rand_ofdm_packet_ref.json"
 
 #C = scipy.constants.c #Speed of light
 C = 299792458
-REFERENCE_DISTANCE = 1 #1 Meter reference
+REFERENCE_DISTANCE = 1.1 #1 Meter reference
 
 def main():
     ofdm_conf = OFDMConfig()
