@@ -62,6 +62,7 @@ def main():
     peak_idx_wired = np.argmax(z_mag_wired)
     fine_delay_wired = lags_wireless[peak_idx_wired]
 
+
     #Calculate Calibration Constant
     constant = ((fine_delay_wireless - fine_delay_wired) * C) - REFERENCE_DISTANCE
     print(f"Calculated Constant: {constant}")
@@ -113,6 +114,63 @@ def scale_rx_signal(raw_rx_data:np.ndarray)->np.ndarray:
         scale_factor = 0.9 / max_val
         scaled_rx_data = raw_rx_data * scale_factor
     return scaled_rx_data
+
+
+def calculate_precise_delay(rx_signal, ref_signal, fs, upsample_factor=100):
+    """
+    Calculates delay using coarse correlation zero-padded FFT interpolation
+    """
+    corr = scipy.signal.correlate(rx_signal, ref_signal, mode='full')
+    lags = scipy.signal.correlation_lags(len(rx_signal), len(ref_signal), mode='full')
+
+    # Find coarse peak
+    mag = np.abs(corr)
+    coarse_idx = np.argmax(mag)
+
+    #Get small window
+    radius = 16
+    start = max(0, coarse_idx - radius)
+    end = min(len(corr), coarse_idx + radius)
+
+    window = corr[start:end]
+
+    #Zero padded interpolation
+    window_fft = np.fft.fft(window)
+
+    #Zero pad
+    n_original = len(window)
+    n_padded = n_original * upsample_factor
+    n_zeros = n_padded - n_original
+
+    #FFT shift
+    window_fft_shifted = np.fft.fftshift(window_fft)
+
+    #insert zeros
+    zeros = np.zeros(n_zeros, dtype=complex)
+    fft_padded = np.concatenate([
+            window_fft_shifted[:n_original//2], 
+            zeros, 
+            window_fft_shifted[n_original//2:]
+        ])
+    
+    #IFFT
+    fft_padded_ready = np.fft.ifftshift(fft_padded)
+    window_upsampled= np.fft.ifft(fft_padded_ready) * upsample_factor
+
+    #Find precise peak
+    upsampled_mag = np.abs(window_upsampled)
+    peak_upsampled_idx = np.argmax(upsampled_mag)
+
+    #Calculate total delay
+    fractional_offset = peak_upsampled_idx / upsample_factor
+
+    total_idx = start + fractional_offset
+
+    #Convert to time
+    zero_lag_index = np.where(lags == 0)[0][0]
+    final_lag_samples = total_idx - zero_lag_index
+
+    return final_lag_samples / fs
 
 if __name__ == "__main__":
     main()
