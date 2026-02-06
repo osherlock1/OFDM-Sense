@@ -38,8 +38,9 @@ def generate_pilot_symbol(config: OFDMConfig, seed: int =42) -> np.ndarray:
 
     #Defined Used Freq Bins
     #used_k = np.array(config.data_carriers)
-    used_idx = np.arange(config.N)
-    used_k = config._idx(used_idx)
+    used_neg = list(range(-(config.N // 2) + config.GUARD_LEN, 0))
+    used_pos = list(range(1,(config.N // 2) - config.GUARD_LEN))
+    used_k = np.array(used_neg + used_pos) #Combine and convert to ndarray
 
     
     #Generate Random data
