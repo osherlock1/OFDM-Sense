@@ -13,7 +13,8 @@ import scipy
 
 #Config
 CALIBRATION_PATH = "metadata/calibration.json"
-RX_DATA_PATH = "data_files/rand_ofdm_packet_rx.dat"
+RX_DATA_PATH = "data_files/rand_ofdm_packet_rx.01.dat"
+WIRED_DATA_PATH = "data_files/rand_ofdm_packet_rx.00.dat"
 TX_REF_PATH = "data_files/rand_ofdm_packet_ref.json"
 
 #C = scipy.constants.c #Speed of light
@@ -23,8 +24,11 @@ REFERENCE_DISTANCE = 1 #1 Meter reference
 def main():
     ofdm_conf = OFDMConfig()
 
-    #Unpack Raw RX and TX data
+    #Unpack Sivers RX-
     raw_rx_data = np.fromfile(RX_DATA_PATH, dtype=np.complex64)
+
+    #Unpack Wired Ref RX
+    wired_rx_data = np.fromfile(WIRED_DATA_PATH, dtype=np.complex64)
 
     #Unpack TX pilot symbol
     with open(TX_REF_PATH, 'r') as f:
@@ -34,26 +38,32 @@ def main():
     tx_pilot = np.array(ref_data['pilot_ref_real']) + 1j * np.array(ref_data['pilot_ref_imag'])
 
     #Scale raw_rx_data
-    max_val = np.max(np.abs(raw_rx_data))
-
-    if max_val > 0:
-        scale_factor = 0.9 / max_val
-        raw_rx_data = raw_rx_data * scale_factor
+    scaled_wireless_rx = scale_rx_signal(raw_rx_data=raw_rx_data)
+    scaled_wired_rx = scale_rx_signal(raw_rx_data=wired_rx_data)
 
     #Upsample Data
-    rx_upsampled = upsample(raw_rx_data, scale_factor=100)
+    rx_wireless_upsampled = upsample(scaled_wireless_rx, scale_factor=100)
+    rx_wired_upsampled = upsample(scaled_wired_rx, scale_factor=100)
     tx_upsampled = upsample(tx_pilot, scale_factor=100)
 
-    #Calculate Matched Filter Delay
-    z, lags = delay.matched_filter_calc(rx_iq = rx_upsampled, ref_iq = tx_upsampled, fs = (ofdm_conf.FS * 100))
-    z_mag = np.abs(z)
+    #Calculate Matched Filter Delay for SIVERS
+    z_wireless, lags_wireless = delay.matched_filter_calc(rx_iq = rx_wireless_upsampled, ref_iq = tx_upsampled, fs = (ofdm_conf.FS * 100))
+    z_mag_wireless = np.abs(z_wireless)
 
     #Find Peak
-    peak_idx = np.argmax(z_mag)
-    fine_delay = lags[peak_idx]
+    peak_idx_wireless = np.argmax(z_mag_wireless)
+    fine_delay_wireless = lags_wireless[peak_idx_wireless]
+
+    #Calculate Matched Filter Delay for WIRED
+    z_wired, lags_wired = delay.matched_filter_calc(rx_iq = rx_wired_upsampled, ref_iq = tx_upsampled, fs = (ofdm_conf.FS * 100))
+    z_mag_wired = np.abs(z_wired)
+
+    #Find Peak
+    peak_idx_wired = np.argmax(z_mag_wired)
+    fine_delay_wired = lags_wireless[peak_idx_wired]
 
     #Calculate Calibration Constant
-    constant = (fine_delay * C) - REFERENCE_DISTANCE
+    constant = ((fine_delay_wireless - fine_delay_wired) * C) - REFERENCE_DISTANCE
     print(f"Calculated Constant: {constant}")
 
     #Save Constant to JSON
@@ -96,7 +106,13 @@ def upsample(raw_data:np.ndarray, scale_factor:int = 100)->np.ndarray:
     upsampled = np.fft.ifft(freq_ready) * K
     return upsampled
     
+def scale_rx_signal(raw_rx_data:np.ndarray)->np.ndarray:
+    max_val = np.max(np.abs(raw_rx_data))
 
+    if max_val > 0:
+        scale_factor = 0.9 / max_val
+        scaled_rx_data = raw_rx_data * scale_factor
+    return scaled_rx_data
 
 if __name__ == "__main__":
     main()

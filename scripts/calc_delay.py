@@ -33,7 +33,7 @@ def main():
     raw_rx_data = np.fromfile("data_files/rand_ofdm_packet_rx.01.dat", dtype=np.complex64)
 
     #Unpack wired RX data 
-    wired_rx_data = np.fromfile("data_files/rand_ofdm_packet.00.dat", dtype=np.complex64)
+    wired_rx_data = np.fromfile("data_files/rand_ofdm_packet_rx.00.dat", dtype=np.complex64)
 
     #Unpack TX Pilot symbol
     with open("data_files/rand_ofdm_packet_ref.json", "r") as f:
@@ -69,9 +69,19 @@ def main():
 
     print(f"Wired Delay: {fine_delay_wired}, Wireless Delay: {fine_delay_wireless}")
 
+    print(f"Wired Delay - Wireless Delay = {fine_delay_wired - fine_delay_wireless}")
+    print(f"Wireless Delay - Wired Delay = {fine_delay_wireless - fine_delay_wired}")
+
     #Calculate Distance
-    # print(f"Constant used is: {CONSTANT}")
-    # raw_distance = (fine_delay * C) - CONSTANT
+    print(f"Constant used is: {CONSTANT}")
+    raw_distance = ((fine_delay_wireless - fine_delay_wired) * C) - CONSTANT
+    print(f"Wireless - Wired calced distance = {raw_distance}")
+
+    raw_distance = ((fine_delay_wired - fine_delay_wireless) * C) - CONSTANT
+    print(f"Wired - Wireless Distance = {raw_distance}")
+
+
+
 
     # print(f"Coarse Delay: {lags[peak_idx]*1e6:.4f}us")
     # print(f"Fine Delay: {fine_delay*1e6:.4f}us")

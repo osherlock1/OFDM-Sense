@@ -13,7 +13,6 @@ from ofdm.utils import usrp
 
 
 def unpack_rx_file(ofdm_conf:OFDMConfig, rx_path:str, ref_path:str, sim:bool = False)->np.ndarray:
-    
     #Load Data
     print(f"Loading RX data from {rx_path}...")
     if sim == False:
@@ -192,8 +191,11 @@ def main():
     demodulated_dict = {}
 
     for i in range(rx_channel_n):
-        if rx_channel_idx != 1:
-            rx_path = f"./data_files/rand_ofdm_packet_rx.0{i}.dat"        
+        if rx_channel_n != 1:
+            rx_path = f"./data_files/rand_ofdm_packet_rx.0{i}.dat"
+        else: 
+            rx_path = f"./data_files/rand_ofdm_packet_rx.dat"    
+
         demodulated_data, ref_data = unpack_rx_file(ofdm_conf=ofdm_conf, rx_path=rx_path, ref_path=args.ref)
         demodulated_dict[f"Channel_{i}"] = demodulated_data
 
