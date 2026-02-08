@@ -180,20 +180,20 @@ def main():
     
     #Calculate number of rx channels
     rx_channel_idx = usrp_conf.rx_channel_idx
-    print(f"rx channel idx from config is :{rx_channel_idx}")
     rx_channel_n = 0
     for char in rx_channel_idx:
         if char != ",":
             rx_channel_n += 1
-    print(f"Calculated rx channel # {rx_channel_n}")
+    print(f"Unpacking {rx_channel_n} RX Channels...")
 
     
     #Unpack all RX files
     demodulated_dict = {}
 
     for i in range(rx_channel_n):
-        if rx_channel_idx != 1:
+        if rx_channel_n != 1:
             rx_path = f"./data_files/rand_ofdm_packet_rx.0{i}.dat"        
+        print(f"Unpacking Channel {i}...")
         demodulated_data, ref_data = unpack_rx_file(ofdm_conf=ofdm_conf, rx_path=rx_path, ref_path=args.ref)
         demodulated_dict[f"Channel_{i}"] = demodulated_data
 
@@ -218,7 +218,7 @@ def main():
 
         #Calculate BER
         ber = eval.calc_BER(iq_rx = demodulated_data, iq_ref=ref_iq)
-        print(f"BER:{ber*100:.2f}%")
+        print(f"BER:{ber*100:.2f}% \n")
 
         # ---------- Plots ---------------
         ref_constalation = qam.get_reference_constalation()
@@ -227,7 +227,7 @@ def main():
         plt.scatter(np.real(demodulated_data), np.imag(demodulated_data), alpha=0.5)
         plt.scatter(np.real(ref_constalation), np.imag(ref_constalation))
         plt.title=f"{channel_name} Constalation plot"
-        plt.show()
+        #plt.show()
 
         #----------- Save Unpacked Data ---------- 
         unpacked_file_name = f"unpacked_data_{channel_name}.json"
