@@ -171,6 +171,7 @@ def main():
     parser.add_argument('--file', type=str, default="./data_files/rand_ofdm_packet_rx.dat", help="File name of packet to unpack")
     parser.add_argument('--ref', type=str, default ="./data_files/rand_ofdm_packet_ref.json", help ="Reference packet json file name")
     parser.add_argument('--sim', type=bool, default = False, help="Choose to simulation (True = Use TX File)")
+    parser.add_argument('--plot', help="Plot Constalation Diagrams of Unpacked OFDM Packets")
     args = parser.parse_args()
 
     #Load Configurations
@@ -225,19 +226,21 @@ def main():
         ber = eval.calc_BER(iq_rx = demodulated_data, iq_ref=ref_iq)
         print(f"BER:{ber*100:.2f}% \n")
 
-        # ---------- Plots ---------------
-        ref_constalation = qam.get_reference_constalation()
-
-        plt.figure()
-        plt.scatter(np.real(demodulated_data), np.imag(demodulated_data), alpha=0.5)
-        plt.scatter(np.real(ref_constalation), np.imag(ref_constalation))
-        plt.title=f"{channel_name} Constalation plot"
-        #plt.show()
-
     for channel_name, demodulated_data in demodulated_dict.items():
         #----------- Save Unpacked Data ---------- 
         unpacked_file_name = f"unpacked_data_{channel_name}.json"
         save_unpacked_data(demodulated_data, file_name=unpacked_file_name)
+
+    if (args.plot):
+        # ---------- Plots ---------------
+        for channel_name, demodulated_data in demodulated_dict.items():
+            ref_constalation = qam.get_reference_constalation()
+
+            plt.figure()
+            plt.scatter(np.real(demodulated_data), np.imag(demodulated_data), alpha=0.5)
+            plt.scatter(np.real(ref_constalation), np.imag(ref_constalation))
+            plt.title=f"{channel_name} Constalation plot"
+        plt.show()
 
 
 def binary_ref_to_iq(binary_string:str, n_samples:int)->np.ndarray:
