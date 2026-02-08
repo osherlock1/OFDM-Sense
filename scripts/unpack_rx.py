@@ -229,6 +229,7 @@ def main():
         plt.title=f"{channel_name} Constalation plot"
         #plt.show()
 
+    for channel_name, demodulated_data in demodulated_dict.items():
         #----------- Save Unpacked Data ---------- 
         unpacked_file_name = f"unpacked_data_{channel_name}.json"
         save_unpacked_data(demodulated_data, file_name=unpacked_file_name)
