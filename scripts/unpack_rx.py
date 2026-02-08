@@ -162,7 +162,7 @@ def unpack_rx_file(ofdm_conf:OFDMConfig, rx_path:str, ref_path:str, sim:bool = F
 
     print(f"[Success] Packet Extracted.")
     print(f"  -> {len(rx_payload_syms)} Payload Symbols extracted")
-    print(f"Calculated CFO:{best_cfo}")
+    print(f"Calculated CFO:{best_cfo}.\n")
 
     return demodulated_data, ref_data
 
