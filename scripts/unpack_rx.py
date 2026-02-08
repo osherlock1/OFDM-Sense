@@ -13,17 +13,20 @@ from ofdm.utils import usrp
 
 
 def unpack_rx_file(ofdm_conf:OFDMConfig, rx_path:str, ref_path:str, sim:bool = False)->np.ndarray:
-    
+    """  
+    Take raw ofdm binary data from the rx and unpack it including syncronization, channel estimation, and cfo calibration.
+    """
+
     #Load Data
     print(f"Loading RX data from {rx_path}...")
     if sim == False:
         rx_raw = np.fromfile(rx_path, dtype=np.complex64)
     else: 
         rx_raw = np.fromfile(rx_path, dtype=np.complex64)
-
-    print(f"Loading Referense Data from {ref_path}...")
+    print(f"Loading Referense Data from {ref_path}...\n")
     with open(ref_path) as f:
         ref_data = json.load(f)
+    
     
     #Unpack Referense Sync Symbol
     sync_ref_real = np.array(ref_data['sync_ref_real']).astype(complex)
@@ -70,8 +73,6 @@ def unpack_rx_file(ofdm_conf:OFDMConfig, rx_path:str, ref_path:str, sim:bool = F
     )
     #FIXME: Using Opposite Sign on CFO since it seems to be revered(need to look into)
     best_cfo = best_cfo * -1
-    print(f"Estimated CFO:{best_cfo}, Best Delay:{best_delay_rel}")
-
 
     #Global Correction
     actual_pilot_start = pilot_chunk_start + best_delay_rel
@@ -102,15 +103,9 @@ def unpack_rx_file(ofdm_conf:OFDMConfig, rx_path:str, ref_path:str, sim:bool = F
     rx_pilot_sym = all_symbols[1]
     rx_payload_syms = all_symbols[2:]
 
-    print(f"[Success] Packet Extracted.")
-    print(f"  -> {len(rx_payload_syms)} Payload Symbols extracted")
-
     #-------- Pilot CFO Calc --------------
     tx_pilot_ref = np.array(ref_data['pilot_ref_real']).astype(complex) + 1j * np.array(ref_data['pilot_ref_imag']).astype(complex)
     tx_pilot_no_cp = waveform.remove_cp(tx_pilot_ref, cp_len=ofdm_conf.CP_LEN)
-
-    print(f"Calculated CFO:{best_cfo}, Calculated Delay:{best_delay_rel}")
-
 
 
     # ------ Channel Estimation Calc -----------
@@ -124,14 +119,14 @@ def unpack_rx_file(ofdm_conf:OFDMConfig, rx_path:str, ref_path:str, sim:bool = F
     Lambda_est = CHEST.channel_estimation_calc(rx_pilot_freq=rx_pilot_freq, tx_pilot_ref=tx_pilot_freq, config=ofdm_conf)
 
     #Plot Channel Gains
-    plt.figure()
-    plt.plot(ofdm_conf.data_carriers ,np.fft.fftshift(np.abs(Lambda_est)[ofdm_conf.data_carriers]))
-    plt.title("Lambda ABS")
+    # plt.figure()
+    # plt.plot(ofdm_conf.data_carriers ,np.fft.fftshift(np.abs(Lambda_est)[ofdm_conf.data_carriers]))
+    # plt.title("Lambda ABS")
 
-    plt.figure()
-    plt.plot(ofdm_conf.data_carriers ,np.fft.fftshift(np.angle(Lambda_est[ofdm_conf.data_carriers])))
-    plt.title("Lambda Angle")
-    plt.show()
+    # plt.figure()
+    # plt.plot(ofdm_conf.data_carriers ,np.fft.fftshift(np.angle(Lambda_est[ofdm_conf.data_carriers])))
+    # plt.title("Lambda Angle")
+    # plt.show()
     
     #----- Payload Extraction ---------
     pilots_idx = ofdm_conf._idx(np.array(ofdm_conf.pilot_carriers))
@@ -164,6 +159,11 @@ def unpack_rx_file(ofdm_conf:OFDMConfig, rx_path:str, ref_path:str, sim:bool = F
     #Final Data
     demodulated_data = np.array(demodulated_data)
     demodulated_data = demodulated_data*np.sqrt(10)
+
+    print(f"[Success] Packet Extracted.")
+    print(f"  -> {len(rx_payload_syms)} Payload Symbols extracted")
+    print(f"Calculated CFO:{best_cfo}")
+
     return demodulated_data, ref_data
 
 def main():
