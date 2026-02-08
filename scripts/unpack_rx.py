@@ -239,7 +239,9 @@ def main():
             plt.figure()
             plt.scatter(np.real(demodulated_data), np.imag(demodulated_data), alpha=0.5)
             plt.scatter(np.real(ref_constalation), np.imag(ref_constalation))
-            plt.title=f"{channel_name} Constalation plot"
+            plt.title(f"{channel_name} Constalation plot")
+            plt.xlabel("Real")
+            plt.ylabel("Imaginary")
         plt.show()
 
 
