@@ -194,12 +194,15 @@ def main():
         if rx_channel_n != 1:
             rx_path = f"./data_files/rand_ofdm_packet_rx.0{i}.dat"
         print(f"#####################")        
-        print(f"Unpacking Channel {i}...\n")
-        print(f"#####################")  
+        print(f"Unpacking Channel {i}...")
+        print(f"#####################\n")  
         demodulated_data, ref_data = unpack_rx_file(ofdm_conf=ofdm_conf, rx_path=rx_path, ref_path=args.ref)
         demodulated_dict[f"Channel_{i}"] = demodulated_data
 
     #--------- Evaluation ---------
+    print(f"#####################") 
+    print(f"Calculating OFDM Perforamnce")
+    print(f"#####################") 
     #Get Referense Data
     ref_binary = ref_data['binary_data']
     n_ref_samples = ref_data['n_samples']
