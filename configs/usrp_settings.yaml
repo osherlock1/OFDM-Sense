@@ -5,7 +5,7 @@ rx_addr: "addr=192.168.30.2"
 
 #Channel Selection
 subdev: "A:0 B:0" # Declares the subdevices
-tx_channel_idx: "1"
+tx_channel_idx: "0,1"
 rx_channel_idx: "0,1"
 
 # Sampling Rates (Hz)
