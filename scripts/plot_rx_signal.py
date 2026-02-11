@@ -5,7 +5,7 @@ from ofdm.viz import plotter
 
 
 def main():
-    rx_file_path = "data_files/rand_ofdm_packet_rx.dat"
+    rx_file_path = "data_files/rand_ofdm_packet_rx.00.dat"
     tx_file_path = "data_files/rand_ofdm_packet.dat"
 
     iq_data = np.fromfile(rx_file_path, dtype=np.complex64)
