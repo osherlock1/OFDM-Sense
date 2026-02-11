@@ -9,7 +9,12 @@ from ofdm.modulation import qam
 from ofdm.config import OFDMConfig
 import scipy
 import scipy.signal
+import pandas as pd
+import os
+from datetime import datetime
 
+EXPERIMENT_NAME = "single_rx_no_ref"
+EXPERIMENT_PATH = f"./experiments/{EXPERIMENT_NAME}.csv"
 
 
 def main():

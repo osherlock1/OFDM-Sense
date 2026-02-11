@@ -79,33 +79,7 @@ def main():
     raw_distance = ((fine_delay_wireless - fine_delay_wired) * C) - CONSTANT
     print(f"Distance: {raw_distance:.5f}")
     print(f"{caled_delay:5f},{raw_distance:.5f}")
-    #raw_distance = ((fine_delay_wired - fine_delay_wireless) * C) - CONSTANT
-    #print(f"Wired - Wireless Distance = {raw_distance}")
-
-
-
-
-    # print(f"Coarse Delay: {lags[peak_idx]*1e6:.4f}us")
-    # print(f"Fine Delay: {fine_delay*1e6:.4f}us")
-    # print(f"Distance: {raw_distance:.2f}meters")
-
-
-    # plt.figure()
-    # plt.plot(lags, np.abs(z_mag))
-    # plt.title("Match Filter Delay Correlation Magnitude")
-    # plt.xlabel("Time(s)")
-    # plt.ylabel("Magnitude")
     
-    # range = 3000
-    # zoom_start = peak_idx - range
-    # zoom_end = peak_idx + range
-
-    # plt.figure()
-    # plt.plot(lags[zoom_start:zoom_end], np.abs(z_mag[zoom_start:zoom_end]))
-    # plt.title("Match Filter Delay Correlation Magnitude (Zoomed)")
-    # plt.xlabel("Time(s)")
-    # plt.ylabel("Magnitude")
-    # plt.show()
 
 def upsample(raw_data:np.ndarray, scale_factor:int = 100)->np.ndarray:
     """
