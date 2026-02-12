@@ -20,6 +20,20 @@ TX_REF_PATH = "data_files/rand_ofdm_packet_ref.json"
 
 C = scipy.constants.c #Speed of light
 
+def calc_delay_with_ref(raw_rx_data: np.ndarray, wired_rx_data: np.ndarray,):
+    """
+    Calculate delay between tx and rx using a wired references. 
+    """
+
+    pass
+
+def calc_delay():
+    """
+    Docstring for calc_delay
+    """
+    pass
+
+
 
 def main():
     #Define OFDM Configuration
