@@ -10,6 +10,7 @@ from ofdm.config import OFDMConfig
 import time
 import datetime
 import scipy
+import argparse
 
 #Config
 CALIBRATION_PATH = "metadata/calibration.json"
@@ -20,6 +21,64 @@ ofdm_conf = OFDMConfig()
 #C = scipy.constants.c #Speed of light
 C = 299792458
 REFERENCE_DISTANCE = 1.1 #1 Meter reference
+
+
+
+def main():
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--ref", action="store_true", help = "Declare if a direct wired connection is being used (wired ref = true, no ref = false)")
+    
+    args = parser.parse_args()
+    print(args.ref)
+
+    if (args.ref == True):
+        rx_data_path = "data_files/rand_ofdm_packet_rx.01.dat" #FIXME: HARD CODED ADRESSED
+        rx_ref_path = "data_files/rand_ofdm_packet_rx.00.dat"
+
+        #Unpack Sivers RX-
+        raw_rx_data = np.fromfile(rx_data_path, dtype=np.complex64)
+
+        #Unpack Wired Ref RX
+        wired_rx_data = np.fromfile(rx_ref_path, dtype=np.complex64)
+
+        #Unpack TX pilot symbol
+        with open(TX_REF_PATH, 'r') as f:
+            ref_data = json.load(f)
+
+        calibrate_with_ref(ref_data = ref_data, raw_rx_data=raw_rx_data, wired_rx_data=wired_rx_data)
+
+    else:
+        
+        rx_channel_n = 2 #Number of rx channels (must be sequential)
+        constant_list = []
+
+        with open(TX_REF_PATH, 'r') as f:
+            ref_data = json.load(f)
+            
+
+        for i in range(rx_channel_n):
+        
+            print(f"Calibrating Channel {i}")
+            rx_data_path = f"data_files/rand_ofdm_packet_rx.0{i}.dat"
+            raw_rx_data = np.fromfile(rx_data_path, dtype=np.complex64)
+
+            constant = calibrate_no_ref(raw_rx_data = raw_rx_data, ref_data = ref_data)
+            constant_list.append(constant)
+
+        #Save Constant to JSON
+        json_data = {
+            "reference_distance":REFERENCE_DISTANCE,
+            "constants":constant_list,
+            "calibration_time":datetime.datetime.now().isoformat(),
+            "mode":"no wired reference"
+        }
+
+        os.makedirs(os.path.dirname(CALIBRATION_PATH), exist_ok=True)
+        with open(CALIBRATION_PATH, "w") as f:
+            json.dump(json_data, f, indent=2)
+        print(f"[Success] Calibrations with wired reference finished.  Saved constant to {CALIBRATION_PATH}")
+
 
 
 def calibrate_with_ref(ref_data:np.ndarray, raw_rx_data:np.ndarray, wired_rx_data:np.ndarray):
@@ -94,31 +153,9 @@ def calibrate_no_ref(raw_rx_data:np.ndarray, ref_data:np.ndarray):
     #Calculate Calibration Constant
     constant = ((fine_delay_wireless) * C) - REFERENCE_DISTANCE
     print(f"Calculated Constant: {constant}")
+    return constant
 
-    #Save Constant to JSON
-    json_data = {
-        "reference_distance":REFERENCE_DISTANCE,
-        "constant":constant,
-        "calibration_time":datetime.datetime.now().isoformat(),
-        "mode":"no wired reference"
-    }
 
-    os.makedirs(os.path.dirname(CALIBRATION_PATH), exist_ok=True)
-    with open(CALIBRATION_PATH, "w") as f:
-        json.dump(json_data, f, indent=2)
-    print(f"[Success] Calibration with wired reference finished.  Saved constant to {CALIBRATION_PATH}")
-
-def main():
-
-    #Unpack Sivers RX-
-    raw_rx_data = np.fromfile(RX_DATA_PATH, dtype=np.complex64)
-
-    #Unpack Wired Ref RX
-    wired_rx_data = np.fromfile(WIRED_DATA_PATH, dtype=np.complex64)
-
-    #Unpack TX pilot symbol
-    with open(TX_REF_PATH, 'r') as f:
-        ref_data = json.load(f)
 
 
 
