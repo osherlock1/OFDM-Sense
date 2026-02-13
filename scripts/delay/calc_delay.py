@@ -9,37 +9,29 @@ from ofdm.modulation import qam
 from ofdm.config import OFDMConfig
 import scipy
 import scipy.signal
+import argparse
 
 
 #Config
 CALIBRATION_PATH = "metadata/calibration.json"
 RX_DATA_PATH = "data_files/rand_ofdm_packet.dat"
 TX_REF_PATH = "data_files/rand_ofdm_packet_ref.json"
+#Define OFDM Configuration
+ofdm_conf = OFDMConfig()
+
+STORE_REF_PATH = "./metadata/ref_delay_calc.json"
+STORE_NO_REF_PATH = "./metadata/delay_calc.json"
+
 
 
 
 C = scipy.constants.c #Speed of light
 
-def calc_delay_with_ref(raw_rx_data: np.ndarray, wired_rx_data: np.ndarray,):
+def calc_delay_with_ref():
     """
     Calculate delay between tx and rx using a wired references. 
     """
-
-    pass
-
-def calc_delay():
-    """
-    Docstring for calc_delay
-    """
-    pass
-
-
-
-def main():
-    #Define OFDM Configuration
-    ofdm_conf = OFDMConfig()
-
-    #Get constant
+   #Get constant
     with open(CALIBRATION_PATH, 'r') as f:
         cali_data = json.load(f)
     CONSTANT = cali_data['constant']
@@ -93,6 +85,112 @@ def main():
     raw_distance = ((fine_delay_wireless - fine_delay_wired) * C) - CONSTANT
     print(f"Distance: {raw_distance:.5f}")
     print(f"{caled_delay:5f},{raw_distance:.5f}")
+
+    json_data = {
+        "delay":caled_delay,
+        "raw_distance":raw_distance,
+        "mode": "ref"
+    }
+
+    os.makedirs(os.path.dirname(STORE_REF_PATH), exist_ok=True)
+    with open(STORE_REF_PATH, "w") as f:
+        json.dump(json_data, f, indent=2)
+    print(f"Stored delay calc with ref to {STORE_REF_PATH}")
+
+
+
+
+def calc_delay():
+    """
+    Calculate delay for all cahnnels
+    """
+   #Get constant
+    with open(CALIBRATION_PATH, 'r') as f:
+        cali_data = json.load(f)
+    constants = cali_data['constants']
+
+    constant0 =constants[0]
+    constant1 = constants[1]
+    
+    calced_delays = []
+    calced_distances = []
+
+
+    n_channels = 2 #FIXME: HARDCODED
+
+    for i in range(n_channels):
+
+        #Unpack Sivers RX and TX data
+        raw_rx_data = np.fromfile(f"data_files/rand_ofdm_packet_rx.0{i}.dat", dtype=np.complex64)
+
+        #Unpack TX Pilot symbol
+        with open("data_files/rand_ofdm_packet_ref.json", "r") as f:
+            ref_data = json.load(f)
+
+        #Get Tx pilot symbol
+        tx_pilot = np.array(ref_data['pilot_ref_real']) + 1j * np.array(ref_data['pilot_ref_imag'])
+
+        #Scale raw_rx_data
+        scaled_wireless_rx = scale_rx_signal(raw_rx_data=raw_rx_data)
+
+        #Upsampel Data
+        rx_wireless_upsampled = upsample(scaled_wireless_rx, scale_factor = 100)
+        tx_upsampled = upsample(tx_pilot, scale_factor=100)
+
+        #Calculate Matched Filter Delay for wireless
+        z_wireless, lags_wireless = delay.matched_filter_calc(rx_iq = rx_wireless_upsampled, ref_iq=tx_upsampled, fs = (ofdm_conf.FS * 100))
+        z_mag_wireless = np.abs(z_wireless)
+
+        #Find Peak of correlation
+        peak_idx_wireless = np.argmax(z_mag_wireless)
+        fine_delay_wireless = lags_wireless[peak_idx_wireless]
+
+        #print(f"Wired Delay: {fine_delay_wired}, Wireless Delay: {fine_delay_wireless}")
+
+        #print(f"Wired Delay - Wireless Delay = {fine_delay_wired - fine_delay_wireless}")
+        caled_delay = ((fine_delay_wireless) * 1e9)
+        print(f"Delay: {caled_delay:.5f}ns")
+
+        #Calculate Distance
+        #print(f"Constant used is: {CONSTANT}")
+        raw_distance = ((fine_delay_wireless) * C) - constants[i]
+        print(f"Distance: {raw_distance:.5f}")
+        print(f"{caled_delay:5f},{raw_distance:.5f}")
+        
+        calced_delays.append(caled_delay)
+        calced_distances.append(raw_distance)
+
+
+
+    json_data = {
+        "delays":calced_delays,
+        "raw_distance":calced_distances,
+        "mode": "no ref"
+    }
+
+    os.makedirs(os.path.dirname(STORE_NO_REF_PATH), exist_ok=True)
+    with open(STORE_NO_REF_PATH, "w") as f:
+        json.dump(json_data, f, indent=2)
+    print(f"Stored delay calc to {STORE_NO_REF_PATH}")
+
+
+
+def main():
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--ref", action="store_true", help = "Decalre if a directed wired ref is used")
+    
+    args = parser.parse_args()
+
+
+    if (args.ref == True):
+        calc_delay_with_ref()
+
+    else:
+        calc_delay()
+
+ 
     
 
 def upsample(raw_data:np.ndarray, scale_factor:int = 100)->np.ndarray:
