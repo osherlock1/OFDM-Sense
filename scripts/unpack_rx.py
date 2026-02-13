@@ -2,6 +2,8 @@ import argparse
 import numpy as np
 import json
 import matplotlib.pyplot as plt
+import os
+
 #Internal
 from ofdm.config import OFDMConfig
 from ofdm.core import sync, waveform, preamble, payload
@@ -171,7 +173,7 @@ def main():
     parser.add_argument('--file', type=str, default="./data_files/rand_ofdm_packet_rx.dat", help="File name of packet to unpack")
     parser.add_argument('--ref', type=str, default ="./data_files/rand_ofdm_packet_ref.json", help ="Reference packet json file name")
     parser.add_argument('--sim', type=bool, default = False, help="Choose to simulation (True = Use TX File)")
-    parser.add_argument('--plot', help="Plot Constalation Diagrams of Unpacked OFDM Packets")
+    parser.add_argument('--plot', action="store_true", help="Plot Constalation Diagrams of Unpacked OFDM Packets")
     args = parser.parse_args()
 
     #Load Configurations
@@ -209,6 +211,10 @@ def main():
     n_ref_samples = ref_data['n_samples']
     ref_iq = binary_ref_to_iq(binary_string=ref_binary, n_samples=n_ref_samples)
 
+    #Store Metrics for post processing
+    ber_list = [] 
+    ser_list = []
+    evm_list = []
 
     #Eval and plot all unpacked data
     for channel_name, demodulated_data in demodulated_dict.items():
@@ -216,7 +222,7 @@ def main():
 
         #Calculate EVM
         evm = eval.calc_EVM(iq_rx=demodulated_data, iq_ref=ref_iq)
-        print(f"EVM:{evm}dB")
+        print(f"EVM:{evm:.2f}dB")
 
         #Calculate SER
         ser = eval.calc_SER(iq_rx=demodulated_data, iq_ref=ref_iq)
@@ -225,6 +231,10 @@ def main():
         #Calculate BER
         ber = eval.calc_BER(iq_rx = demodulated_data, iq_ref=ref_iq)
         print(f"BER:{ber*100:.2f}% \n")
+        
+        ber_list.append(ber)
+        ser_list.append(ser)
+        evm_list.append(evm)
 
     for channel_name, demodulated_data in demodulated_dict.items():
         #----------- Save Unpacked Data ---------- 
@@ -243,6 +253,21 @@ def main():
             plt.xlabel("Real")
             plt.ylabel("Imaginary")
         plt.show()
+
+
+    eval_metrics_path = "./data_files/ofdm_performance.json"
+    os.makedirs(os.path.dirname(eval_metrics_path), exist_ok=True)
+    json_data = {
+        "evm":evm_list,
+        "ser":ser_list,
+        "ber":ber_list
+    }
+    with open(eval_metrics_path, "w") as f:
+        json.dump(json_data, f, indent=2)
+    print(f"Stored Eval Metrics to {eval_metrics_path}")
+
+
+    
 
 
 def binary_ref_to_iq(binary_string:str, n_samples:int)->np.ndarray:
