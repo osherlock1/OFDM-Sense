@@ -14,7 +14,7 @@ import os
 from datetime import datetime
 import argparse
 
-EXPERIMENT_NAME = "test"
+EXPERIMENT_NAME = "no_ref_2rx"
 EXPERIMENT_PATH = f"./experiments/{EXPERIMENT_NAME}.csv"
 
 DELAY_DATA_PATH = "./metadata/delay_calc.json"
