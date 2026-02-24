@@ -181,26 +181,22 @@ def main():
     usrp_conf = usrp.load_config(USRP_CONFIG_PATH)
     ofdm_conf = OFDMConfig()
     
-    #Calculate number of rx channels
-    rx_channel_idx = usrp_conf.rx_channel_idx
-    rx_channel_n = 0
-    for char in rx_channel_idx:
-        if char != ",":
-            rx_channel_n += 1
-    print(f"Unpacking {rx_channel_n} RX Channels...")
-
+    rx_channel_idx = usrp_conf.rx_channel_idx.replace(",", "")
     
+    print(f"Unpacking {len(rx_channel_idx)} RX Channels...")
+
     #Unpack all RX files
     demodulated_dict = {}
 
-    for i in range(rx_channel_n):
-        if rx_channel_n != 1:
-            rx_path = f"./data_files/rand_ofdm_packet_rx.0{i}.dat"
+    for channel in rx_channel_idx:
+        
+        if len(rx_channel_idx) != 1:
+            rx_path = f"./data_files/rand_ofdm_packet_rx.0" + channel + ".dat"
         print(f"#####################")        
-        print(f"Unpacking Channel {i}...")
+        print(f"Unpacking Channel" + channel + "...")
         print(f"#####################\n")  
         demodulated_data, ref_data = unpack_rx_file(ofdm_conf=ofdm_conf, rx_path=rx_path, ref_path=args.ref)
-        demodulated_dict[f"Channel_{i}"] = demodulated_data
+        demodulated_dict[f"Channel_" + channel] = demodulated_data
 
     #--------- Evaluation ---------
     print(f"#####################") 
