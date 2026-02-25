@@ -13,13 +13,15 @@ import pandas as pd
 import os
 from datetime import datetime
 import argparse
+from ofdm.utils import usrp
 
-EXPERIMENT_NAME = "no_ref_2rx_01"
+EXPERIMENT_NAME = "test3"
 EXPERIMENT_PATH = f"./experiments/{EXPERIMENT_NAME}.csv"
 
 DELAY_DATA_PATH = "./metadata/delay_calc.json"
 REF_DELAY_DATA_PATH = "./metadata/ref_delay_calc.json"
 PERFORMANCE_DATA_PATH = "./data_files/ofdm_performance.json"
+USRP_CONFIG_PATH = "./configs/usrp_settings.yaml"
 
 
 
@@ -95,18 +97,18 @@ def main():
         delays = delay_data['delays']
         distances = delay_data['raw_distance']
 
-        results = {
-            'delay0':delays[0],
-            'distance0':distances[0],
-            'delay1':delays[1],
-            'distance1':distances[1],
-            'evm0': evm[0],
-            'evm1':evm[1],
-            'ber0':ber[0],
-            'ber1':ber[1],
-            'ser0':ser[0],
-            'ser1':ser[1],
-        }
+        usrp_conf = usrp.load_config(USRP_CONFIG_PATH)
+        rx_channel_idx = usrp_conf.rx_channel_idx.replace(",", "")
+
+        results = {}
+        for channel in rx_channel_idx:
+            results.update({
+                f'delay{channel}':delays[int(channel)],
+                f'distance{channel}':distances[int(channel)],
+                f'evm{channel}': evm[int(channel)],
+                f'ber{channel}':ber[int(channel)],
+                f'ser{channel}':ser[int(channel)],
+            })
 
         df_new = pd.DataFrame([results])
 
