@@ -91,9 +91,11 @@ def unpack_rx_file(ofdm_conf:OFDMConfig, rx_path:str, ref_path:str, sim:bool = F
     total_samlpes = sym_len * total_symbols
 
     #Safety Check
-    if start_idx + total_samlpes > len(rx_raw):
-        print(f"[Error] Packet end index {start_idx + total_samlpes} exceeds file size{len(rx_raw)}")
-        return
+    if refined_packet_start + total_samlpes > len(rx_raw):
+        print(f"[Error] Packet end index {refined_packet_start + total_samlpes} exceeds file size{len(rx_raw)}")
+        print(f"Setting start idx to 0")
+        refined_packet_start = 0
+        #return
 
     #Sclice the packet
     packet_time = rx_corrected[refined_packet_start: refined_packet_start + total_samlpes]
