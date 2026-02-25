@@ -10,6 +10,7 @@ from ofdm.config import OFDMConfig
 import scipy
 import scipy.signal
 import argparse
+from ofdm.utils import usrp
 
 
 #Config
@@ -22,7 +23,7 @@ ofdm_conf = OFDMConfig()
 STORE_REF_PATH = "./metadata/ref_delay_calc.json"
 STORE_NO_REF_PATH = "./metadata/delay_calc.json"
 
-
+USRP_CONFIG_PATH = "./configs/usrp_settings.yaml"
 
 
 C = scipy.constants.c #Speed of light
@@ -115,13 +116,14 @@ def calc_delay():
     calced_delays = []
     calced_distances = []
 
+    usrp_conf = usrp.load_config(USRP_CONFIG_PATH)
 
-    n_channels = 2 #FIXME: HARDCODED
+    rx_channel_idx = usrp_conf.rx_channel_idx.replace(",", "")
 
-    for i in range(n_channels):
+    for channel in rx_channel_idx:
 
         #Unpack Sivers RX and TX data
-        raw_rx_data = np.fromfile(f"data_files/rand_ofdm_packet_rx.0{i}.dat", dtype=np.complex64)
+        raw_rx_data = np.fromfile(f"data_files/rand_ofdm_packet_rx.0{channel}.dat", dtype=np.complex64)
 
         #Unpack TX Pilot symbol
         with open("data_files/rand_ofdm_packet_ref.json", "r") as f:
@@ -153,7 +155,7 @@ def calc_delay():
 
         #Calculate Distance
         #print(f"Constant used is: {CONSTANT}")
-        raw_distance = ((fine_delay_wireless) * C) - constants[i]
+        raw_distance = ((fine_delay_wireless) * C) - constants[int(channel)]
         print(f"Distance: {raw_distance:.5f}")
         print(f"{caled_delay:5f},{raw_distance:.5f}")
         
@@ -178,9 +180,7 @@ def calc_delay():
 def main():
 
     parser = argparse.ArgumentParser()
-
     parser.add_argument("--ref", action="store_true", help = "Decalre if a directed wired ref is used")
-    
     args = parser.parse_args()
 
 
