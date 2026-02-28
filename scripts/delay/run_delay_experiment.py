@@ -15,19 +15,13 @@ from datetime import datetime
 import argparse
 from ofdm.utils import usrp
 
-EXPERIMENT_NAME = "test3"
+EXPERIMENT_NAME = "test4"
 EXPERIMENT_PATH = f"./experiments/{EXPERIMENT_NAME}.csv"
 
 DELAY_DATA_PATH = "./metadata/delay_calc.json"
 REF_DELAY_DATA_PATH = "./metadata/ref_delay_calc.json"
 PERFORMANCE_DATA_PATH = "./data_files/ofdm_performance.json"
 USRP_CONFIG_PATH = "./configs/usrp_settings.yaml"
-
-
-
-
-
-
 
 
 def main():
@@ -37,8 +31,6 @@ def main():
     parser.add_argument("--ref", action="store_true")
 
     args = parser.parse_args()
-
-
 
 
     if (args.ref == True):
@@ -53,15 +45,12 @@ def main():
         with open(REF_DELAY_DATA_PATH, 'r') as f:
             delay_data = json.load(f)
 
-
-
         results = {
             'delay':delay_data["delay"],
             'distance':delay_data["raw_distance"]
         }
 
         df_new = pd.DataFrame([results])
-
         write_header = not os.path.exists(EXPERIMENT_PATH)
 
         df_new.to_csv(
@@ -120,9 +109,6 @@ def main():
             header=write_header,
             index=False
         )
-
-
-
 
 if __name__ == "__main__":
     main()
