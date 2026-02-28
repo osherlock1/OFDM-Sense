@@ -121,16 +121,6 @@ def unpack_rx_file(ofdm_conf:OFDMConfig, rx_path:str, ref_path:str, sim:bool = F
     tx_pilot_freq = waveform.time_to_freq(tx_pilot_no_cp)
     #Calculate Channel Gains
     Lambda_est = CHEST.channel_estimation_calc(rx_pilot_freq=rx_pilot_freq, tx_pilot_ref=tx_pilot_freq, config=ofdm_conf)
-
-    #Plot Channel Gains
-    # plt.figure()
-    # plt.plot(ofdm_conf.data_carriers ,np.fft.fftshift(np.abs(Lambda_est)[ofdm_conf.data_carriers]))
-    # plt.title("Lambda ABS")
-
-    # plt.figure()
-    # plt.plot(ofdm_conf.data_carriers ,np.fft.fftshift(np.angle(Lambda_est[ofdm_conf.data_carriers])))
-    # plt.title("Lambda Angle")
-    # plt.show()
     
     #----- Payload Extraction ---------
     pilots_idx = ofdm_conf._idx(np.array(ofdm_conf.pilot_carriers))
