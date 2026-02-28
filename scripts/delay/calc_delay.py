@@ -147,19 +147,15 @@ def calc_delay():
         peak_idx_wireless = np.argmax(z_mag_wireless)
         fine_delay_wireless = lags_wireless[peak_idx_wireless]
 
-        #print(f"Wired Delay: {fine_delay_wired}, Wireless Delay: {fine_delay_wireless}")
-
-        #print(f"Wired Delay - Wireless Delay = {fine_delay_wired - fine_delay_wireless}")
-        caled_delay = ((fine_delay_wireless) * 1e9)
-        print(f"Delay: {caled_delay:.5f}ns")
-
-        #Calculate Distance
-        #print(f"Constant used is: {CONSTANT}")
+        #Calculatiosn
+        cacled_delay = ((fine_delay_wireless) * 1e9)
         raw_distance = ((fine_delay_wireless) * C) - constants[int(channel)]
-        print(f"Distance: {raw_distance:.5f}")
-        print(f"{caled_delay:5f},{raw_distance:.5f}")
+
+        print(f"Channel {channel}:")
+        print(f"--Delay: {cacled_delay:.5f}ns")
+        print(f"--Distance: {raw_distance:.5f}\n")
         
-        calced_delays.append(caled_delay)
+        calced_delays.append(cacled_delay)
         calced_distances.append(raw_distance)
 
 
