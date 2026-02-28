@@ -11,6 +11,7 @@ import time
 import datetime
 import scipy
 import argparse
+from ofdm.utils import usrp
 
 #Config
 CALIBRATION_PATH = "metadata/calibration.json"
@@ -21,7 +22,7 @@ ofdm_conf = OFDMConfig()
 #C = scipy.constants.c #Speed of light
 C = 299792458
 REFERENCE_DISTANCE = 1.1 #1 Meter reference
-
+USRP_CONFIG_PATH = "./configs/usrp_settings.yaml"
 
 
 def main():
@@ -50,17 +51,19 @@ def main():
 
     else:
         
-        rx_channel_n = 2 #Number of rx channels (must be sequential)
-        constant_list = []
+        #Load Configurations
+        usrp_conf = usrp.load_config(USRP_CONFIG_PATH)        
+        rx_channel_idx = usrp_conf.rx_channel_idx.replace(",", "")
+        print(f"Unpacking {len(rx_channel_idx)} RX Channels...")
 
         with open(TX_REF_PATH, 'r') as f:
             ref_data = json.load(f)
             
-
-        for i in range(rx_channel_n):
+        constant_list = []
+        for channel in rx_channel_idx:
         
-            print(f"Calibrating Channel {i}")
-            rx_data_path = f"data_files/rand_ofdm_packet_rx.0{i}.dat"
+            print(f"Calibrating Channel {channel}")
+            rx_data_path = f"data_files/rand_ofdm_packet_rx.0{channel}.dat"
             raw_rx_data = np.fromfile(rx_data_path, dtype=np.complex64)
 
             constant = calibrate_no_ref(raw_rx_data = raw_rx_data, ref_data = ref_data)
