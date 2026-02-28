@@ -7,6 +7,7 @@ import json
 from ofdm.channel import delay
 from ofdm.modulation import qam
 from ofdm.config import OFDMConfig
+from ofdm.core import sync
 import scipy
 import scipy.signal
 import argparse
@@ -24,6 +25,7 @@ STORE_REF_PATH = "./metadata/ref_delay_calc.json"
 STORE_NO_REF_PATH = "./metadata/delay_calc.json"
 
 USRP_CONFIG_PATH = "./configs/usrp_settings.yaml"
+
 
 
 C = scipy.constants.c #Speed of light
@@ -110,6 +112,7 @@ def calc_delay():
         cali_data = json.load(f)
     constants = cali_data['constants']
 
+
     constant0 =constants[0]
     constant1 = constants[1]
     
@@ -124,6 +127,7 @@ def calc_delay():
 
         #Unpack Sivers RX and TX data
         raw_rx_data = np.fromfile(f"data_files/rand_ofdm_packet_rx.0{channel}.dat", dtype=np.complex64)
+        rx_data = clean_rx(raw_rx_data)
 
         #Unpack TX Pilot symbol
         with open("data_files/rand_ofdm_packet_ref.json", "r") as f:
@@ -133,7 +137,7 @@ def calc_delay():
         tx_pilot = np.array(ref_data['pilot_ref_real']) + 1j * np.array(ref_data['pilot_ref_imag'])
 
         #Scale raw_rx_data
-        scaled_wireless_rx = scale_rx_signal(raw_rx_data=raw_rx_data)
+        scaled_wireless_rx = scale_rx_signal(raw_rx_data=rx_data)
 
         #Upsampel Data
         rx_wireless_upsampled = upsample(scaled_wireless_rx, scale_factor = 100)
@@ -171,6 +175,44 @@ def calc_delay():
         json.dump(json_data, f, indent=2)
     print(f"Stored delay calc to {STORE_NO_REF_PATH}")
 
+
+
+def clean_rx(rx_raw:np.ndarray)->np.ndarray:
+    """
+    Removes leading and trialing zeros from the signal
+    """
+
+    # ------ Prepare RX signal --------
+    with open(TX_REF_PATH, 'r') as f:
+        ref_data = json.load(f)
+
+    #Unpack Referense Sync Symbol
+    sync_ref_real = np.array(ref_data['sync_ref_real']).astype(complex)
+    sync_ref_imag = np.array(ref_data["sync_ref_imag"]).astype(complex)
+    sync_ref_time = sync_ref_real + 1j * sync_ref_imag
+
+    #Calculate starting incex
+    M, P = sync.calculate_schmidl_cox_metrics(rx_signal=rx_raw, config=ofdm_conf)
+    start_idx = sync.find_start_idx(
+        M_metric=M,
+        config=ofdm_conf,
+        rx_signal=rx_raw,
+        known_sync_time=sync_ref_time
+    )
+
+    # Get total samples in packet
+    sym_len = ofdm_conf.N + ofdm_conf.CP_LEN
+    total_symbols = 1 + 1 + ref_data["n_data_symb"]
+    total_samples = sym_len * total_symbols
+
+    buffer = 200
+    start = start_idx - buffer
+    end = start_idx + total_samples + buffer
+
+    if (start < 0): start = 0
+    if (end > len(rx_raw)): end = len(rx_raw) - 1
+    return rx_raw[start:end]
+    
 
 
 def main():
