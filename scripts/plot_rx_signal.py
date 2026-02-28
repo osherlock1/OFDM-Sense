@@ -2,21 +2,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 #internal
 from ofdm.viz import plotter
+from ofdm.utils import usrp
 
 
 def main():
-    rx_file_path0 = "data_files/rand_ofdm_packet_rx.00.dat"
-    rx_file_path1 = "data_files/rand_ofdm_packet_rx.01.dat"
-    tx_file_path = "data_files/rand_ofdm_packet.dat"
 
-    iq_data0 = np.fromfile(rx_file_path0, dtype=np.complex64)
-    iq_data1 = np.fromfile(rx_file_path1, dtype=np.complex64)
-    ref_data = np.fromfile(tx_file_path,dtype=np.complex64)
+    #Load Configurations
+    USRP_CONFIG_PATH = "./configs/usrp_settings.yaml"
+    usrp_conf = usrp.load_config(USRP_CONFIG_PATH)
+    rx_channel_idx = usrp_conf.rx_channel_idx.replace(",", "")
+    print(f"Unpacking {len(rx_channel_idx)} RX Channels...")
 
-    #Plot TX and RX
-    plotter.plot_time_series(signal=iq_data0, title="RX Data (Channel 0")
-    plotter.plot_time_series(signal=iq_data0, title="RX Data1 (Channel 1)")
-    plotter.plot_time_series(signal=ref_data, title="TX Ref Data")
+
+    for channel in rx_channel_idx:
+        rx_file_path = f"data_files/rand_ofdm_packet_rx.0{channel}.dat"
+        iq_data = np.fromfile(rx_file_path, dtype=np.complex64)
+
+        #Plot TX and RX
+        plotter.plot_time_series(signal=iq_data, title=f"RX Data (Channel {channel}")
     plt.show()
 
 if __name__ == "__main__":
