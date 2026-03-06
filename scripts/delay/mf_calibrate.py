@@ -24,6 +24,7 @@ ofdm_conf = OFDMConfig()
 C = 299792458
 REFERENCE_DISTANCE = 1.1 #1 Meter reference
 USRP_CONFIG_PATH = "./configs/usrp_settings.yaml"
+START_IDX_PATH = "./data_files/ofdm_performance.json"
 
 
 def main():
@@ -60,13 +61,19 @@ def main():
         with open(TX_REF_PATH, 'r') as f:
             ref_data = json.load(f)
             
+        with open(START_IDX_PATH, 'r') as f:
+            ofdm_performance_data = json.load(f)
+        start_idx_list = ofdm_performance_data['start_idx']
+
+
         constant_list = []
-        for channel in rx_channel_idx:
+        for i, channel in enumerate(rx_channel_idx):
         
             print(f"Calibrating Channel {channel}")
             rx_data_path = f"data_files/rand_ofdm_packet_rx.0{channel}.dat"
             raw_rx_data = np.fromfile(rx_data_path, dtype=np.complex64)
-            cleaned_rx_data = clean_rx(raw_rx_data)
+            current_start_idx = start_idx_list[i]
+            cleaned_rx_data = clean_rx(raw_rx_data, current_start_idx[1])
 
 
             constant = calibrate_no_ref(raw_rx_data = cleaned_rx_data, ref_data = ref_data)
@@ -86,7 +93,7 @@ def main():
         print(f"[Success] Calibrations with wired reference finished.  Saved constant to {CALIBRATION_PATH}")
 
 
-def clean_rx(rx_raw:np.ndarray)->np.ndarray:
+def clean_rx(rx_raw:np.ndarray, start_idx:int)->np.ndarray:
     """
     Removes leading and trialing zeros from the signal
     """
@@ -95,28 +102,14 @@ def clean_rx(rx_raw:np.ndarray)->np.ndarray:
     with open(TX_REF_PATH, 'r') as f:
         ref_data = json.load(f)
 
-    #Unpack Referense Sync Symbol
-    sync_ref_real = np.array(ref_data['sync_ref_real']).astype(complex)
-    sync_ref_imag = np.array(ref_data["sync_ref_imag"]).astype(complex)
-    sync_ref_time = sync_ref_real + 1j * sync_ref_imag
-
-    #Calculate starting incex
-    M, P = sync.calculate_schmidl_cox_metrics(rx_signal=rx_raw, config=ofdm_conf)
-    start_idx = sync.find_start_idx(
-        M_metric=M,
-        config=ofdm_conf,
-        rx_signal=rx_raw,
-        known_sync_time=sync_ref_time
-    )
-
     # Get total samples in packet
     sym_len = ofdm_conf.N + ofdm_conf.CP_LEN
     total_symbols = 1 + 1 + ref_data["n_data_symb"]
     total_samples = sym_len * total_symbols
 
     buffer = 200
-    start = start_idx - buffer
-    end = start_idx + total_samples + buffer
+    start = int(start_idx - buffer)
+    end = int(start_idx + total_samples + buffer)
 
     if (start < 0): start = 0
     if (end > len(rx_raw)): end = len(rx_raw) - 1
