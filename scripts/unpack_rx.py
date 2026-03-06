@@ -158,7 +158,7 @@ def unpack_rx_file(ofdm_conf:OFDMConfig, rx_path:str, ref_path:str, sim:bool = F
     print(f"  -> {len(rx_payload_syms)} Payload Symbols extracted")
     print(f"Calculated CFO:{best_cfo}.\n")
 
-    return demodulated_data, ref_data
+    return demodulated_data, ref_data, refined_packet_start
 
 def main():
     parser = argparse.ArgumentParser(description="Unpack and Plot Recieved OFDM Packet")
@@ -179,16 +179,16 @@ def main():
 
     #Unpack all RX files
     demodulated_dict = {}
-
-    for channel in rx_channel_idx:
-        
+    start_idx_list = []
+    for channel in rx_channel_idx: 
         if len(rx_channel_idx) != 1:
             rx_path = f"./data_files/rand_ofdm_packet_rx.0" + channel + ".dat"
         print(f"#####################")        
         print(f"Unpacking Channel" + channel + "...")
         print(f"#####################\n")  
-        demodulated_data, ref_data = unpack_rx_file(ofdm_conf=ofdm_conf, rx_path=rx_path, ref_path=args.ref)
+        demodulated_data, ref_data, start_idx = unpack_rx_file(ofdm_conf=ofdm_conf, rx_path=rx_path, ref_path=args.ref)
         demodulated_dict[f"Channel_" + channel] = demodulated_data
+        start_idx_list.append((channel, start_idx))
 
     #--------- Evaluation ---------
     print(f"#####################") 
@@ -248,10 +248,11 @@ def main():
     json_data = {
         "evm":evm_list,
         "ser":ser_list,
-        "ber":ber_list
+        "ber":ber_list,
+        "start_idx":start_idx_list
     }
     with open(eval_metrics_path, "w") as f:
-        json.dump(json_data, f, indent=2)
+        json.dump(json_data, f, indent=2, default=float)
     print(f"Stored Eval Metrics to {eval_metrics_path}")
 
 
