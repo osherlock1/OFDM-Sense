@@ -20,11 +20,10 @@ RX_DATA_PATH = "data_files/rand_ofdm_packet.dat"
 TX_REF_PATH = "data_files/rand_ofdm_packet_ref.json"
 #Define OFDM Configuration
 ofdm_conf = OFDMConfig()
-
 STORE_REF_PATH = "./metadata/ref_delay_calc.json"
 STORE_NO_REF_PATH = "./metadata/delay_calc.json"
-
 USRP_CONFIG_PATH = "./configs/usrp_settings.yaml"
+START_IDX_PATH = "./data_files/ofdm_performance.json"
 
 
 
@@ -112,6 +111,9 @@ def calc_delay():
         cali_data = json.load(f)
     constants = cali_data['constants']
 
+    with open(START_IDX_PATH, 'r') as f:
+        ofdm_performance_data = json.load(f)
+    start_idx_list = ofdm_performance_data['start_idx']
 
     constant0 =constants[0]
     constant1 = constants[1]
@@ -120,14 +122,13 @@ def calc_delay():
     calced_distances = []
 
     usrp_conf = usrp.load_config(USRP_CONFIG_PATH)
-
     rx_channel_idx = usrp_conf.rx_channel_idx.replace(",", "")
 
-    for channel in rx_channel_idx:
-
+    for i, channel in enumerate(rx_channel_idx):
         #Unpack Sivers RX and TX data
         raw_rx_data = np.fromfile(f"data_files/rand_ofdm_packet_rx.0{channel}.dat", dtype=np.complex64)
-        rx_data = clean_rx(raw_rx_data)
+        current_start_idx = start_idx_list[i]
+        rx_data = clean_rx(raw_rx_data, current_start_idx[1])
 
         #Unpack TX Pilot symbol
         with open("data_files/rand_ofdm_packet_ref.json", "r") as f:
@@ -177,7 +178,7 @@ def calc_delay():
 
 
 
-def clean_rx(rx_raw:np.ndarray)->np.ndarray:
+def clean_rx(rx_raw:np.ndarray, start_idx:int)->np.ndarray:
     """
     Removes leading and trialing zeros from the signal
     """
@@ -186,28 +187,14 @@ def clean_rx(rx_raw:np.ndarray)->np.ndarray:
     with open(TX_REF_PATH, 'r') as f:
         ref_data = json.load(f)
 
-    #Unpack Referense Sync Symbol
-    sync_ref_real = np.array(ref_data['sync_ref_real']).astype(complex)
-    sync_ref_imag = np.array(ref_data["sync_ref_imag"]).astype(complex)
-    sync_ref_time = sync_ref_real + 1j * sync_ref_imag
-
-    #Calculate starting incex
-    M, P = sync.calculate_schmidl_cox_metrics(rx_signal=rx_raw, config=ofdm_conf)
-    start_idx = sync.find_start_idx(
-        M_metric=M,
-        config=ofdm_conf,
-        rx_signal=rx_raw,
-        known_sync_time=sync_ref_time
-    )
-
     # Get total samples in packet
     sym_len = ofdm_conf.N + ofdm_conf.CP_LEN
     total_symbols = 1 + 1 + ref_data["n_data_symb"]
     total_samples = sym_len * total_symbols
 
     buffer = 200
-    start = start_idx - buffer
-    end = start_idx + total_samples + buffer
+    start = int(start_idx - buffer)
+    end = int(start_idx + total_samples + buffer)
 
     if (start < 0): start = 0
     if (end > len(rx_raw)): end = len(rx_raw) - 1
