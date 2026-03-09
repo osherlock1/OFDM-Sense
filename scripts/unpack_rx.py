@@ -46,7 +46,8 @@ def unpack_rx_file(ofdm_conf:OFDMConfig, rx_path:str, ref_path:str, sim:bool = F
         M_metric=M,
         config=ofdm_conf,
         rx_signal=rx_raw,
-        known_sync_time=sync_ref_time
+        known_sync_time=sync_ref_time,
+        search_window=200
     )
 
     #Find pilot symbol
@@ -70,11 +71,11 @@ def unpack_rx_file(ofdm_conf:OFDMConfig, rx_path:str, ref_path:str, sim:bool = F
     best_cfo, best_delay_rel, heatmap = cfo.estimate_cfo(
         tx_ref = tx_pilot_ref,
         rx_signal = rx_pilot_search_area,
-        fs = 0.5e6,
-        n_bins = 2 ** 17
+        fs = 5e5,
+        n_bins = 2 ** 14
     )
     #FIXME: Using Opposite Sign on CFO since it seems to be revered(need to look into)
-    best_cfo = best_cfo * -1
+    best_cfo = best_cfo * -1 * 150
 
     #Global Correction
     actual_pilot_start = pilot_chunk_start + best_delay_rel
