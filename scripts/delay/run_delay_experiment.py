@@ -15,7 +15,7 @@ from datetime import datetime
 import argparse
 from ofdm.utils import usrp
 
-EXPERIMENT_NAME = "new_delay_calc"
+EXPERIMENT_NAME = "mfdelay_09_03_26"
 EXPERIMENT_PATH = f"./experiments/{EXPERIMENT_NAME}.csv"
 
 DELAY_DATA_PATH = "./metadata/delay_calc.json"
