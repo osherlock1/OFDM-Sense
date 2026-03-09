@@ -28,87 +28,91 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--ref", action="store_true")
+    parser.add_argument("--runs", type=int, default=1, help="specify number of time experiement will run")
     args = parser.parse_args()
 
+    for run in range(args.runs):
 
-    if (args.ref == True):
-        print("--- Starting Transfer (REF) ----")
-        subprocess.run(["python", "./scripts/run_transfer.py"], check=True)
-        print("--- Transfer Complete ---")
+        print(f"\n========== RUN {run+1}/{args.runs} ==========\n")
 
-        print("---Calculating Delay -----")
-        subprocess.run(["python", "./scripts/delay/calc_delay.py", "--ref"], check = True)
-        #run subprocess to calculate delay
+        if (args.ref == True):
+            print("--- Starting Transfer (REF) ----")
+            subprocess.run(["python", "./scripts/run_transfer.py"], check=True)
+            print("--- Transfer Complete ---")
 
-        with open(REF_DELAY_DATA_PATH, 'r') as f:
-            delay_data = json.load(f)
+            print("---Calculating Delay -----")
+            subprocess.run(["python", "./scripts/delay/calc_delay.py", "--ref"], check = True)
+            #run subprocess to calculate delay
 
-        results = {
-            'delay':delay_data["delay"],
-            'distance':delay_data["raw_distance"]
-        }
+            with open(REF_DELAY_DATA_PATH, 'r') as f:
+                delay_data = json.load(f)
 
-        df_new = pd.DataFrame([results])
-        write_header = not os.path.exists(EXPERIMENT_PATH)
+            results = {
+                'delay':delay_data["delay"],
+                'distance':delay_data["raw_distance"]
+            }
 
-        df_new.to_csv(
-            EXPERIMENT_PATH,
-            mode = 'a',
-            header=write_header,
-            index=False
-        )
-    
-    if (args.ref == False):
-        print("--- Starting Transfer (NO REF) ----")
-        subprocess.run(["python", "./scripts/run_transfer.py"], check=True)
-        print("--- Transfer Complete ---")
+            df_new = pd.DataFrame([results])
+            write_header = not os.path.exists(EXPERIMENT_PATH)
 
-        print("---Unpacking OFDM Data---")
-        subprocess.run(["python", "./scripts/unpack_rx.py"], check=True)
-        print("---Finished Unpacking---")
+            df_new.to_csv(
+                EXPERIMENT_PATH,
+                mode = 'a',
+                header=write_header,
+                index=False
+            )
+        
+        if (args.ref == False):
+            print("--- Starting Transfer (NO REF) ----")
+            subprocess.run(["python", "./scripts/run_transfer.py"], check=True)
+            print("--- Transfer Complete ---")
 
-        print("---Calculating Delay -----")
-        subprocess.run(["python", "./scripts/delay/calc_delay.py"], check = True)
-        #run subprocess to calculate delay
+            print("---Unpacking OFDM Data---")
+            subprocess.run(["python", "./scripts/unpack_rx.py"], check=True)
+            print("---Finished Unpacking---")
 
-        with open(DELAY_DATA_PATH, 'r') as f:
-            delay_data = json.load(f)
+            print("---Calculating Delay -----")
+            subprocess.run(["python", "./scripts/delay/calc_delay.py"], check = True)
+            #run subprocess to calculate delay
 
-        with open(PERFORMANCE_DATA_PATH, 'r') as f:
-            performance_data = json.load(f)
+            with open(DELAY_DATA_PATH, 'r') as f:
+                delay_data = json.load(f)
 
-        evm = performance_data['evm']
-        ber = performance_data['ber']
-        ser = performance_data['ser']
-        starting_idxs = performance_data['start_idx']
+            with open(PERFORMANCE_DATA_PATH, 'r') as f:
+                performance_data = json.load(f)
 
-        delays = delay_data['delays']
-        distances = delay_data['raw_distance']
+            evm = performance_data['evm']
+            ber = performance_data['ber']
+            ser = performance_data['ser']
+            starting_idxs = performance_data['start_idx']
 
-        usrp_conf = usrp.load_config(USRP_CONFIG_PATH)
-        rx_channel_idx = usrp_conf.rx_channel_idx.replace(",", "")
+            delays = delay_data['delays']
+            distances = delay_data['raw_distance']
 
-        results = {}
-        for channel in rx_channel_idx:
-            results.update({
-                f'delay{channel}':delays[int(channel)],
-                f'distance{channel}':distances[int(channel)],
-                f'evm{channel}': evm[int(channel)],
-                f'ber{channel}':ber[int(channel)],
-                f'ser{channel}':ser[int(channel)],
-                f'startingx_idx{channel}' : starting_idxs[int(channel)][1]
-            })
+            usrp_conf = usrp.load_config(USRP_CONFIG_PATH)
+            rx_channel_idx = usrp_conf.rx_channel_idx.replace(",", "")
 
-        df_new = pd.DataFrame([results])
+            results = {}
+            for channel in rx_channel_idx:
+                results.update({
+                    f'delay{channel}':delays[int(channel)],
+                    f'distance{channel}':distances[int(channel)],
+                    f'evm{channel}': evm[int(channel)],
+                    f'ber{channel}':ber[int(channel)],
+                    f'ser{channel}':ser[int(channel)],
+                    f'startingx_idx{channel}' : starting_idxs[int(channel)][1]
+                })
 
-        write_header = not os.path.exists(EXPERIMENT_PATH)
+            df_new = pd.DataFrame([results])
 
-        df_new.to_csv(
-            EXPERIMENT_PATH,
-            mode = 'a',
-            header=write_header,
-            index=False
-        )
+            write_header = not os.path.exists(EXPERIMENT_PATH)
+
+            df_new.to_csv(
+                EXPERIMENT_PATH,
+                mode = 'a',
+                header=write_header,
+                index=False
+            )
 
 if __name__ == "__main__":
     main()
