@@ -8,6 +8,7 @@ from scipy.signal import correlate
 from ofdm.viz import plotter
 import matplotlib.pyplot as plt
 
+
 def calculate_schmidl_cox_metrics(rx_signal: np.ndarray, config:OFDMConfig)->Tuple[np.ndarray, np.ndarray]:
     """  
     Calculates the Schmidl-Cox Syncronization algorithm M and P metrics packet dection and syncronization
@@ -63,7 +64,7 @@ def find_start_idx(
     config: OFDMConfig, 
     rx_signal: np.ndarray,
     known_sync_time: np.ndarray,
-    search_window: int = 20
+    search_window: int
     ) -> int:
     """  
     Determine the exact sample index where the packet begins (Start of CP).
