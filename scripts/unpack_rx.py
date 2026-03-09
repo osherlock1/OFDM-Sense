@@ -71,11 +71,11 @@ def unpack_rx_file(ofdm_conf:OFDMConfig, rx_path:str, ref_path:str, sim:bool = F
     best_cfo, best_delay_rel, heatmap = cfo.estimate_cfo(
         tx_ref = tx_pilot_ref,
         rx_signal = rx_pilot_search_area,
-        fs = 5e5,
+        fs = 100e6,
         n_bins = 2 ** 14
     )
     #FIXME: Using Opposite Sign on CFO since it seems to be revered(need to look into)
-    best_cfo = best_cfo * -1 * 150
+    best_cfo = best_cfo * -1
 
     #Global Correction
     actual_pilot_start = pilot_chunk_start + best_delay_rel
