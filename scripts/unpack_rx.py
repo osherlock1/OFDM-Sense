@@ -47,7 +47,7 @@ def unpack_rx_file(ofdm_conf:OFDMConfig, rx_path:str, ref_path:str, sim:bool = F
         config=ofdm_conf,
         rx_signal=rx_raw,
         known_sync_time=sync_ref_time,
-        search_window=200
+        search_window=500
     )
 
     #Find pilot symbol
