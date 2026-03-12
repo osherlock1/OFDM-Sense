@@ -107,7 +107,7 @@ def clean_rx(rx_raw:np.ndarray, start_idx:int)->np.ndarray:
     total_symbols = 1 + 1 + ref_data["n_data_symb"]
     total_samples = sym_len * total_symbols
 
-    buffer = 200
+    buffer = 0
     start = int(start_idx - buffer)
     end = int(start_idx + total_samples + buffer)
 
