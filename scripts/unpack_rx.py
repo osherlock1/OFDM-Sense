@@ -181,15 +181,24 @@ def main():
     #Unpack all RX files
     demodulated_dict = {}
     start_idx_list = []
-    for channel in rx_channel_idx: 
-        if len(rx_channel_idx) != 1:
-            rx_path = f"./data_files/rand_ofdm_packet_rx.0" + channel + ".dat"
+
+    if args.file == "./data_files/rand_ofdm_packet_rx.dat": # checks if custom file is inputted in CLA if not runs as normal
+        for channel in rx_channel_idx: 
+            if len(rx_channel_idx) != 1:
+                rx_path = f"./data_files/rand_ofdm_packet_rx.0" + channel + ".dat"
+            print(f"#####################")        
+            print(f"Unpacking Channel" + channel + "...")
+            print(f"#####################\n")  
+            demodulated_data, ref_data, start_idx = unpack_rx_file(ofdm_conf=ofdm_conf, rx_path=rx_path, ref_path=args.ref)
+            demodulated_dict[f"Channel_" + channel] = demodulated_data
+            start_idx_list.append((channel, start_idx))
+    else:
         print(f"#####################")        
-        print(f"Unpacking Channel" + channel + "...")
+        print(f"Unpacking File" + args.file + "...")
         print(f"#####################\n")  
-        demodulated_data, ref_data, start_idx = unpack_rx_file(ofdm_conf=ofdm_conf, rx_path=rx_path, ref_path=args.ref)
-        demodulated_dict[f"Channel_" + channel] = demodulated_data
-        start_idx_list.append((channel, start_idx))
+        demodulated_data, ref_data, start_idx = unpack_rx_file(ofdm_conf=ofdm_conf, rx_path=args.file, ref_path=args.ref)
+        demodulated_dict[f"Channel"] = demodulated_data
+        start_idx_list.append((0, start_idx))  
 
     #--------- Evaluation ---------
     print(f"#####################") 
