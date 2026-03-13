@@ -21,3 +21,5 @@ __pycache__/
 rx_log.txt
 pyscr/scrap.py
 *.json
+
+experiments/
