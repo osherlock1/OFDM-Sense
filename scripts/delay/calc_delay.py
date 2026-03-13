@@ -102,74 +102,44 @@ def calc_delay_with_ref():
 
 
 
-def calc_delay(do_DebugPlot:bool = False):
+def calc_delay(rx_path:str, channel:str, start_idx:int, do_DebugPlot:bool = False):
     """
     Calculate delay for all cahnnels
     """
-   #Get constant
-    with open(CALIBRATION_PATH, 'r') as f:
-        cali_data = json.load(f)
-    constants = cali_data['constants']
+   #
 
-    with open(START_IDX_PATH, 'r') as f:
-        ofdm_performance_data = json.load(f)
-    start_idx_list = ofdm_performance_data['start_idx']
+    #Unpack Sivers RX and TX data
+    raw_rx_data = np.fromfile(rx_path, dtype=np.complex64)
+    current_start_idx = start_idx
+    rx_data = clean_rx(raw_rx_data, current_start_idx[1])
+
+    #Unpack TX Pilot symbol
+    with open("data_files/rand_ofdm_packet_ref.json", "r") as f:
+        ref_data = json.load(f)
+
+    #Get Tx pilot symbol
+    tx_pilot = np.array(ref_data['pilot_ref_real']) + 1j * np.array(ref_data['pilot_ref_imag'])
+
+    #Scale raw_rx_data
+    scaled_wireless_rx = scale_rx_signal(raw_rx_data=rx_data)
+
+
+    #Calculate Matched Filter Delay for wireless
+    fine_delay_wireless = calculate_precise_delay(
+            rx_signal=scaled_wireless_rx,
+            ref_signal=tx_pilot,
+            fs=ofdm_conf.FS,
+            upsample_factor=100,
+            debug_plot=do_DebugPlot
+        )
+
+    #Calculatiosn
+    calced_delay = ((fine_delay_wireless) * 1e9)
+
+    print(f"Channel {channel}:")
+    print(f"--Delay: {calced_delay:.5f}ns")
+    return calced_delay
     
-    calced_delays = []
-    calced_distances = []
-
-    usrp_conf = usrp.load_config(USRP_CONFIG_PATH)
-    rx_channel_idx = usrp_conf.rx_channel_idx.replace(",", "")
-
-    for i, channel in enumerate(rx_channel_idx):
-        #Unpack Sivers RX and TX data
-        raw_rx_data = np.fromfile(f"data_files/rand_ofdm_packet_rx.0{channel}.dat", dtype=np.complex64)
-        current_start_idx = start_idx_list[i]
-        rx_data = clean_rx(raw_rx_data, current_start_idx[1])
-
-        #Unpack TX Pilot symbol
-        with open("data_files/rand_ofdm_packet_ref.json", "r") as f:
-            ref_data = json.load(f)
-
-        #Get Tx pilot symbol
-        tx_pilot = np.array(ref_data['pilot_ref_real']) + 1j * np.array(ref_data['pilot_ref_imag'])
-
-        #Scale raw_rx_data
-        scaled_wireless_rx = scale_rx_signal(raw_rx_data=rx_data)
-
-
-        #Calculate Matched Filter Delay for wireless
-        fine_delay_wireless = calculate_precise_delay(
-                rx_signal=scaled_wireless_rx,
-                ref_signal=tx_pilot,
-                fs=ofdm_conf.FS,
-                upsample_factor=100,
-                debug_plot=do_DebugPlot
-            )
-
-        #Calculatiosn
-        cacled_delay = ((fine_delay_wireless) * 1e9)
-        raw_distance = ((fine_delay_wireless) * C) - constants[int(channel)]
-
-        print(f"Channel {channel}:")
-        print(f"--Delay: {cacled_delay:.5f}ns")
-        print(f"--Distance: {raw_distance:.5f}\n")
-        
-        calced_delays.append(cacled_delay)
-        calced_distances.append(raw_distance)
-
-
-
-    json_data = {
-        "delays":calced_delays,
-        "raw_distance":calced_distances,
-        "mode": "no ref"
-    }
-
-    os.makedirs(os.path.dirname(STORE_NO_REF_PATH), exist_ok=True)
-    with open(STORE_NO_REF_PATH, "w") as f:
-        json.dump(json_data, f, indent=2)
-    print(f"Stored delay calc to {STORE_NO_REF_PATH}")
 
 
 
@@ -198,18 +168,52 @@ def clean_rx(rx_raw:np.ndarray, start_idx:int)->np.ndarray:
 
 
 def main():
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--ref", action="store_true", help = "Decalre if a directed wired ref is used")
     parser.add_argument("--plot", action="store_true", help ="Enable debug plot")
+    parser.add_argument("--file", type=str, help="Specify specific file to unpack")
     args = parser.parse_args()
 
+    with open(CALIBRATION_PATH, 'r') as f:
+        cali_data = json.load(f)
+    constants = cali_data['constants']
 
-    if (args.ref == True):
-        calc_delay_with_ref()
+    with open(START_IDX_PATH, 'r') as f:
+        ofdm_performance_data = json.load(f)
 
+    start_idx_list = ofdm_performance_data['start_idx']
+    
+    calced_delays = []
+    usrp_conf = usrp.load_config(USRP_CONFIG_PATH)
+    rx_channel_idx = usrp_conf.rx_channel_idx.replace(",", "")
+
+    if not args.file:
+        for channel in rx_channel_idx:
+            path = f"./data_files/rand_ofdm_packet_rx.0{channel}.dat"
+            calced_delays.append(calc_delay(
+                do_DebugPlot=args.plot,
+                rx_path=path, 
+                start_idx=start_idx_list[int(channel)],
+                channel=channel))
     else:
-        calc_delay(args.plot)
+        path = args.file
+        calced_delays.append(calc_delay(
+            do_DebugPlot=args.plot,
+            rx_path=path, 
+            start_idx=start_idx_list[0],
+            channel=0
+            ))
+
+
+    json_data = {
+        "delays":calced_delays,
+        "mode": "no ref"
+    }
+
+    os.makedirs(os.path.dirname(STORE_NO_REF_PATH), exist_ok=True)
+    with open(STORE_NO_REF_PATH, "w") as f:
+        json.dump(json_data, f, indent=2)
+    print(f"Stored delay calc to {STORE_NO_REF_PATH}")
 
  
     
