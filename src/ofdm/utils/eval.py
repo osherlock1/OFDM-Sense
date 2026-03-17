@@ -65,7 +65,7 @@ def calc_SER(iq_rx:np.ndarray, iq_ref:np.ndarray)->float:
     n_samples = len(binary_ref)
 
     #Calculate SER
-    Errors = np.sum(binary_rx[i] != binary_ref[i] for i in range(n_samples))
+    Errors = sum(binary_rx[i] != binary_ref[i] for i in range(n_samples))
 
     ser = Errors / n_samples
 
@@ -102,7 +102,7 @@ def calc_BER(iq_rx:np.ndarray, iq_ref:np.ndarray)->float:
         binary_string_ref = binary_string_ref[:min_len]
     
     n_bits = len(binary_string_rx)
-    bit_errors = np.sum(binary_string_ref[i] != binary_string_rx[i] for i in range(n_bits))
+    bit_errors = sum(binary_string_ref[i] != binary_string_rx[i] for i in range(n_bits))
 
     #Calc BER
     ber = bit_errors / n_bits
