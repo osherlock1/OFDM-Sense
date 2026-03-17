@@ -11,15 +11,15 @@ DELAY_DATA_PATH = "./metadata/delay_calc.json"
 
 RX_COORDS = np.array([
     [0.0, 0.0], # RX 1
-    [0.3937, 0.1422], # RX 2
-    [0.1397, 0.5207], # RX 3
+    [0.508, 0.137], # RX 2
+    [0.0, 0.615], # RX 3
 ])
 
-TX_TRUE = np.array([0.5613, 0.7264])
+TX_TRUE = np.array([0.270, 0.970])
 
 def load_tdoa_from_csvs():
-    base_dir = "./experiments/unpacked_data"
-
+    base_dir = "./experiments/unpacked_data3"
+    
     df_rx2_ch0 = pd.read_csv(os.path.join(base_dir, "rx2_channel0.csv"))
     df_rx2_ch1 = pd.read_csv(os.path.join(base_dir, "rx2_channel1.csv"))
     
@@ -28,76 +28,99 @@ def load_tdoa_from_csvs():
 
     col_name = 'delay0'
 
-    anchor_t1_ns = df_rx2_ch0[col_name].values[0]
-    rover_t1_ns = df_rx2_ch1[col_name].values[0]
 
-    anchor_t2_ns = df_rx3_ch0[col_name].values[0]
-    rover_t2_ns = df_rx3_ch1[col_name].values[0]
+    raw_anchor_t1_ns = df_rx2_ch1[col_name].values # Ch 1
+    raw_rover_t1_ns  = df_rx2_ch0[col_name].values # Ch 0
+    raw_anchor_t2_ns = df_rx3_ch1[col_name].values # Ch 1
+    raw_rover_t2_ns  = df_rx3_ch0[col_name].values # Ch 0
 
-    # calculate TDoA in nanoseconds
-    dt_1_ns = rover_t1_ns - anchor_t1_ns
-    dt_2_ns = rover_t2_ns - anchor_t2_ns
+    # calc tdoa
+    raw_dt_1_ns = raw_rover_t1_ns - raw_anchor_t1_ns
+    raw_dt_2_ns = raw_rover_t2_ns - raw_anchor_t2_ns
+
+    # correct hardware delays
+    HARDWARE_BIAS_NS = 3.463
+    bias_corrected_dt_1 = raw_dt_1_ns - HARDWARE_BIAS_NS
+    bias_corrected_dt_2 = raw_dt_2_ns - HARDWARE_BIAS_NS
+
+    # correct SDR clock slip
+    dt_1_ns = (bias_corrected_dt_1 + 5.0) % 10.0 - 5.0
+    dt_2_ns = (bias_corrected_dt_2 + 5.0) % 10.0 - 5.0
 
     # convert to seconds
     dt_1_sec = dt_1_ns * 1e-9
-    dt_2_sec = dt_2_ns * 1e-9 
+    dt_2_sec = dt_2_ns * 1e-9
 
-    return np.array([dt_1_sec, dt_2_sec])
+    return np.column_stack((dt_1_sec, dt_2_sec))
+
 
 
 def main():
-    # rx coordinates
-    
     try:
-        delay_diffs_sec = load_tdoa_from_csvs()
-        print(f"TDoA 1 (RX2_Anhor): {delay_diffs_sec[0]*1e9:.3f} ns")
-        print(f"TDoA (RX-Anchor): {delay_diffs_sec[1]*1e9:.3f} ns")
+        all_delay_diffs = load_tdoa_from_csvs()
+        num_packets = len(all_delay_diffs)
+        print(f"--- Loaded {num_packets} packets for processing ---")
     except Exception as e:
         print(f"Error loading CSVs: {e}")
         return
     
     print("\n--- Running TDoA Solver ---")
 
-    initial_guess = np.array([0.3,0.3])
+    initial_guess = np.array([0.3, 0.3])
+    estimated_positions = []
+    errors = []
 
-    result = least_squares(
-        tdoa_cost_fuction,
-        initial_guess,
-        args=(RX_COORDS, delay_diffs_sec),
-        method='lm'
-    )
+    for i in range(num_packets):
+        delay_diffs_sec = all_delay_diffs[i]
 
-    est_x, est_y = result.x
-    error_m = np.sqrt((est_x - TX_TRUE[0])**2 + (est_y - TX_TRUE[1])**2)
+        result = least_squares(
+            tdoa_cost_fuction,
+            initial_guess,
+            args=(RX_COORDS, delay_diffs_sec),
+            method='lm'
+        )
 
-    print(f"Solver Converged: {result.success}")
-    print(f"Estimated TX Position: X: {est_x:.4f}m, Y: {est_y:.4f}m")
-    print(f"Ground Truth TX:       X: {TX_TRUE[0]:.4f}m, Y: {TX_TRUE[1]:.4f}m")
-    print(f"Localization Error:    {error_m * 100:.2f} cm") 
-
-    # --- Plotting the Desk Layout ---
-    plt.figure(figsize=(8, 8))
+        if result.success:
+            est_x, est_y = result.x
+            estimated_positions.append([est_x, est_y])
+            error_m = np.sqrt((est_x - TX_TRUE[0])**2 + (est_y - TX_TRUE[1])**2)
+            errors.append(error_m)
     
-    # Plot Receivers
-    plt.scatter(RX_COORDS[0,0], RX_COORDS[0,1], c='blue', marker='^', s=150, label='RX1 (Anchor)')
-    plt.scatter(RX_COORDS[1:,0], RX_COORDS[1:,1], c='cyan', marker='^', s=100, label='RX2/RX3 (Rover)')
-    
-    # Plot Transmitter Data
-    plt.scatter(TX_TRUE[0], TX_TRUE[1], c='green', marker='s', s=100, label='TX (Ground Truth)')
-    plt.scatter(est_x, est_y, c='red', marker='x', s=150, linewidths=3, label='TX (Estimated)')
+    estimated_positions = np.array(estimated_positions)
+    errors = np.array(errors)
 
-    # Formatting
-    plt.title("OFDM-Sense mmWave Localization Results")
+    centroid_x, centroid_y = np.mean(estimated_positions, axis=0)
+    mean_error = np.mean(errors)
+    centroid_error = np.sqrt((centroid_x - TX_TRUE[0])**2 + (centroid_y - TX_TRUE[1])**2)
+
+    print(f"Successful Solves:     {len(estimated_positions)}/{num_packets}")
+    print(f"Centroid TX Position:  X: {centroid_x:.4f}m, Y: {centroid_y:.4f}m")
+    print(f"Mean Packet Error:     {mean_error * 100:.2f} cm")
+    print(f"Centroid Error:        {centroid_error * 100:.2f} cm")
+
+
+    plt.figure(figsize=(9, 9))
+    plt.scatter(RX_COORDS[0,0], RX_COORDS[0,1], c='blue', marker='^', s=150, label='RX1 (Anchor)', zorder=3)
+    plt.scatter(RX_COORDS[1:,0], RX_COORDS[1:,1], c='cyan', marker='^', s=100, label='RX2/RX3 (Rover)', zorder=3)
+    
+    # truth
+    plt.scatter(TX_TRUE[0], TX_TRUE[1], c='green', marker='s', s=150, label='TX (Ground Truth)', zorder=3)
+
+    # estimates
+    plt.scatter(estimated_positions[:, 0], estimated_positions[:, 1], 
+                c='red', marker='o', s=30, alpha=0.3, label='Individual Estimates', zorder=2)
+    
+    # centroid
+    plt.scatter(centroid_x, centroid_y, c='purple', marker='X', s=200, edgecolor='black', 
+                linewidths=2, label='TX (Centroid)', zorder=4)
+
+    plt.title(f"OFDM-Sense Localization Cluster ({len(estimated_positions)} packets)")
     plt.xlabel("X Coordinate (meters)")
     plt.ylabel("Y Coordinate (meters)")
     plt.grid(True, linestyle='--', alpha=0.7)
     plt.legend()
     plt.axis('equal') 
     plt.show()
-
-
-
-
 
 def toa_cost_function(guess, rx_coords, measured_distance):
     """
@@ -131,7 +154,7 @@ def tdoa_cost_fuction(guess, rx_coords, delay_diffs_sec):
     anchor_x, anchor_y = rx_coords[0]
     dist_to_anchor = np.sqrt((x - anchor_x)**2 + (y - anchor_y)**2)
 
-    # loop through remaining 3 receivers
+    # loop through remaining receivers
     for i in range(1, len(rx_coords)):
         rx_x, rx_y = rx_coords[i]
 
