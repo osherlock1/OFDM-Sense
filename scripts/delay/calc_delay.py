@@ -102,7 +102,7 @@ def calc_delay_with_ref():
 
 
 
-def calc_delay(rx_path:str, channel:str, start_idx:int, do_DebugPlot:bool = False):
+def calc_delay(rx_path:str, channel:str, start_idx:list, do_DebugPlot:bool = False):
     """
     Calculate delay for all cahnnels
     """
@@ -110,8 +110,8 @@ def calc_delay(rx_path:str, channel:str, start_idx:int, do_DebugPlot:bool = Fals
 
     #Unpack Sivers RX and TX data
     raw_rx_data = np.fromfile(rx_path, dtype=np.complex64)
-    current_start_idx = start_idx
-    rx_data = clean_rx(raw_rx_data, current_start_idx[1])
+    coarse_sample_idx = start_idx[1]
+    rx_data = clean_rx(raw_rx_data, coarse_sample_idx)
 
     #Unpack TX Pilot symbol
     with open("data_files/rand_ofdm_packet_ref.json", "r") as f:
@@ -125,20 +125,24 @@ def calc_delay(rx_path:str, channel:str, start_idx:int, do_DebugPlot:bool = Fals
 
 
     #Calculate Matched Filter Delay for wireless
-    fine_delay_wireless = calculate_precise_delay(
+    fine_delay_sec = calculate_precise_delay(
             rx_signal=scaled_wireless_rx,
             ref_signal=tx_pilot,
             fs=ofdm_conf.FS,
-            upsample_factor=100,
             debug_plot=do_DebugPlot
         )
 
+    coarse_delay_sec = coarse_sample_idx / ofdm_conf.FS
+
+    total_abosule_delay_sec = coarse_delay_sec + fine_delay_sec
+
+
     #Calculatiosn
-    calced_delay = ((fine_delay_wireless) * 1e9)
+    calced_delay_ns = ((total_abosule_delay_sec) * 1e9)
 
     print(f"Channel {channel}:")
-    print(f"--Delay: {calced_delay:.5f}ns")
-    return calced_delay
+    print(f"--Delay: {calced_delay_ns:.5f}ns")
+    return calced_delay_ns
     
 
 
@@ -283,86 +287,128 @@ def scale_rx_signal(raw_rx_data:np.ndarray)->np.ndarray:
     return scaled_rx_data
 
 
-def calculate_precise_delay(rx_signal, ref_signal, fs, upsample_factor=100, debug_plot:bool = False):
+# def calculate_precise_delay(rx_signal, ref_signal, fs, upsample_factor=100, debug_plot:bool = False):
+#     """
+#     Calculates delay using coarse correlation zero-padded FFT interpolation
+#     """
+#     corr = scipy.signal.correlate(rx_signal, ref_signal, mode='full')
+#     lags = scipy.signal.correlation_lags(len(rx_signal), len(ref_signal), mode='full')
+
+#     # Find coarse peak
+#     mag = np.abs(corr)
+#     coarse_idx = np.argmax(mag)
+
+#     #Get small window
+#     radius = 16
+#     start = max(0, coarse_idx - radius)
+#     end = min(len(corr), coarse_idx + radius)
+
+#     window = corr[start:end]
+
+#     #Zero padded interpolation
+#     window_fft = np.fft.fft(window)
+#     window_fft_shifted = np.fft.fftshift(window_fft)
+
+#     #Zero pad
+#     n_original = len(window)
+#     n_padded = n_original * upsample_factor
+#     n_zeros = n_padded - n_original
+
+#     zeros_half = np.zeros(n_zeros // 2, dtype=complex)
+#     fft_padded_shifted = np.concatenate([
+#             zeros_half, 
+#             window_fft_shifted, 
+#             zeros_half
+#         ])
+    
+#     #IFFT
+#     fft_padded_ready = np.fft.ifftshift(fft_padded_shifted)
+#     window_upsampled= np.fft.ifft(fft_padded_ready) * upsample_factor
+
+#     #Find precise peak
+#     upsampled_mag = np.abs(window_upsampled)
+#     peak_upsampled_idx = np.argmax(upsampled_mag)
+
+#     #Calculate total delay
+#     fractional_offset = peak_upsampled_idx / upsample_factor
+#     total_idx = start + fractional_offset
+
+#     #Convert to time
+#     zero_lag_index = np.where(lags == 0)[0][0]
+#     final_lag_samples = total_idx - zero_lag_index
+
+#     if debug_plot:
+#         plt.figure(figsize=(12, 5))
+        
+#         # Plot 1: The full coarse correlation
+#         plt.subplot(1, 2, 1)
+#         plt.plot(lags, mag)
+#         plt.axvline(x=lags[coarse_idx], color='r', linestyle='--', alpha=0.7)
+#         plt.title("Full Coarse Correlation")
+#         plt.xlabel("Lags (Samples)")
+#         plt.ylabel("Magnitude")
+
+#         # Plot 2: The zoomed-in interpolated peak
+#         plt.subplot(1, 2, 2)
+#         # Create a sub-sample x-axis for the upsampled window
+#         upsampled_lags = np.linspace(lags[start], lags[end-1], len(upsampled_mag))
+#         plt.plot(upsampled_lags, upsampled_mag, label="Interpolated Curve")
+
+#         plt.plot(lags[start:end], mag[start:end], 'ko', label="Coarse Samples")
+        
+#         precise_lag_val = lags[start] + fractional_offset
+#         plt.axvline(x=precise_lag_val, color='r', linestyle='--', label=f"True Peak: {precise_lag_val:.2f}")
+        
+#         plt.title(f"Interpolated Peak (100x)")
+#         plt.xlabel("Lags (Samples)")
+#         plt.legend()
+#         plt.tight_layout()
+#         plt.show()
+
+
+#     return final_lag_samples / fs
+
+def calculate_precise_delay(rx_signal, ref_signal, fs, debug_plot=False):
     """
-    Calculates delay using coarse correlation zero-padded FFT interpolation
+    Calculates sub-sample delay using precise Parabolic Interpolation.
     """
     corr = scipy.signal.correlate(rx_signal, ref_signal, mode='full')
     lags = scipy.signal.correlation_lags(len(rx_signal), len(ref_signal), mode='full')
 
-    # Find coarse peak
     mag = np.abs(corr)
-    coarse_idx = np.argmax(mag)
+    peak_idx = np.argmax(mag)
 
-    #Get small window
-    radius = 16
-    start = max(0, coarse_idx - radius)
-    end = min(len(corr), coarse_idx + radius)
+    # Parabolic Interpolation Formula
+    if peak_idx > 0 and peak_idx < len(mag) - 1:
+        alpha = mag[peak_idx - 1]
+        beta  = mag[peak_idx]
+        gamma = mag[peak_idx + 1]
 
-    window = corr[start:end]
+        # Calculate the fractional shift (-0.5 to +0.5 samples)
+        fractional_shift = 0.5 * (alpha - gamma) / (alpha - 2*beta + gamma)
+    else:
+        fractional_shift = 0.0
 
-    #Zero padded interpolation
-    window_fft = np.fft.fft(window)
-    window_fft_shifted = np.fft.fftshift(window_fft)
-
-    #Zero pad
-    n_original = len(window)
-    n_padded = n_original * upsample_factor
-    n_zeros = n_padded - n_original
-
-    zeros_half = np.zeros(n_zeros // 2, dtype=complex)
-    fft_padded_shifted = np.concatenate([
-            zeros_half, 
-            window_fft_shifted, 
-            zeros_half
-        ])
-    
-    #IFFT
-    fft_padded_ready = np.fft.ifftshift(fft_padded_shifted)
-    window_upsampled= np.fft.ifft(fft_padded_ready) * upsample_factor
-
-    #Find precise peak
-    upsampled_mag = np.abs(window_upsampled)
-    peak_upsampled_idx = np.argmax(upsampled_mag)
-
-    #Calculate total delay
-    fractional_offset = peak_upsampled_idx / upsample_factor
-    total_idx = start + fractional_offset
-
-    #Convert to time
-    zero_lag_index = np.where(lags == 0)[0][0]
-    final_lag_samples = total_idx - zero_lag_index
+    precise_lag = lags[peak_idx] + fractional_shift
 
     if debug_plot:
-        plt.figure(figsize=(12, 5))
+        plt.figure(figsize=(8, 5))
         
-        # Plot 1: The full coarse correlation
-        plt.subplot(1, 2, 1)
-        plt.plot(lags, mag)
-        plt.axvline(x=lags[coarse_idx], color='r', linestyle='--', alpha=0.7)
-        plt.title("Full Coarse Correlation")
+        # Plot 10 samples on either side of the peak
+        start = max(0, peak_idx - 10)
+        end = min(len(mag), peak_idx + 10)
+        
+        plt.plot(lags[start:end], mag[start:end], 'ko-', label="Coarse Samples")
+        plt.axvline(x=precise_lag, color='r', linestyle='--', label=f"Parabolic Peak: {precise_lag:.2f}")
+        
+        plt.title("Parabolic Interpolation Peak")
         plt.xlabel("Lags (Samples)")
-        plt.ylabel("Magnitude")
-
-        # Plot 2: The zoomed-in interpolated peak
-        plt.subplot(1, 2, 2)
-        # Create a sub-sample x-axis for the upsampled window
-        upsampled_lags = np.linspace(lags[start], lags[end-1], len(upsampled_mag))
-        plt.plot(upsampled_lags, upsampled_mag, label="Interpolated Curve")
-
-        plt.plot(lags[start:end], mag[start:end], 'ko', label="Coarse Samples")
-        
-        precise_lag_val = lags[start] + fractional_offset
-        plt.axvline(x=precise_lag_val, color='r', linestyle='--', label=f"True Peak: {precise_lag_val:.2f}")
-        
-        plt.title(f"Interpolated Peak (100x)")
-        plt.xlabel("Lags (Samples)")
+        plt.ylabel("Correlation Magnitude")
         plt.legend()
-        plt.tight_layout()
+        plt.grid(True, alpha=0.3)
         plt.show()
 
-
-    return final_lag_samples / fs
+    return precise_lag / fs
     
 if __name__ == "__main__":
     main()
