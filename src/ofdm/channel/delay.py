@@ -38,3 +38,8 @@ def upsample(raw_data:np.ndarray, scale_factor:int = 100)->np.ndarray:
     freq_zero_padded_shifted = np.fft.ifftshift(np.concatenate([zeros_one_side, freq, zeros_one_side]))
     return np.fft.ifft(freq_zero_padded_shifted) * scale_factor
 
+def scale_rx_signal(raw_rx_data:np.ndarray)->np.ndarray:
+    max_val = np.max(np.abs(raw_rx_data))
+    if max_val > 0:
+        return raw_rx_data * (0.9) / max_val
+    return raw_rx_data
