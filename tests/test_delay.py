@@ -1,8 +1,9 @@
 import numpy as np
-from ofdm.channel.delay import matched_filter_calc
+from ofdm.channel.delay import matched_filter_calc, upsample
 from ofdm.config import OFDMConfig
 import pytest
-from scripts.delay.calc_delay import upsample, scale_rx_signal, calculate_precise_delay
+from scripts.delay.calc_delay import scale_rx_signal, calculate_precise_delay
+
 
 class TestUpsample:
     def test_output_length(self):
