@@ -23,3 +23,4 @@ pyscr/scrap.py
 *.json
 .pytest_cache
 experiments/
+ofdm.egg-info/
