@@ -280,12 +280,9 @@ def binary_ref_to_iq(binary_string:str, n_samples:int)->np.ndarray:
 
 def scale_rx_signal(raw_rx_data:np.ndarray)->np.ndarray:
     max_val = np.max(np.abs(raw_rx_data))
-
     if max_val > 0:
-        scale_factor = 0.9 / max_val
-        scaled_rx_data = raw_rx_data * scale_factor
-    return scaled_rx_data
-
+        return raw_rx_data * (0.9) / max_val
+    return raw_rx_data
 
 # def calculate_precise_delay(rx_signal, ref_signal, fs, upsample_factor=100, debug_plot:bool = False):
 #     """
