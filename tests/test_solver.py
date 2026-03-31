@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from scipy import constants
 from ofdm.simulation.solver import solve_tdoa, tdoa_cost_function, toa_cost_function
-from ofdm.simulation.geometry import ideal_tdoa
+
 
 C = constants.c
 
@@ -16,6 +16,11 @@ def four_rx_layout():
     ])
     known_tx = np.array([0.270, 0.970])
     return rx_coords, known_tx
+
+def ideal_tdoa(tx_pos, rx_coords):
+    distances = np.linalg.norm(rx_coords - tx_pos, axis=1)
+    toa = distances / C
+    return toa[1:] - toa[0]
 
 class TestTDoACostFunction:
     def test_cost_function_zero_at_true_position(self, four_rx_layout):
