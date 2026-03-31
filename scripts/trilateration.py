@@ -11,11 +11,11 @@ DELAY_DATA_PATH = "./metadata/delay_calc.json"
 
 RX_COORDS = np.array([
     [0.0, 0.0], # ANchor
-    [0.508, 0.137], # RX 2
-    [0.0, 0.615] # RX 3
+    [0.0, 0.0], # RX 2
+    [0.0, 0.0] # RX 3
 ])
 
-TX_TRUE = np.array([0.270, 0.970])
+TX_TRUE = np.array([0.0, 0.0])
 
 def load_tdoa_from_csvs():
     base_dir = "./experiments/verification_data"
