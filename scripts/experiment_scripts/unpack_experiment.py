@@ -22,12 +22,14 @@ DELAY_DATA_PATH = "./metadata/delay_calc.json"
 REF_DELAY_DATA_PATH = "./metadata/ref_delay_calc.json"
 PERFORMANCE_DATA_PATH = "./data_files/ofdm_performance.json"
 USRP_CONFIG_PATH = "./configs/usrp_settings.yaml"
-UNPACKED_DATA_CSV = "./experiments/unpacked_data3/rx3_channel1.csv"
 
+#----- MODIFY ------
+# directory to where the unpacked data will be saved to.  Specifiy the name of the csv in path + no files will automatically be created you have to make those manually
+UNPACKED_DATA_CSV = "./experiments/unpacked_data3/rx3_channel1.csv" # ./experiments/[EXPERIMENT NAME]/[UNPACKED NAME.csv]
 
-
-
-data_dir = Path("/home/guoyixu/OFDM_Sense/EXPERIMENTS/synthetic_trilateration2/trilat1_rx3_x0cm_y61_5cm_archive/channel1")
+#Path to the raw data that needs to be unpacked
+data_dir = Path("/home/guoyixu/OFDM_Sense/EXPERIMENTS/synthetic_trilateration2/trilat1_rx3_x0cm_y61_5cm_archive/channel1") #PATH TO RAW DATA TO BE UNPACKED
+# -----------------
 
 for dat_file in data_dir.glob("*.dat"):
     print(dat_file)
