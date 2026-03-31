@@ -26,23 +26,17 @@ def load_tdoa_from_csvs():
     df_rx3_ch0 = pd.read_csv(os.path.join(base_dir, "rx3_channel0.csv"))
     df_rx3_ch1 = pd.read_csv(os.path.join(base_dir, "rx3_channel1.csv"))
 
-    #df_rx4_ch0 = pd.read_csv(os.path.join(base_dir, "rx3_channel0.csv"))
-    #df_rx4_ch1 = pd.read_csv(os.path.join(base_dir, "rx3_channel1.csv"))
-
     col_name = 'delay0'
-
 
     raw_anchor_t1_ns = df_rx2_ch1[col_name].values # Ch 1
     raw_rover_t1_ns  = df_rx2_ch0[col_name].values # Ch 0
     raw_anchor_t2_ns = df_rx3_ch1[col_name].values # Ch 1
     raw_rover_t2_ns  = df_rx3_ch0[col_name].values # Ch 0
 
-
     # calc tdoa
     raw_dt_1_ns = (raw_rover_t1_ns - raw_anchor_t1_ns) * 1e9
     raw_dt_2_ns = (raw_rover_t2_ns - raw_anchor_t2_ns) * 1e9
-    #raw_dt_3_ns = raw_rover_t3_ns - raw_anchor_t3_ns
-    #                                                                                                   
+                                                                                                  
     HARDWARE_BIAS_NS = 3.461                                                               
     dt_1_sec = (raw_dt_1_ns - HARDWARE_BIAS_NS) * 1e-9                                                
     dt_2_sec = (raw_dt_2_ns - HARDWARE_BIAS_NS) * 1e-9
@@ -66,11 +60,6 @@ def main():
     estimated_positions = []
     errors = []
 
-    for i in range(num_packets):                                                                      
-        delay_diffs_sec = all_delay_diffs[i]
-        print(f"Packet {i}: tdoa_sec={delay_diffs_sec}, tdoa_m={delay_diffs_sec * C}")                
-        break  # just check first packet 
-
     for i in range(num_packets):
         delay_diffs_sec = all_delay_diffs[i]
 
@@ -80,7 +69,6 @@ def main():
             args=(RX_COORDS, delay_diffs_sec),
             method='lm'
         )
-        print(f"Packet {i}: cost={result.cost:.2e}, x={result.x}") 
 
         if result.cost < 1e-6:
             est_x, est_y = result.x
