@@ -1,9 +1,11 @@
 import argparse
 import numpy as np 
+import matplotlib.pyplot as plt
 
 from ofdm.simulation.geometry import compute_tdoa
 from ofdm.simulation.noise_model import add_gausian_nosie
 from ofdm.simulation.solver import solve_tdoa
+from ofdm.viz.sim_plotter import plot_mc_results, plot_tdoa_hyperbolas
 
 
 def run_monte_carlo(tx_pos, rx_coords, sigma_ns, n_trials=1000, seed=None):
@@ -43,8 +45,7 @@ def main():
     rx_coords = np.array([
         [0.0, 0.0],
         [0.508, 0.137],
-        [0.0, 0.615],
-        [0.13, 0.22]
+        [0.0, 0.615]
     ])
 
     results = run_monte_carlo(
@@ -60,6 +61,11 @@ def main():
     print(f"Mean error: {results['mean_error']*100:.2f} cm")
     print(f"P95 errors: {results['p95_error']*100:.2f} cm")
     print(f"Centroid:   X={results['centroid'][0]:.4f} cm, Y={results['centroid'][1]:.4f} cm")
+
+    ax = plot_mc_results(results, np.array(args.tx), rx_coords, args.sigma_ns)
+    plot_tdoa_hyperbolas(np.array(args.tx), rx_coords, results, ax)
+    plt.tight_layout()
+    plt.show()
 
 if __name__ == "__main__":
     main()
