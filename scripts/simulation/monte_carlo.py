@@ -2,38 +2,8 @@ import argparse
 import numpy as np 
 import matplotlib.pyplot as plt
 
-from ofdm.simulation.geometry import compute_tdoa
-from ofdm.simulation.noise_model import add_gausian_nosie
-from ofdm.simulation.solver import solve_tdoa
-from ofdm.viz.sim_plotter import plot_mc_results, plot_tdoa_hyperbolas
-
-
-def run_monte_carlo(tx_pos, rx_coords, sigma_ns, n_trials=1000, seed=None):
-    """
-    Run monte carlo TDOA localization simluation.
-    Returns dict with estimates, errors, and summary stats
-    """
-    rng = np.random.default_rng(seed)
-    ideal_tdoas = compute_tdoa(tx_pos, rx_coords)
-
-    estimates = []
-    for _ in range(n_trials):
-        noisy_tdoas = add_gausian_nosie(ideal_tdoas, sigma_ns, rng=rng)
-        est = solve_tdoa(rx_coords, noisy_tdoas)
-        if est is not None:
-            estimates.append(est)
-    estimates = np.array(estimates)
-    errors = np.linalg.norm(estimates - tx_pos, axis=1)
-    return {
-        "estimates": estimates,
-        "errors": errors,
-        "rmse": np.sqrt(np.mean(errors**2)),
-        "mean_error": np.mean(errors),
-        "p95_error": np.percentile(errors, 95),
-        "centroid": np.mean(estimates, axis=0),
-        "n_converged": len(estimates),
-        "n_trials": n_trials,
-    }
+from ofdm.viz.sim_plotter import plot_mc_results, plot_tdoa_hyperbolas, DraggableSimulation
+from ofdm.simulation.monte_carlo import run_monte_carlo
 
 def main():
     parser = argparse.ArgumentParser()
@@ -45,7 +15,8 @@ def main():
     rx_coords = np.array([
         [0.0, 0.0],
         [0.508, 0.137],
-        [0.0, 0.615]
+        [0.0, 0.615],
+        [0.0, 1.0]
     ])
 
     results = run_monte_carlo(
@@ -65,6 +36,14 @@ def main():
     ax = plot_mc_results(results, np.array(args.tx), rx_coords, args.sigma_ns)
     plot_tdoa_hyperbolas(np.array(args.tx), rx_coords, results, ax)
     plt.tight_layout()
+    sim = DraggableSimulation(
+        ax=ax, 
+        tx_pos=np.array(args.tx),
+        rx_coords=rx_coords,
+        sigma_ns=args.sigma_ns,
+        n_trials=args.trials
+    )
+    
     plt.show()
 
 if __name__ == "__main__":
