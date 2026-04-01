@@ -121,9 +121,13 @@ class DraggableSimulation:
         self._dragging = None
     
     def _redraw(self):
+        xlim = self.ax.get_xlim()
+        ylim = self.ax.get_ylim()
         self.ax.cla()
         results = run_monte_carlo(self.tx_pos, self.rx_coords, self.sigma_ns, self.n_trials, seed=42)
         plot_mc_results(results, self.tx_pos, self.rx_coords, self.sigma_ns, ax=self.ax)
         plot_tdoa_hyperbolas(self.tx_pos, self.rx_coords, results, self.ax)
+        self.ax.set_xlim(xlim)
+        self.ax.set_ylim(ylim)
         self.ax.get_figure().canvas.draw_idle()
 
