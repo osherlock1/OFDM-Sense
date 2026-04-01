@@ -30,3 +30,4 @@ def run_monte_carlo(tx_pos, rx_coords, sigma_ns, n_trials=1000, seed=None):
         "n_converged": len(estimates),
         "n_trials": n_trials,
     }
+
