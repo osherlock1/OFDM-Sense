@@ -4,6 +4,7 @@ from matplotlib.patches import Ellipse
 from typing import Optional
 from scipy import constants
 from ofdm.simulation.geometry import compute_tdoa
+from ofdm.simulation.monte_carlo import run_monte_carlo
 
 C = constants.c
 
@@ -76,3 +77,53 @@ def plot_tdoa_hyperbolas(tx_pos, rx_coords, results, ax, sigma_ns=None):
         dist_to_rx = np.sqrt((X - rx[0])**2 + (Y - rx[1])**2)
         diff = dist_to_rx - dist_to_anchor - (ideal_tdoas[i - 1] * C)
         ax.contour(X, Y, diff, levels=[0], linewidths=1.5, linestyles='-')
+
+
+class DraggableSimulation:
+    def __init__(self, ax, tx_pos, rx_coords, sigma_ns, n_trials=1000):
+        self.ax = ax
+        self.tx_pos = tx_pos.copy()
+        self.rx_coords = rx_coords.copy()
+        self.sigma_ns = sigma_ns
+        self.n_trials = n_trials
+        self._dragging = None
+        self._pick_radius = 0.05
+        fig = ax.get_figure()
+        fig.canvas.mpl_connect('button_press_event', self._on_press)
+        fig.canvas.mpl_connect('motion_notify_event', self._on_motion)
+        fig.canvas.mpl_connect('button_release_event', self._on_release)
+    
+    def _hit(self, event, pos):
+        if event.xdata is None:
+            return False
+        return np.hypot(event.xdata - pos[0], event.ydata - pos[1]) < self._pick_radius
+    
+    def _on_press(self, event):
+        if self._hit(event, self.tx_pos):
+            self._dragging = ('tx', None)
+        else:
+            for i, rx in enumerate(self.rx_coords):
+                if self._hit(event, rx):
+                    self._dragging = ('rx', i)
+                    break
+
+    def _on_motion(self, event):
+        if self._dragging is None or event.xdata is None:
+            return
+        kind, idx = self._dragging
+        if kind == 'tx':
+            self.tx_pos[:] = [event.xdata, event.ydata]
+        else:
+            self.rx_coords[idx] = [event.xdata, event.ydata]
+        self._redraw()
+
+    def _on_release(self, event):
+        self._dragging = None
+    
+    def _redraw(self):
+        self.ax.cla()
+        results = run_monte_carlo(self.tx_pos, self.rx_coords, self.sigma_ns, self.n_trials, seed=42)
+        plot_mc_results(results, self.tx_pos, self.rx_coords, self.sigma_ns, ax=self.ax)
+        plot_tdoa_hyperbolas(self.tx_pos, self.rx_coords, results, self.ax)
+        self.ax.get_figure().canvas.draw_idle()
+
