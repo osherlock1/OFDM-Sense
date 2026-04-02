@@ -121,7 +121,6 @@ def toa_cost_function(guess, rx_coords, measured_distance):
     Calculates difference between theoretical distances based on guessed (x,y) and the actual measured distnace.
 
     """
-
     x, y = guess
     residuals = np.zeros(len(rx_coords))
 
