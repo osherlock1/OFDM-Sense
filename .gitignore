@@ -25,4 +25,3 @@ pyscr/scrap.py
 experiments/
 src/ofdm.egg-info/
 ofdm.egg-info/
-!configs/layout.json
