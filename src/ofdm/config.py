@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 import random
+import json
+import numpy as np
 
 
 @dataclass
@@ -49,8 +51,6 @@ class OFDMConfig:
         self.pilot_carriers.sort()
         self.data_carriers.sort()
 
-
-
     def _load_default_map(self):
         """
         Define Default OFDM mapping if no Config is provided
@@ -71,3 +71,12 @@ class OFDMConfig:
         Helper to convert from python indexing to freq bin indexing
         """
         return (k + self.N) % self.N
+    
+
+def loadLayout(layout_config_path:str)->np.ndarray:
+    """
+    Loads configs/layout.json.  Returns rx_coords, tx_true as np.ndarrays
+    """ 
+    with open(layout_config_path, "r") as f:
+        coords = json.load(f)
+    return np.array(coords['rx_coords']), np.array(coords['tx_true'])

@@ -1,15 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from ofdm.simulation.monte_carlo import run_monte_carlo
+from ofdm.config import loadLayout
 
 
 def main():
-    rx_coords = np.array([
-        [0.0, 0.0],
-        [0.508, 0.137],
-        [0.0, 0.615],
-        #[0.0, 1.0]
-    ])
+    layout_config_pth = "./configs/layout.json"
+    rx_coords, tx_true = loadLayout(layout_config_pth)
+
     rx_x = rx_coords[:, 0].reshape(-1, 1, 1)
     rx_y = rx_coords[:, 1].reshape(-1, 1, 1)
 
