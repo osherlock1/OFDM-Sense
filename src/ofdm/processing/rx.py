@@ -10,12 +10,11 @@ def unpack_rx_file(ofdm_conf:OFDMConfig, rx_path:str, ref_path:str, sim:bool = F
     Take raw ofdm binary data from the rx and unpack it including syncronization, channel estimation, and cfo calibration.
     """
 
-    print(f"Loading RX data from {rx_path}...")
+    
     if sim == False:
         rx_raw = np.fromfile(rx_path, dtype=np.complex64)
     else: 
         rx_raw = np.fromfile(rx_path, dtype=np.complex64)
-    print(f"Loading Referense Data from {ref_path}...\n")
     with open(ref_path) as f:
         ref_data = json.load(f)
     
@@ -116,9 +115,6 @@ def unpack_rx_file(ofdm_conf:OFDMConfig, rx_path:str, ref_path:str, sim:bool = F
         
     demodulated_data = np.array(demodulated_data)
     demodulated_data = demodulated_data*np.sqrt(10)
-    print(f"[Success] Packet Extracted.")
-    print(f"  -> {len(rx_payload_syms)} Payload Symbols extracted")
-    print(f"Calculated CFO:{best_cfo}.\n")
     return demodulated_data, ref_data, refined_packet_start
 
 #TODO: NEEDS TESTS
@@ -154,7 +150,6 @@ def normalize_rx_signal(rx_data:np.ndarray)->np.ndarray:
         rx_data normalized between +- 0.9
 
     """
-    
     max_val = np.max(np.abs(rx_data))
     if max_val == 0:
         raise ValueError("Cannot normalize signal: max amplitude is zero.  Check the .dat file for bad capture.")
