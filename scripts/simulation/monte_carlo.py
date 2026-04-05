@@ -18,12 +18,15 @@ def main():
     if args.tx is not None:
         tx_true = np.array(args.tx)
 
+    bounds = ([0, 2], [0, 2])
+
     results = run_monte_carlo(
         tx_pos=tx_true,
         rx_coords=rx_coords,
         sigma_ns=args.sigma_ns,
         n_trials=args.trials,
         seed=42,
+        bounds=bounds
     )
 
     print(f"Converged:  {results['n_converged']}/{results['n_trials']}")

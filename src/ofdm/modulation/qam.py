@@ -66,5 +66,16 @@ def get_reference_constalation() -> np.ndarray:
     points = list(QAM16_MAP.values())
     return np.array(points) 
 
+def binary_ref_to_iq(binary_string:str)->np.ndarray:
+    """
+    Helper to convert the binary reference data in the ref_data json files into iq data for evaluation
+    calculations.
+    """
+    full_string = "".join(binary_string)
+    word_len = 4
+    binary_word_list = np.array([full_string[i:word_len + i] for i in range(0 ,len(full_string), word_len)])
+
+    iq_array = [binary_to_iq(word) for word in binary_word_list]
+    return np.array(iq_array) * np.sqrt(10)
 
     

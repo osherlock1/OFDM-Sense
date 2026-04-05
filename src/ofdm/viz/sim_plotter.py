@@ -5,6 +5,7 @@ from typing import Optional
 from scipy import constants
 from ofdm.simulation.geometry import compute_tdoa
 from ofdm.simulation.monte_carlo import run_monte_carlo
+from matplotlib.widgets import Slider
 
 C = constants.c
 
@@ -26,7 +27,7 @@ def plot_mc_results(
     centroid = results["centroid"]
 
     ax.scatter(estimates[:, 0], estimates[:, 1],
-               c='red', marker='o', s=20, alpha=0.3, label='Estimates', zorder=2)
+               c='blue', marker='o', s=20, alpha=0.3, label='Estimates', zorder=2)
     
     # centroid
     ax.scatter(*centroid, c='purple', marker='X', s=200, edgecolor='black', linewidths=1.5, label='Centroid', zorder=5)
@@ -39,7 +40,7 @@ def plot_mc_results(
     ax.scatter(rx_coords[1:, 0], rx_coords[1:, 1], c='cyan', marker='^', s= 100, label='Roaming RX', zorder=4)
 
     stats = (
-        f"$\\sigma$ = {sigma_ns} ns\n"
+        f"$\\sigma$ = {sigma_ns:.3f} ns\n"
         f"RMSE      = {results['rmse']*100:.2f} cm\n"
         f"Mean err  = {results['mean_error']*100:.2f} cm\n"
         f"P95 err   = {results['p95_error']*100:2.2f} cm\n"
@@ -65,8 +66,8 @@ def plot_tdoa_hyperbolas(tx_pos, rx_coords, results, ax, sigma_ns=None):
 
     ideal_tdoas = compute_tdoa(tx_pos, rx_coords)
 
-    x = np.linspace(-0.5, 1.5, 800)
-    y = np.linspace(-0.5, 1.5, 800)
+    x = np.linspace(-0.5, 2.0, 800)
+    y = np.linspace(-0.5, 2.0, 800)
     X, Y = np.meshgrid(x, y)
 
     anchor = rx_coords[0]
@@ -93,6 +94,20 @@ class DraggableSimulation:
         fig.canvas.mpl_connect('motion_notify_event', self._on_motion)
         fig.canvas.mpl_connect('button_release_event', self._on_release)
     
+        ax_sigma = fig.add_axes([0.15, 0.08, 0.7, 0.03])
+        ax_trials = fig.add_axes([0.15, 0.03, 0.7, 0.03])
+
+        self._slider_sigma = Slider(ax_sigma, 'σ (ns)', 0.01, 1.5, valinit=sigma_ns)
+        self._slider_trials = Slider(ax_trials, 'Trials', 10, 1000, valinit=n_trials, valstep=10)
+
+        self._slider_sigma.on_changed(self._on_slider)
+        self._slider_trials.on_changed(self._on_slider)
+
+    def _on_slider(self, val):
+        self.sigma_ns = self._slider_sigma.val
+        self.n_trials = int(self._slider_trials.val)
+        self._redraw()
+
     def _hit(self, event, pos):
         if event.xdata is None:
             return False
@@ -131,3 +146,41 @@ class DraggableSimulation:
         self.ax.set_ylim(ylim)
         self.ax.get_figure().canvas.draw_idle()
 
+def plot_experiment_results(
+        results: dict,
+        tx_pos: np.ndarray,
+        rx_coords: np.ndarray,
+        ax: Optional[plt.Axes] = None,
+) -> plt.Axes:
+    """
+    Plot localization results from a real experiemnt.
+    """
+    if ax is None:
+        fix, ax = plt.subplots(figsize=(9,9))
+    
+    estimates = results["estimates"]
+    centroid = results["centroid"]
+
+    ax.scatter(estimates[:, 0], estimates[:, 1], c='red', marker='o', s=20, alpha=0.3, label="Estimates", zorder=2)
+    ax.scatter(*centroid, c='purple', marker='X', s=200, edgecolor='black', linewidths=1.5, label='Centroid', zorder=5)
+    ax.scatter(*tx_pos, c='green', marker='s', s=150, label='TX (Ground Truth)', zorder=5)
+    ax.scatter(*rx_coords[0], c='blue', marker='^', s=150, label='Anchor RX', zorder=4)
+    ax.scatter(rx_coords[1:, 0], rx_coords[1:, 1], c='cyan', marker='^', s=100, label='Roaming RX', zorder=4)
+    
+    stats = (
+        f"Converged:    {results['n_converged']}/{results['n_trials']}\n"
+        f"Mean err:     {results['mean_error']*100:.2f} cm\n"
+        f"RMSE:         {results['rmse']*100:.2f} cm\n"
+        f"P95 err:      {results['p95_error']*100:.2f} cm\n"
+        f"Centroid err: {results['centroid_error']*100:.2f} cm"
+    )
+    ax.text(0.02, 0.98, stats, transform=ax.transAxes, fontsize=9, verticalalignment='top',
+             family='monospace', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+    
+    ax.set_xlabel("X (meters)")
+    ax.set_ylabel("Y (meters)")
+    ax.legend(loc='lower right')
+    ax.grid(True, linestyle='--', alpha=0.6)
+    ax.set_aspect('equal')
+
+    return ax
