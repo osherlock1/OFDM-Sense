@@ -25,7 +25,7 @@ def tdoa_cost_function(guess, rx_coords, delay_diffs_sec):
     
     return residuals
 
-def solve_tdoa(rx_coords, delay_diffs_sec, initial_guess=None):
+def solve_tdoa(rx_coords, delay_diffs_sec, initial_guess=None, bounds=None):
     """                                                        
     Runs LM least-squares TDOA solve for a single set of delay measurements.
     Returns (x, y) estimate or None if solve failed.                                              
@@ -42,6 +42,11 @@ def solve_tdoa(rx_coords, delay_diffs_sec, initial_guess=None):
     )
 
     if result.success:
+        x, y = result.x
+        if bounds is not None:
+            (x_min, x_max), (y_min, y_max) = bounds
+            if not (x_min <= x <= x_max and y_min <= y <= y_max):
+                return None
         return result.x
     return None
 
