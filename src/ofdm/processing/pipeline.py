@@ -1,5 +1,10 @@
 import numpy as np
 import json
+from pathlib import Path
+from collections import defaultdict
+from tqdm import tqdm
+import pandas as pd
+
 from ofdm.processing.rx import unpack_rx_file, normalize_rx_signal, extract_packet
 from ofdm.channel.delay import calculate_sub_sample_delay_parabolic
 from ofdm.modulation import qam
@@ -7,7 +12,9 @@ from ofdm.utils.eval import calc_EVM, calc_BER, calc_SER
 from ofdm.config import OFDMConfig
 
 
-def process_dat_file(dat_path: str, ref_path:str, channel:int, ofdm_conf:OFDMConfig) -> dict:
+
+
+def process_dat_file(dat_path:Path, ref_path:Path, channel:int, ofdm_conf:OFDMConfig) -> dict:
     """
     Processes a single .dat file and returns delay and transfer quality metrics.
     Only the delay is used for localization, demodulated IQ data is discarded
@@ -47,3 +54,38 @@ def process_dat_file(dat_path: str, ref_path:str, channel:int, ofdm_conf:OFDMCon
             f"evm{channel}": evm,
             f"ser{channel}": ser,
             f"ber{channel}": ber}
+
+
+def process_archive(archive_dir:Path, ref_path:Path, ofdm_conf:OFDMConfig):
+    """
+    Script to automate experiment unpacking.
+
+    reads all of the .dat files in each of the channel dirs in a device archive and saves the unpacked experiment data in a csv
+    """
+    runs = defaultdict(dict)
+    for channel_dir in archive_dir.glob("channel*/"):
+        channel = int(channel_dir.name.replace("channel", ""))
+        for dat_file in channel_dir.glob("*.dat"):
+            run_number = int(dat_file.name.split("_run_")[1].split("_")[0])
+            runs[run_number][channel] = dat_file
+
+    results = []
+    for run_number, channel_files in tqdm(sorted(runs.items()), desc="Processing runs"):
+        row = {"run": run_number}
+        for channel, dat_file in sorted(channel_files.items()):
+            try:
+                unpacked_data = process_dat_file(
+                    dat_path=dat_file,
+                    ref_path=ref_path,
+                    channel= channel,
+                    ofdm_conf= ofdm_conf
+                )
+                row.update(unpacked_data)
+            except Exception as e:
+                tqdm.write(f"  [WARNING] run {run_number} channel {channel} failed: {e}")
+        results.append(row)
+
+    output_path = archive_dir / "delays.csv"
+    pd.DataFrame(results).to_csv(output_path, index=False)
+    print(f"Saved {len(results)} runs to {output_path}")
+
