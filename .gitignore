@@ -11,7 +11,7 @@ venv/
 
 #Build Artifacts
 build/
-
+images/
 
 #Byte-compiled / optimized / DLL
 __pycache__/
