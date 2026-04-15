@@ -3,6 +3,9 @@ import numpy as np
 from ofdm.config import OFDMConfig
 from ofdm.core import preamble, payload, waveform
 import json
+from PIL import Image                                                                                                                                                   
+import io 
+from ofdm.channel.noise import add_nosie
 
 
 IMAGE_PATH = "./images/cat.jpeg"
@@ -24,8 +27,11 @@ def pad_and_reformat_iq_data(iq_data:np.ndarray)->np.ndarray:
     return iq_samples.reshape(-1, n_data_subcarriers)
 
 def main():
-    with open(IMAGE_PATH, "rb") as f:
-        image_bytes = f.read()
+                                                                       
+    img = Image.open(IMAGE_PATH)
+    buf = io.BytesIO()                                                                                                                                                      
+    img.save(buf, format='BMP')
+    image_bytes = buf.getvalue()     
 
     bits = bytes2bits(image_bytes)
     chunks4bit = [bits[i:i + 4] for i in range(0, len(bits), 4)]
@@ -61,28 +67,20 @@ def main():
     max_val = np.max(np.abs(final_signal))                                                                  
     if max_val > 0: 
         final_signal = final_signal * (0.9 / max_val)                                                       
-                                                                                                            
+
+    final_signal = add_nosie(final_signal, 100)
+
     final_signal.astype(np.complex64).tofile(SIGNAL_SAVE_PATH)
 
     ref_data = {
         "n_samples": len(final_signal),
-        "symb_per_packet": SYMBOLS_PER_PACKET
+        "symb_per_packet": SYMBOLS_PER_PACKET,
+        "total_image_bytes": len(image_bytes),
+        "n_packets": len(packets)  
     }
     with open(METADATA_SAVE_PATH, 'w') as f:
         json.dump(ref_data, f, indent=2)
 
     
-# need to convert bytes into bits
-
-# convert bits into iq samples
-
-# pack iq sampels into symbols
-
-# pack symbols into packets
-
-# concatenate all packets into one .dat file
-
-
-
 if __name__ == "__main__":
     main()
