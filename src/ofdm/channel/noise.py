@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def add_nosie(signal: np.ndarray, snr_db: float, seed:int = None) -> np.ndarray:
+def add_noise(signal: np.ndarray, snr_db: float, seed:int = None) -> np.ndarray:
     """
     Adds Gaussian Noise to a signal
     """

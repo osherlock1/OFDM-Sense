@@ -60,7 +60,7 @@ def main():
 
     #Add noise
     if args.snr < 100.0:
-        full_packet = noise.add_nosie(signal = full_packet, snr_db=args.snr, seed=args.seed)
+        full_packet = noise.add_noise(signal = full_packet, snr_db=args.snr, seed=args.seed)
     
     #Add buffer prefix
     buffer = np.zeros(20000, dtype=complex)
