@@ -59,7 +59,21 @@ def plot_constellation(
     Plots RX IQ salmpes as QAM16 Format
     """
     if ax is None:
-        fig, ax = plt.subplots(figsize=(6,6))\
-    
-    return
-    #Plot the grid
+        fig, ax = plt.subplots(figsize=(6,6))
+
+    ax.scatter(np.real(iq_data), np.imag(iq_data), s=10, alpha=0.5)
+
+    # 16-QAM reference grid
+    levels = [-3, -1, 1, 3]
+    for x in levels:
+        for y in levels:
+            ax.plot(x, y, 'r+', markersize=10, markeredgewidth=1.5)
+
+    ax.axhline(0, color='gray', linewidth=0.5)
+    ax.axvline(0, color='gray', linewidth=0.5)
+    ax.set_title(title)
+    ax.set_xlabel("In-Phase")
+    ax.set_ylabel("Quadrature")
+    ax.set_aspect('equal')
+
+    return ax
