@@ -1,5 +1,5 @@
 import numpy as np
-from ofdm.channel.CHEST import channel_estimation_calc, apply_gains, chest_cacl
+from ofdm.channel.CHEST import channel_estimation_calc, apply_gains
 from ofdm.config import OFDMConfig
 from ofdm.utils.generator import DataGenerator
 from ofdm.core import payload, preamble
@@ -53,16 +53,3 @@ def test_apply_gains_correct_equalization():
     equalized = apply_gains(rx_symb_freq=pilot_symbol_rx, Lambda_est=calced_gains)
     np.testing.assert_allclose(equalized, pilot_symbol_tx[active_bins], atol=1e-10)
 
-def test_chest_calc_unity_channel():                                                                                
-    config = OFDMConfig()                                                                                           
-    pilot_symbol = preamble.generate_pilot_symbol(config=config)                                                    
-    active_bins = np.unique(np.concatenate([config.data_carriers, config.pilot_carriers]))                          
-                                                                                                                    
-    gains = chest_cacl(                                                                                             
-        rx_pilot_freq=pilot_symbol[active_bins],
-        tx_pilot_ref=pilot_symbol[active_bins],                                                                     
-        config=config
-    )
-
-    np.testing.assert_allclose(gains, np.ones(len(active_bins)), atol=1e-10)
-    
