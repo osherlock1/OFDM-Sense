@@ -1,6 +1,6 @@
 import numpy as np
 
-def add_gausian_nosie(tdoa_values, sigma_ns, rng=None):
+def add_gaussian_noise(tdoa_values, sigma_ns, rng=None):
     """
     Add gausian noise to time difference of arrival delay values.
     signa_ns: noise standard deviation in ns
