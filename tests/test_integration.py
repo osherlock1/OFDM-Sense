@@ -38,10 +38,10 @@ def test_pipeline_no_channel_bits_recovered():
     assert bits_rx == bits_tx
 
 
-def test_pipeline_high_snr_low_ber():
+def test_pipeline_high_snr_low_ber_via_calc_ber():
     """
-    End-to-end with AGWN noise at high SNR
-    BER should be very low but not guaranteeded to be zero.
+    End-to-end with AWGN noise at high SNR.
+    BER computed via calc_BER utility should be very low.
     """
     config = OFDMConfig()
     gen = DataGenerator(config=config, seed=0)
