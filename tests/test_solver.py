@@ -57,7 +57,7 @@ class TestSolveTDoA:
         assert est is not None
         np.testing.assert_allclose(est, tx_true, atol=1e-3)
 
-    def solve_with_three_rx(self):
+    def test_solve_with_three_rx(self):
         rx_coords = np.array([
             [0.0, 0.0],
             [0.9, 0.0],
@@ -69,7 +69,7 @@ class TestSolveTDoA:
         assert est is not None
         np.testing.assert_allclose(est, tx_true, atol=1e-3)
 
-    def solver_returns_ndarray(self, four_rx_layout):
+    def test_solver_returns_ndarray(self, four_rx_layout):
         rx_coords, tx_true = four_rx_layout
         tdoas = ideal_tdoa(tx_true, rx_coords)
         est = solve_tdoa(rx_coords, tdoas)
