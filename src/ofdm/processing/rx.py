@@ -53,7 +53,7 @@ def unpack_rx_file(ofdm_conf:OFDMConfig, rx_path:str, ref_path:str, sim:bool = F
     best_cfo, best_delay_rel, heatmap = cfo.estimate_cfo(
         tx_ref = tx_pilot_ref,
         rx_signal = rx_pilot_search_area,
-        fs = 100e6,
+        fs = ofdm_conf.FS,
         n_bins = 2 ** 14
     )
     best_cfo = best_cfo * -1
