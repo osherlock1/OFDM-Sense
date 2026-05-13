@@ -17,8 +17,6 @@ FIXED_DEVICES = ["ANCHORch0", "TX"] # NAME OF DEVICES THAT ARE FIXED (WILL ONLY 
 # -------------------------------
 
 RUN_NAME = "".join(ROAMING_DEVICES) + "_"
-EXPERIMENT_DIR = f"/home/guoyixu/OFDM_Sense/EXPERIMENTS/{EXPERIMENT_NAME}"
-DESTINATION_DIR = EXPERIMENT_DIR + f"/{RUN_NAME}archive/"
 
 #Load Configurations
 usrp_conf = usrp.load_config(USRP_CONFIG_PATH)
@@ -85,14 +83,18 @@ def get_roaming_positions(roaming_rx_devices, run_dir):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--runs", type=int, default=1, help="specify number of time experiement will run")
+    parser.add_argument("--experiments_dir", type=str, default="./experiments", help="root directory where experiment data will be saved")
     args = parser.parse_args()
 
-    if not os.path.exists(DESTINATION_DIR):
-        os.makedirs(DESTINATION_DIR)
-        print(f"Created archive directory: {DESTINATION_DIR}")
+    experiment_dir = os.path.join(args.experiments_dir, EXPERIMENT_NAME)
+    destination_dir = os.path.join(experiment_dir, f"{RUN_NAME}archive")
 
-    get_fixed_positions(EXPERIMENT_DIR, fixed_devices=FIXED_DEVICES)
-    get_roaming_positions(run_dir=DESTINATION_DIR, roaming_rx_devices=ROAMING_DEVICES)
+    if not os.path.exists(destination_dir):
+        os.makedirs(destination_dir)
+        print(f"Created archive directory: {destination_dir}")
+
+    get_fixed_positions(experiment_dir, fixed_devices=FIXED_DEVICES)
+    get_roaming_positions(run_dir=destination_dir, roaming_rx_devices=ROAMING_DEVICES)
 
     for run in range(args.runs):
         print(f"\n========== RUN {run+1}/{args.runs} ==========\n")
@@ -105,7 +107,7 @@ def main():
 
         for channel in rx_channel_idx:
             source_dat_file = f"{SOURCE_DAT_FILE}.0{channel}.dat"
-            channel_file = f"{DESTINATION_DIR}channel{channel}/"
+            channel_file = os.path.join(destination_dir, f"channel{channel}")
 
             if not os.path.exists(channel_file):
                 os.makedirs(channel_file)

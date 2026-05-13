@@ -8,7 +8,7 @@ from ofdm.config import OFDMConfig
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--experiment_pth", type=str, default="/home/guoyixu/OFDM_Sense/EXPERIMENTS/rj_virtual_multilateration")
+    parser.add_argument("--experiment_pth", type=str, required=True, help="path to experiment directory containing archive subdirectories")
     parser.add_argument("--ref_pth", type=str, default="./data_files/rand_ofdm_packet_ref.json")
     args = parser.parse_args()
 
