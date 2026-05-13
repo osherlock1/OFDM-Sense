@@ -5,7 +5,7 @@ from ofdm.core.preamble import generate_pilot_vals
 from ofdm.core.payload import generate_ofdm_data_symbol, extract_data
 from ofdm.core.waveform import create_time_domain_symbol, remove_cp, time_to_freq
 from ofdm.modulation.qam import iq_to_binary
-from ofdm.channel.noise import add_nosie
+from ofdm.channel.noise import add_noise
 from ofdm.modulation.qam import iq_to_binary
 from ofdm.utils.eval import calc_BER, calc_EVM, calc_SER
 from ofdm.core.preamble import generate_pilot_symbol
@@ -53,7 +53,7 @@ def test_pipeline_high_snr_low_ber():
     time_signal = create_time_domain_symbol(freq_data=symbol_freq, cp_len=config.CP_LEN)
 
     # --- add noise ---
-    noisy_signal = add_nosie(signal=time_signal, snr_db=30.0, seed=42)
+    noisy_signal = add_noise(signal=time_signal, snr_db=30.0, seed=42)
 
     # --- rx ---
     time_no_cp = remove_cp(noisy_signal, cp_len=config.CP_LEN)
@@ -82,8 +82,8 @@ def test_pipeline_high_snr_low_ber():
     time_signal = create_time_domain_symbol(symbol_freq, cp_len=config.CP_LEN)                                
                                                                                                             
     # --- nosie ---
-    from ofdm.channel.noise import add_nosie                                                                  
-    noisy_signal = add_nosie(signal=time_signal, snr_db=30.0, seed=42)
+    from ofdm.channel.noise import add_noise                                                                  
+    noisy_signal = add_noise(signal=time_signal, snr_db=30.0, seed=42)
 
     # --- rx ---                                                                                              
     time_no_cp = remove_cp(noisy_signal, cp_len=config.CP_LEN)
