@@ -51,21 +51,6 @@ class OFDMConfig:
         self.pilot_carriers.sort()
         self.data_carriers.sort()
 
-    def _load_default_map(self):
-        """
-        Define Default OFDM mapping if no Config is provided
-        """
-        #Standard OFDM mapping
-        # - 48 Data Subcarriers
-        # - 4 Pilot Subarriers
-        # - 1 DC (Index 0)
-        # - 11 Guard Carriers
-
-        #Define PIlots
-        pilot_indicies = [-21, -7, 7, 21]
-        self.pilot_carriers = [self]
-        pass
-    
     def _idx(self, k: int) -> int:
         """
         Helper to convert from python indexing to freq bin indexing
