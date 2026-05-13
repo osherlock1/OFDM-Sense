@@ -20,7 +20,8 @@ __pycache__/
 #Specific
 rx_log.txt
 pyscr/scrap.py
-*.json
+metadata/*.json
+data_files/*.json
 .pytest_cache
 experiments/
 src/ofdm.egg-info/
