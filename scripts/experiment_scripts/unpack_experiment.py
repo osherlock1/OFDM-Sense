@@ -1,83 +1,62 @@
 import numpy as np
 from pathlib import Path
 import subprocess
-import numpy as np
 import os
-import matplotlib.pyplot as plt
-from scipy.interpolate import interp1d
 import json
-from ofdm.channel import delay
-from ofdm.modulation import qam
-from ofdm.config import OFDMConfig
-import scipy
-import scipy.signal
-import pandas as pd
-import os
-from datetime import datetime
 import argparse
+import pandas as pd
+from ofdm.config import OFDMConfig
 from ofdm.utils import usrp
 
 
 DELAY_DATA_PATH = "./metadata/delay_calc.json"
-REF_DELAY_DATA_PATH = "./metadata/ref_delay_calc.json"
 PERFORMANCE_DATA_PATH = "./data_files/ofdm_performance.json"
 USRP_CONFIG_PATH = "./configs/usrp_settings.yaml"
 
-#----- MODIFY ------
-# directory to where the unpacked data will be saved to.  Specifiy the name of the csv in path + no files will automatically be created you have to make those manually
-UNPACKED_DATA_CSV = "./experiments/unpacked_data3/rx3_channel1.csv" # ./experiments/[EXPERIMENT NAME]/[UNPACKED NAME.csv]
 
-#Path to the raw data that needs to be unpacked
-data_dir = Path("/home/guoyixu/OFDM_Sense/EXPERIMENTS/synthetic_trilateration2/trilat1_rx3_x0cm_y61_5cm_archive/channel1") #PATH TO RAW DATA TO BE UNPACKED
-# -----------------
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_dir", type=str, required=True, help="path to raw .dat archive channel directory")
+    parser.add_argument("--output_csv", type=str, required=True, help="path to output CSV file (e.g. ./experiments/my_experiment/rx3_channel1.csv)")
+    args = parser.parse_args()
 
-for dat_file in data_dir.glob("*.dat"):
-    print(dat_file)
-    file_path = data_dir / dat_file
+    data_dir = Path(args.data_dir)
 
-    print("---Unpacking OFDM Data---")
-    subprocess.run(["python", "./scripts/unpack_rx.py", "--file", str(dat_file)], check=True)
-    print("---Finished Unpacking---")
+    for dat_file in data_dir.glob("*.dat"):
+        print(dat_file)
 
-    print("---Calculating Delay -----")
-    subprocess.run(["python", "./scripts/delay/calc_delay.py", "--file", str(dat_file)], check = True)
-    #run subprocess to calculate delay
+        print("---Unpacking OFDM Data---")
+        subprocess.run(["python", "./scripts/unpack_rx.py", "--file", str(dat_file)], check=True)
+        print("---Finished Unpacking---")
 
-    with open(DELAY_DATA_PATH, 'r') as f:
-        delay_data = json.load(f)
+        print("---Calculating Delay -----")
+        subprocess.run(["python", "./scripts/delay/calc_delay.py", "--file", str(dat_file)], check=True)
 
-    with open(PERFORMANCE_DATA_PATH, 'r') as f:
-        performance_data = json.load(f)
+        with open(DELAY_DATA_PATH, 'r') as f:
+            delay_data = json.load(f)
 
-    evm = performance_data['evm']
-    ber = performance_data['ber']
-    ser = performance_data['ser']
-    starting_idxs = performance_data['start_idx']
+        with open(PERFORMANCE_DATA_PATH, 'r') as f:
+            performance_data = json.load(f)
 
-    delays = delay_data['delays']
+        evm = performance_data['evm']
+        ber = performance_data['ber']
+        ser = performance_data['ser']
+        starting_idxs = performance_data['start_idx']
+        delays = delay_data['delays']
 
-    usrp_conf = usrp.load_config(USRP_CONFIG_PATH)
-    rx_channel_idx = usrp_conf.rx_channel_idx.replace(",", "")
+        channel = 0
+        results = {
+            f'delay{channel}': delays[int(channel)],
+            f'evm{channel}': evm[int(channel)],
+            f'ber{channel}': ber[int(channel)],
+            f'ser{channel}': ser[int(channel)],
+            f'startingx_idx{channel}': starting_idxs[int(channel)][1]
+        }
 
-    results = {}
-    channel = 0
-    results.update({
-        f'delay{channel}':delays[int(channel)],
-        f'evm{channel}': evm[int(channel)],
-        f'ber{channel}':ber[int(channel)],
-        f'ser{channel}':ser[int(channel)],
-        f'startingx_idx{channel}' : starting_idxs[int(channel)][1]
-    })
-
-    df_new = pd.DataFrame([results])
-
-    write_header = not os.path.exists(UNPACKED_DATA_CSV)
-
-    df_new.to_csv(
-        UNPACKED_DATA_CSV,
-        mode = 'a',
-        header=write_header,
-        index=False
-    )
+        df_new = pd.DataFrame([results])
+        write_header = not os.path.exists(args.output_csv)
+        df_new.to_csv(args.output_csv, mode='a', header=write_header, index=False)
 
 
+if __name__ == "__main__":
+    main()
