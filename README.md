@@ -113,7 +113,7 @@ Update `tx_addr` / `rx_addr` to match your USRP IP addresses. The `ref: "externa
 python scripts/generate_packet.py --n_symb 30 --snr 20
 
 # Unpack and evaluate
-python scripts/unpack_rx.py --plot
+python scripts/unpack_rx.py --sim --plot
 ```
 
 ### Hardware transfer

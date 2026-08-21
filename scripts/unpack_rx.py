@@ -11,14 +11,18 @@ from ofdm.utils import eval
 from ofdm.modulation import qam
 from ofdm.utils import usrp
 
+RX_DEFAULT_PATH = "./data_files/rand_ofdm_packet_rx.dat"
+TX_DEFAULT_PATH = "./data_files/rand_ofdm_packet.dat"
+
 
 def main():
     parser = argparse.ArgumentParser(description="Unpack and Plot Recieved OFDM Packet")
     parser.add_argument(
         "--file",
         type=str,
-        default="./data_files/rand_ofdm_packet_rx.dat",
-        help="File name of packet to unpack",
+        default=None,
+        help="File name of packet to unpack. Defaults to the hardware RX capture, "
+        "or the TX file when --sim is set",
     )
     parser.add_argument(
         "--ref",
@@ -28,9 +32,9 @@ def main():
     )
     parser.add_argument(
         "--sim",
-        type=bool,
-        default=False,
-        help="Choose to simulation (True = Use TX File)",
+        action="store_true",
+        help="Simulate unpacking directly from the generated TX file "
+        "(no hardware capture needed)",
     )
     parser.add_argument(
         "--plot",
@@ -38,6 +42,9 @@ def main():
         help="Plot Constalation Diagrams of Unpacked OFDM Packets",
     )
     args = parser.parse_args()
+
+    if args.file is None:
+        args.file = TX_DEFAULT_PATH if args.sim else RX_DEFAULT_PATH
 
     # Load Configurations
     USRP_CONFIG_PATH = "./configs/usrp_settings.yaml"
@@ -53,7 +60,7 @@ def main():
     start_idx_list = []
 
     if (
-        args.file == "./data_files/rand_ofdm_packet_rx.dat"
+        not args.sim and args.file == RX_DEFAULT_PATH
     ):  # checks if custom file is inputted in CLA if not runs as normal
         for channel in rx_channel_idx:
             if len(rx_channel_idx) != 1:
