@@ -4,7 +4,7 @@ from ofdm.simulation.noise_model import add_gaussian_noise
 from ofdm.simulation.solver import solve_tdoa
 
 
-def run_monte_carlo(tx_pos, rx_coords, sigma_ns, n_trials=1000, seed=None, bounds = None):
+def run_monte_carlo(tx_pos, rx_coords, sigma_ns, n_trials=1000, seed=None, bounds=None):
     """
     Run monte carlo TDOA localization simluation.
     Returns dict with estimates, errors, and summary stats
@@ -30,4 +30,3 @@ def run_monte_carlo(tx_pos, rx_coords, sigma_ns, n_trials=1000, seed=None, bound
         "n_converged": len(estimates),
         "n_trials": n_trials,
     }
-

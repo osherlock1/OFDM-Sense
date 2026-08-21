@@ -1,10 +1,11 @@
 import numpy as np
-from typing import Tuple
-#Internal
+
+# Internal
 from ofdm.modulation import qam
 
-def calc_EVM(iq_rx:np.ndarray, iq_ref:np.ndarray)->float:
-    """  
+
+def calc_EVM(iq_rx: np.ndarray, iq_ref: np.ndarray) -> float:
+    """
     Calculated the Error Vector Magnitude
 
     Args:
@@ -14,30 +15,33 @@ def calc_EVM(iq_rx:np.ndarray, iq_ref:np.ndarray)->float:
     Returns:
         evm: Error Vector Magnitude
     """
-    
-    #Length Check
+
+    # Length Check
     if len(iq_rx) != len(iq_ref):
-        print(f"[EVM] RX Data:{len(iq_rx)} samples does not match Reference Lengt:{len(iq_ref)}...")
-        
+        print(
+            f"[EVM] RX Data:{len(iq_rx)} samples does not match Reference Lengt:{len(iq_ref)}..."
+        )
+
         min_len = min(len(iq_ref), len(iq_rx))
         iq_rx = iq_rx[:min_len]
         iq_ref = iq_ref[:min_len]
         print(f"[EVM] Truncating RX and Referense to {min_len} samples.")
-    
+
     error_vector = iq_rx - iq_ref
 
-    #Calculate powers
+    # Calculate powers
     p_error = np.mean(np.abs(error_vector) ** 2)
     p_ref = np.mean(np.abs(iq_ref) ** 2)
 
-    #Calc EVM
+    # Calc EVM
     evm = np.sqrt(p_error / p_ref)
-    
-    #Convert to dB
+
+    # Convert to dB
     return 20 * np.log10(evm)
 
-def calc_SER(iq_rx:np.ndarray, iq_ref:np.ndarray)->float:
-    """  
+
+def calc_SER(iq_rx: np.ndarray, iq_ref: np.ndarray) -> float:
+    """
     Calculates Symbol Error Rate
 
     Args:
@@ -48,30 +52,33 @@ def calc_SER(iq_rx:np.ndarray, iq_ref:np.ndarray)->float:
         ser: Symbol Error Rate
     """
 
-    #Convert rx iq to Binary
+    # Convert rx iq to Binary
     binary_rx = [qam.iq_to_binary(sample) for sample in iq_rx]
 
-    #Convert ref iq to Binary
+    # Convert ref iq to Binary
     binary_ref = [qam.iq_to_binary(sample) for sample in iq_ref]
 
-    #Length Check
+    # Length Check
     if len(binary_rx) != len(binary_ref):
-        print(f"[SER] RX len:{len(binary_rx)} samples does not match referense length:{len(binary_ref)} samples")
+        print(
+            f"[SER] RX len:{len(binary_rx)} samples does not match referense length:{len(binary_ref)} samples"
+        )
         min_len = min(len(binary_ref), len(binary_rx))
         print(f"Truncating to min length:{min_len} samples")
         binary_rx = binary_rx[:min_len]
         binary_ref = binary_ref[:min_len]
-    
+
     n_samples = len(binary_ref)
 
-    #Calculate SER
+    # Calculate SER
     Errors = sum(binary_rx[i] != binary_ref[i] for i in range(n_samples))
 
     ser = Errors / n_samples
 
     return ser
 
-def calc_BER(iq_rx:np.ndarray, iq_ref:np.ndarray)->float:
+
+def calc_BER(iq_rx: np.ndarray, iq_ref: np.ndarray) -> float:
     """
     Calculate Bit Error Rate (BER) by comparing the difference between individual bits
 
@@ -83,28 +90,30 @@ def calc_BER(iq_rx:np.ndarray, iq_ref:np.ndarray)->float:
         BER = Bit Error Rate
     """
 
-    #Convert iq_rx to binary
+    # Convert iq_rx to binary
     binary_rx = [qam.iq_to_binary(sample) for sample in iq_rx]
 
-    #Convert iq_ref to binary
+    # Convert iq_ref to binary
     binary_ref = [qam.iq_to_binary(sample) for sample in iq_ref]
 
-    #Convert into continous string
+    # Convert into continous string
     binary_string_rx = "".join(binary_rx)
     binary_string_ref = "".join(binary_ref)
 
-    #Check Len
+    # Check Len
     if len(binary_string_ref) != len(binary_string_rx):
-        print(f"[BER] Lenth of RX:{len(binary_string_rx)} does not equal Length of Ref:{len(binary_string_ref)}")
+        print(
+            f"[BER] Lenth of RX:{len(binary_string_rx)} does not equal Length of Ref:{len(binary_string_ref)}"
+        )
         min_len = min(len(binary_string_ref), len(binary_string_rx))
         print(f"Truncating to {min_len} samples")
         binary_string_rx = binary_string_rx[:min_len]
         binary_string_ref = binary_string_ref[:min_len]
-    
+
     n_bits = len(binary_string_rx)
     bit_errors = sum(binary_string_ref[i] != binary_string_rx[i] for i in range(n_bits))
 
-    #Calc BER
+    # Calc BER
     ber = bit_errors / n_bits
 
     return ber

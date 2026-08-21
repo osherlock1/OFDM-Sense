@@ -1,10 +1,13 @@
 import numpy as np
 from ofdm.config import OFDMConfig
 
-def channel_estimation_calc(rx_pilot_freq:np.ndarray, tx_pilot_ref: np.ndarray, config:OFDMConfig) -> np.ndarray:
-    """  
+
+def channel_estimation_calc(
+    rx_pilot_freq: np.ndarray, tx_pilot_ref: np.ndarray, config: OFDMConfig
+) -> np.ndarray:
+    """
     Performs Channel Estimation and returns subcarrier channel gains
-    
+
     Args:
         rx_pilot_freq: Recieved RX Symbol no CP (After CFO Correction)
         tx_pilot_ref: Reference Pilot Symbol from TX
@@ -13,22 +16,23 @@ def channel_estimation_calc(rx_pilot_freq:np.ndarray, tx_pilot_ref: np.ndarray, 
         Lambda_est: Channel Gains
     """
 
-    #Identify Bins carrying data
+    # Identify Bins carrying data
     active_bins = np.concatenate([config.data_carriers, config.pilot_carriers])
-    active_bins = np.unique(active_bins) #Sort
+    active_bins = np.unique(active_bins)  # Sort
 
-    #Initialize lambda
+    # Initialize lambda
     Lambda_est = np.ones_like(rx_pilot_freq, dtype=complex)
 
-    #Estiamtion channels
+    # Estiamtion channels
     Lambda_est = rx_pilot_freq / (tx_pilot_ref + 1e-12)
 
     return Lambda_est
 
-def apply_gains(rx_symb_freq:np.ndarray, Lambda_est:np.ndarray)-> np.ndarray:
-    """  
+
+def apply_gains(rx_symb_freq: np.ndarray, Lambda_est: np.ndarray) -> np.ndarray:
+    """
     Apply Channel gains to RX signal
-    
+
     Args:
         rx_symb_freq: Recieved RX symbol after CFO with no CP
         Lamba_est: Channel gains calculated from channel_estimation_calc()
