@@ -9,17 +9,18 @@ from ofdm.modulation import qam
 from ofdm.config import OFDMConfig
 from ofdm.channel.delay import scale_rx_signal, calculate_sub_sample_delay_parabolic
 
-# Config
+
 CALIBRATION_PATH = "metadata/calibration.json"
 RX_DATA_PATH = "data_files/rand_ofdm_packet.dat"
 TX_REF_PATH = "data_files/rand_ofdm_packet_ref.json"
-# Define OFDM Configuration
+
+
 OFDM_CONF = OFDMConfig()
 STORE_REF_PATH = "./metadata/ref_delay_calc.json"
 STORE_NO_REF_PATH = "./metadata/delay_calc.json"
 USRP_CONFIG_PATH = "./configs/usrp_settings.yaml"
 START_IDX_PATH = "./data_files/ofdm_performance.json"
-C = scipy.constants.c  # Speed of light
+C = scipy.constants.c
 
 
 def clean_rx(rx_raw: np.ndarray, start_idx: int) -> np.ndarray:
@@ -72,6 +73,10 @@ def main():
     args = parser.parse_args()
 
     usrp_conf = usrp.load_config(USRP_CONFIG_PATH)
+    if not os.path.exists(CALIBRATION_PATH):
+        raise FileNotFoundError(
+            f"[Error] Calibartion file not found at '{CALIBRATION_PATH}. Run 'python scripts/delay/mf_calibrate.py first to generate it."
+        )
     with open(CALIBRATION_PATH, "r") as f:
         cali_data = json.load(f)
     constants = cali_data["constants"]
@@ -100,7 +105,7 @@ def main():
                     rx_signal=rx_data, ref_signal=tx_pilot, fs=OFDM_CONF.FS
                 )
                 * 1e9
-            )  # convert to ns
+            )
             calced_delays.append(delay)
             print(f"Channel{channel} delay: {delay:.1f}ns")
     else:
