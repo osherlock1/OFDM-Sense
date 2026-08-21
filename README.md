@@ -3,12 +3,23 @@
 ![Python](https://img.shields.io/badge/language-Python-blue)
 ![C++](https://img.shields.io/badge/language-C++-00599C)
 ![Status](https://img.shields.io/badge/Status-In_Development-yellow)
+![Publication](https://img.shields.io/badge/Publication-IEEE_ORSS_2026-blue)
 
 # OFDM-Sense
 
 OFDM-Sense is a Joint Communication and Sensing (JCAS) research platform developed as the 2025/26 URI ELECOMP Capstone project under Dr. Guoyi Xu. It implements an OFDM transceiver on a USRP X310 software-defined radio (SDR) to explore the use of OFDM waveforms for simultaneous wireless communication and device localization via time-difference-of-arrival (TDOA).
 
+## Publication
+
+Our paper, **"2D Localization Leveraging OFDM Signals,"** has been accepted for publication in the 2026 IEEE ORSS proceedings.
+
+> O'Malley Sherlock\*, Royaljohn Southamavong\*, and Guoyi Xu, "2D Localization Leveraging OFDM Signals," in *2026 IEEE ORSS*, 2026. (to appear)
+
+
+A link will be added once available.
+
 ## Table of Contents
+- [Publication](#publication)
 - [How it Works](#how-it-works)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
