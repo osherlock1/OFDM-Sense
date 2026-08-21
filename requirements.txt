@@ -1,5 +1,2 @@
-# Install the package and all runtime dependencies
 -e .
-
-# Dev dependencies
 pytest
