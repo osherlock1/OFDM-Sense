@@ -1,23 +1,10 @@
-
-#Data Files
 *.dat
-
-#Virtual Environment
 venv/
-
-# IDE files
 .vscode/
 .idea/
-
-#Build Artifacts
 build/
-
-
-#Byte-compiled / optimized / DLL
 __pycache__/
 *.pyc
-
-#Specific
 rx_log.txt
 pyscr/scrap.py
 metadata/*.json
@@ -26,3 +13,5 @@ data_files/*.json
 experiments/
 src/ofdm.egg-info/
 ofdm.egg-info/
+remote_EXPERIMENTS/
+experiments/
