@@ -2,15 +2,16 @@ import numpy as np
 import scipy
 import scipy.signal
 
-def matched_filter_calc(rx_iq:np.ndarray, ref_iq:np.ndarray, fs:float) -> np.ndarray:
-    """  
+
+def matched_filter_calc(rx_iq: np.ndarray, ref_iq: np.ndarray, fs: float) -> np.ndarray:
+    """
     Calculate the delay through matched filter delay estimation
 
     Args:
         rx_iq: Recieved IQ data
         ref_iq: Reference IQ data
         fs: Sampling Frequency
-    
+
     Returns:
         z: Complex corss-correlation output
         lags: Time lag corresponding to each element of z, in seconds
@@ -19,14 +20,15 @@ def matched_filter_calc(rx_iq:np.ndarray, ref_iq:np.ndarray, fs:float) -> np.nda
     lags = np.arange(-len(rx_iq) + 1, len(ref_iq)) / fs
     return z, lags
 
-def zero_padded_upsample(raw_data:np.ndarray, scale_factor:int = 100)->np.ndarray:
+
+def zero_padded_upsample(raw_data: np.ndarray, scale_factor: int = 100) -> np.ndarray:
     """
     Upsamples raw data based on the scale factor for sub sampling matched filter delay estimation
 
     Args:
         raw_data: Raw pilot symbol data to be upsampled
         scale_factor: Multiplication factor for umsampling i.e. to upsample from 100MHz to 10Ghz use 100
-    
+
     Returns:
         Upsampled np.ndarray data
     """
@@ -36,10 +38,13 @@ def zero_padded_upsample(raw_data:np.ndarray, scale_factor:int = 100)->np.ndarra
     freq = np.fft.fftshift(np.fft.fft(raw_data))
     n_total_zeros = n_padded - n_data
     zeros_one_side = np.zeros(n_total_zeros // 2)
-    freq_zero_padded_shifted = np.fft.ifftshift(np.concatenate([zeros_one_side, freq, zeros_one_side]))
+    freq_zero_padded_shifted = np.fft.ifftshift(
+        np.concatenate([zeros_one_side, freq, zeros_one_side])
+    )
     return np.fft.ifft(freq_zero_padded_shifted) * scale_factor
 
-def scale_rx_signal(raw_rx_data:np.ndarray)->np.ndarray:
+
+def scale_rx_signal(raw_rx_data: np.ndarray) -> np.ndarray:
     """
     Scales an array to +- 0.9
     """
@@ -48,13 +53,17 @@ def scale_rx_signal(raw_rx_data:np.ndarray)->np.ndarray:
         return raw_rx_data * (0.9) / max_val
     return raw_rx_data
 
+
 def _correlate(rx_signal, ref_signal):
-    corr = scipy.signal.correlate(rx_signal, ref_signal, mode='full')
-    lags = scipy.signal.correlation_lags(len(rx_signal), len(ref_signal), mode='full')
+    corr = scipy.signal.correlate(rx_signal, ref_signal, mode="full")
+    lags = scipy.signal.correlation_lags(len(rx_signal), len(ref_signal), mode="full")
     peak_idx = np.argmax(np.abs(corr))
     return corr, lags, peak_idx
 
-def calculate_sub_sample_delay_parabolic(rx_signal:np.ndarray, ref_signal:np.ndarray, fs:float)->float:
+
+def calculate_sub_sample_delay_parabolic(
+    rx_signal: np.ndarray, ref_signal: np.ndarray, fs: float
+) -> float:
     """
     Calculates sub-sample delay using Parabolic Interpolation
 
@@ -75,7 +84,7 @@ def calculate_sub_sample_delay_parabolic(rx_signal:np.ndarray, ref_signal:np.nda
         alpha = corr_mag[peak_idx - 1]
         beta = corr_mag[peak_idx]
         gamma = corr_mag[peak_idx + 1]
-        fractional_shift = 0.5 * (alpha - gamma) / (alpha - 2*beta + gamma)
+        fractional_shift = 0.5 * (alpha - gamma) / (alpha - 2 * beta + gamma)
     else:
         fractional_shift = 0.0
 
@@ -83,7 +92,13 @@ def calculate_sub_sample_delay_parabolic(rx_signal:np.ndarray, ref_signal:np.nda
     return precise_lag / fs
 
 
-def calculate_sub_sample_delay_zp(rx_signal:np.ndarray, ref_signal:np.ndarray, fs:float, upsample_factor:int = 100, search_radius:int = 16)->float:
+def calculate_sub_sample_delay_zp(
+    rx_signal: np.ndarray,
+    ref_signal: np.ndarray,
+    fs: float,
+    upsample_factor: int = 100,
+    search_radius: int = 16,
+) -> float:
     """
     Calculates sub sample delay using zero-padded FFT interpolation
 
@@ -115,4 +130,3 @@ def calculate_sub_sample_delay_zp(rx_signal:np.ndarray, ref_signal:np.ndarray, f
     zero_lag_index = np.where(lags == 0)[0][0]
     final_lag_samples = final_idx - zero_lag_index
     return final_lag_samples / fs
-

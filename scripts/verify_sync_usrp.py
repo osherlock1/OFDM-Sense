@@ -1,74 +1,79 @@
 import numpy as np
-import json
-import os
-import pathlib
 import argparse
 import matplotlib.pyplot as plt
-#Internal
+
+# Internal
 from ofdm.config import OFDMConfig
 from ofdm.utils import usrp
 from ofdm.core import preamble
 from ofdm.core import waveform
 from ofdm.core import sync
 
+
 def main():
     parser = argparse.ArgumentParser(description="Test Sync Function")
     parser.add_argument("--seed", type=int, default=42, help="Random Seed")
-    parser.add_argument("--channel", "-c", type=str, help="Select Communication Channel (A = Baseband, B = Frontend)")
+    parser.add_argument(
+        "--channel",
+        "-c",
+        type=str,
+        help="Select Communication Channel (A = Baseband, B = Frontend)",
+    )
     args = parser.parse_args()
-    #Initialize OFDM Config
+    # Initialize OFDM Config
     ofdm_conf = OFDMConfig()
 
-    #Generate Sync Symbol
-    sync_freq = preamble.generate_sync_symbol(config=ofdm_conf, seed = args.seed)
-    sync_tx = waveform.create_time_domain_symbol(freq_data=sync_freq, cp_len = ofdm_conf.CP_LEN)
-
+    # Generate Sync Symbol
+    sync_freq = preamble.generate_sync_symbol(config=ofdm_conf, seed=args.seed)
+    sync_tx = waveform.create_time_domain_symbol(
+        freq_data=sync_freq, cp_len=ofdm_conf.CP_LEN
+    )
 
     n_buffer = 150
-    buffer = np.zeros(n_buffer, dtype=complex) #Zeros for start and end
+    buffer = np.zeros(n_buffer, dtype=complex)  # Zeros for start and end
     final_tx = np.concatenate([buffer, sync_tx, buffer])
     final_tx_ref = final_tx.copy()
-    
-    #Save File
+
+    # Save File
     sync_test_path_tx = "data_files/sync_verification_tx.dat"
     sync_test_ref_path = "data_files/sync_verification_ref.json"
 
     final_tx.astype(np.complex64).tofile(sync_test_path_tx)
 
-    #Save Reference
-    #Might not be necissary right now
+    # Save Reference
+    # Might not be necissary right now
 
-    #Initiate USRP Config
+    # Initiate USRP Config
     DEFAULT_CONFIG_PATH = "./configs/usrp_settings.yaml"
     usrp_conf = usrp.load_config(DEFAULT_CONFIG_PATH)
     sync_test_path_rx = "data_files/sync_verification_rx.dat"
 
-    #Send Over USRP
+    # Send Over USRP
     usrp.run_transfer(
-        config=usrp_conf, 
+        config=usrp_conf,
         tx_file=sync_test_path_tx,
         rx_file=sync_test_path_rx,
-        nsamps=len(final_tx)
+        nsamps=len(final_tx),
     )
 
-    #Unpack Recieved Data
+    # Unpack Recieved Data
     print("[Test] Unpacking Data...")
     signal = np.fromfile(sync_test_path_rx, dtype=np.complex64)
 
-    #Run Schmidl-Cox Sync
+    # Run Schmidl-Cox Sync
     M, P = sync.calculate_schmidl_cox_metrics(rx_signal=signal, config=ofdm_conf)
 
-    #Get starting IDX
+    # Get starting IDX
     peak_idx = sync.find_start_idx(
         M_metric=M,
-        config=ofdm_conf, 
-        rx_signal=signal, 
+        config=ofdm_conf,
+        rx_signal=signal,
         known_sync_time=sync_tx,
-        )
+    )
 
-    #Calculate Coarse CFO
+    # Calculate Coarse CFO
     symbol_start_idx = peak_idx + ofdm_conf.CP_LEN
-    
+
     if symbol_start_idx < len(P):
         max_P = P[symbol_start_idx]
         cfo = sync.estimate_cfo_coarse(P_value=max_P, config=ofdm_conf)
@@ -76,16 +81,14 @@ def main():
         print(f"[Success] CFO Estimate: {cfo:.2f}Hz")
     else:
         print("[Error] Detected index out of bounds")
-    
-    #Plot Results
+
+    # Plot Results
     plt.figure()
-    plt.plot(signal, label = "RX Signal")
-    plt.plot(M, label = "M metric")
+    plt.plot(signal, label="RX Signal")
+    plt.plot(M, label="M metric")
     plt.show()
 
-
     pass
-
 
 
 if __name__ == "__main__":

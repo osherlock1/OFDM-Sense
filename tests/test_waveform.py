@@ -8,11 +8,13 @@ def test_add_cp_length():
     result = add_cp(signal, cp_len=64)
     assert len(result) == 320
 
+
 def test_add_cp_content():
     """The prefix should be the last cp_len samples of the original signal"""
     signal = np.arange(256, dtype=complex)
-    result = add_cp(signal, cp_len = 64)
+    result = add_cp(signal, cp_len=64)
     np.testing.assert_array_equal(result[:64], signal[-64:])
+
 
 def test_remove_cp_is_inverse_of_add_cp():
     """add_cp then remove_cp should recover the origin signal"""
@@ -21,11 +23,13 @@ def test_remove_cp_is_inverse_of_add_cp():
     recovered = remove_cp(with_cp, cp_len=64)
     np.testing.assert_array_equal(recovered, original)
 
+
 def test_add_cp_zero_length():
     """cp_len = 0 should return the signal unchanged"""
     signal = np.ones(256, dtype=complex)
     result = add_cp(signal, cp_len=0)
     np.testing.assert_array_equal(result, signal)
+
 
 def test_freq_time_roundtrip():
     """IFFT then FFT should recover the original"""

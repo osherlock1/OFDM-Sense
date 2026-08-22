@@ -27,19 +27,21 @@ def main():
                 sigma_ns=0.5,
                 n_trials=30,
                 seed=42,
-                bounds=bounds
+                bounds=bounds,
             )
-            error_heatmap[i][j] = results['rmse']
-    
+            error_heatmap[i][j] = results["rmse"]
+
     plt.figure(figsize=(10, 8))
     v_max = 1.5
-    v_min = 0 
-    cp = plt.pcolormesh(X, Y, error_heatmap,vmin=v_min, vmax=v_max, shading='auto', cmap='viridis')
-    plt.colorbar(cp, label='RMSE (meters)')
-    plt.scatter(rx_x, rx_y, marker='^', color='red', label='Receivers', s=150)
-    plt.title('OFDM Localization Error Heatmap')
-    plt.xlabel('X Position (m)')
-    plt.ylabel('Y Position (m)')
+    v_min = 0
+    cp = plt.pcolormesh(
+        X, Y, error_heatmap, vmin=v_min, vmax=v_max, shading="auto", cmap="viridis"
+    )
+    plt.colorbar(cp, label="RMSE (meters)")
+    plt.scatter(rx_x, rx_y, marker="^", color="red", label="Receivers", s=150)
+    plt.title("OFDM Localization Error Heatmap")
+    plt.xlabel("X Position (m)")
+    plt.ylabel("Y Position (m)")
     plt.legend()
     plt.show()
 
