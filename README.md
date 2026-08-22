@@ -35,24 +35,24 @@ A link will be added once available.
 
 A transmitter sends an OFDM packet (preamble + data symbols) from a USRP X310. One or more receivers capture the signal. The receiver pipeline:
 
-1. **Synchronization** — Schmidl-Cox algorithm detects packet start and estimates coarse CFO
-2. **Channel estimation** — pilot symbols estimate frequency-domain channel response
-3. **Equalization & demodulation** — 16-QAM symbols are recovered and evaluated (EVM, BER, SER)
-4. **Delay estimation** — matched filter + sub-sample interpolation measures propagation delay
-5. **Localization** — TDOA across multiple receivers feeds a least-squares multilateration solver
+1. **Synchronization** Schmidl-Cox algorithm detects packet start and estimates coarse CFO
+2. **Channel estimation** pilot symbols estimate frequency-domain channel response
+3. **Equalization & demodulation** 16-QAM symbols are recovered and evaluated (EVM, BER, SER)
+4. **Delay estimation** matched filter + sub-sample interpolation measures propagation delay
+5. **Localization** TDOA across multiple receivers feeds a least-squares multilateration solver
 
 ---
 
 ## Prerequisites
 
 ### Hardware
-- [USRP X310](https://www.ettus.com/all-products/x310-kit/) with UBX-160 daughterboards
+- [USRP X310](https://www.ettus.com/all-products/x310-kit/) 
 - External 10 MHz reference clock (shared across all devices for synchronization)
-- 1 GbE or 10 GbE connection per USRP
+- 10 GbE connection per USRP
 
 ### Software
 - Python >= 3.8
-- [UHD (USRP Hardware Driver)](https://github.com/EttusResearch/uhd) — required to build the C++ control binary
+- [UHD (USRP Hardware Driver)](https://github.com/EttusResearch/uhd)  required to build the C++ control binary
 - CMake >= 3.8 and a C++14 compiler
 
 ---
@@ -118,7 +118,7 @@ Update `tx_addr` / `rx_addr` to match your USRP IP addresses. The `ref: "externa
 
 ## Workflow
 
-### Quick start (simulation only — no hardware needed)
+### Quick start (simulation only - no hardware needed)
 ```bash
 # Generate a synthetic OFDM packet with noise
 python scripts/generate_packet.py --n_symb 30 --snr 20
