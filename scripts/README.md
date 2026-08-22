@@ -61,6 +61,16 @@ Sweeps TX position over a grid, running a Monte Carlo simulation at each point t
 
 ---
 
+## image_demo/
+
+### package_image.py
+Encodes an image into QAM IQ symbols, packages them into OFDM packets with sync/pilot preambles, adds noise, and saves the resulting signal plus transfer metadata for a USRP transfer.
+
+### unpack_image.py
+Detects packet boundaries in a captured RX file via Schmidl-Cox peaks, demodulates each packet with `unpack_rx_packet`, reconstructs the image bytes, and saves the recovered image alongside per-packet accuracy stats.
+
+---
+
 ## experiment_scripts/
 
 See [`experiment_scripts/README.md`](experiment_scripts/README.md) for the full data-collection tutorial.
